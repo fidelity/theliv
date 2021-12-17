@@ -1,0 +1,7 @@
+<div class="resource" [class.dark-mode]="isDarkModule">
+  <app-navigation-bar [isDarkModule]="isDarkModule" (themeChange)="themeChange($event)"></app-navigation-bar>
+
+  <div class="wrapper">
+    <router-outlet></router-outlet>
+  </div>
+</div>

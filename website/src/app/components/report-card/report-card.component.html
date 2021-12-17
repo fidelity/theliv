@@ -1,0 +1,66 @@
+<div class="theliv-report-card-container">
+    <div class="searched-resources">
+        <div *ngIf="gridToggle && selectedResource" class="overlay">
+            <div class="popup">
+                <h2>{{selectedResource.resourceName}}.yaml
+                    <span class="icon">
+                        <fa-icon [icon]="faCopy" (click)="socialUtil.copyYamlCode(selectedResource.template)"></fa-icon>
+                    </span>
+                </h2>
+                <a class="close" (click)="gridToggle=false; selectedResource=[]">&times;</a>
+                <div class="content">
+                    <pre class="code-content"><code #codeinput>{{selectedResource.template}}</code></pre>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="searched-bar">
+            <div class="searched-show">Showing {{count}} Issue Resources</div>
+            <div class="searched-sort select">Sort by:
+                <select [(ngModel)]="sortBy" name="sort" required>
+                    <option deafult selected [value]="'time'">Newest Post</option>
+                </select>
+            </div>
+        </div> -->
+        
+        <div class="resource-cards">
+            <div class="resource-card" [ngClass]="{'resource-card-level-0': resource.level===0}"  *ngFor="let resource of resourceGroup; let index = index">
+                <div *ngIf="resource.resources" [routerLink]="['../issue', resource.id]" [queryParams]="{cluster: cluster, namespace: ns}">
+                    <div class="resource-card-header">
+                        <img class="kube-icon" src="assets/images/kube/{{resource.topResourceType.toLowerCase()}}.png" />
+                        <div class="resource-action">
+                            <!-- <fa-icon class="thumbs-icon" [icon]="faThumbsUp" [class.thumbs-up]="resource.thumbs"
+                                (click)="socialUtil.isThumbsUp($event, resource)"></fa-icon> -->
+                            <fa-icon class="shared-icon" [icon]="faShareAlt" (click)="socialUtil.openShared($event, resource)"></fa-icon>
+                        </div>
+                    </div>
+                    <div class="resource-card-title">{{resource.name}}<span>{{resource.rootCause.createdTime | date:'MMM d, y'}}</span></div>
+                    <div class="resource-card-subtitle">
+                        <div class="issues-subtitle">
+                            <fa-icon [icon]="faExclamationTriangle"></fa-icon>Issues:
+                        </div>
+                        <div class="resource-issue">
+                            <div class="issue-item">- {{resource.rootCause.name}}</div>
+                        </div>
+                        <div class="cause-subtitle">
+                            <fa-icon [icon]="faLightbulb"></fa-icon>Root Cause:
+                        </div>
+                        <div class="resource-issue">
+                            <div class="issue-item">- {{resource.rootCause.description}}</div>
+                        </div>
+                    </div>
+                    <div class="resource-detail-buttons">
+                        <button class="search-buttons detail-button"
+                            *ngFor="let tag of resource.rootCause.tags">{{tag}}</button>
+                    </div>
+                    <!-- <div class="resource-card-buttons"> -->
+                        <!-- <button class="search-buttons card-buttons" (click)="showPopupItem(index)">Yaml Resource</button> -->
+                        <!-- <a *ngIf="resource.resources" class="search-buttons card-buttons-msg" [routerLink]="['../issue', resource.id]" 
+                        [queryParams]="{cluster: cluster, namespace: ns}">Detail Messages</a>
+                        <button *ngIf="!resource.resources" class="search-buttons card-buttons-msg card-buttons-disabled">No
+                            Detail Messages</button>
+                    </div> -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
