@@ -20,6 +20,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/wangli1030/saml v0.4.7
 	go.etcd.io/etcd/client/v3 v3.5.1
+	go.uber.org/zap v1.19.1
 	k8s.io/api v0.23.0
 	k8s.io/apimachinery v0.23.0
 	k8s.io/client-go v0.23.0
@@ -75,7 +76,6 @@ require (
 	go.etcd.io/etcd/client/pkg/v3 v3.5.1 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
-	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect

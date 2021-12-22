@@ -10,7 +10,9 @@ import (
 	"github.com/fidelity/theliv/pkg/auth/authmiddleware"
 	"github.com/fidelity/theliv/pkg/auth/samlmethod"
 	"github.com/fidelity/theliv/pkg/config"
+	logger "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/router"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -68,8 +70,12 @@ func main() {
 	r.Handle("/auth/saml/*", samlmethod.GetSP())
 
 	theliv := config.GetThelivConfig()
+	// init default Zap logger
+	Logger := logger.NewDefaultLogger(logger.DefaultLogConfig(theliv.LogLevel))
+	defer Logger.Sync()
+
 	err := http.ListenAndServe(fmt.Sprintf(":%v", theliv.Port), r)
 	if err != nil {
-		log.Fatalf("Failed to start server, %v", err)
+		logger.S().Fatalf("Failed to start server, %v", err)
 	}
 }
