@@ -36,7 +36,6 @@ RUN mkdir /app
 WORKDIR /app
 COPY website/. .
 
-RUN apk add --update openssl
 
 # Configure npm
 RUN npm install 
