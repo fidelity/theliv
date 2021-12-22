@@ -88,12 +88,16 @@ type AuthConfig struct {
 	SloURL          string   `json:"sloURL"`
 	EntityID        string   `json:"entityID"`
 	WhitelistPath   []string `json:"whitelistpath"`
+	ClientID        string   `json:"clientID"`
+	ClientSecret    string   `json:"clientSecret"`
 }
 
 func (c *AuthConfig) ToMaskString() string {
 	return fmt.Sprintf(`Auth config:
 	CertPath: %v,
 	Cert length: %v,
+	ClientID length: %v,
+	ClientSecret length: %v.
 	KeyPath: %v,
 	Key length: %v,
 	IDPMetadataPath: %v,
@@ -104,7 +108,7 @@ func (c *AuthConfig) ToMaskString() string {
 	SloURL: %v,
 	EntityID: %v,
 	WhitelistPath: %v
-	`, c.CertPath, len(c.Cert), c.KeyPath, len(c.Key), c.IDPMetadataPath,
+	`, c.CertPath, len(c.Cert), len(c.ClientID), len(c.ClientSecret), c.KeyPath, len(c.Key), c.IDPMetadataPath,
 		len(c.IDPMetadata), c.IDPMetadataURL, c.MetadataURL, c.AcrURL, c.SloURL, c.EntityID, c.WhitelistPath)
 }
 

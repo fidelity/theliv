@@ -6,9 +6,17 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
+
+	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	a "github.com/microsoft/kiota/authentication/go/azure"
+	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
+
+	"github.com/microsoftgraph/msgraph-sdk-go/users/item/memberof"
 
 	"github.com/fidelity/theliv/internal/rbac"
 	"github.com/fidelity/theliv/pkg/config"
@@ -17,10 +25,14 @@ import (
 )
 
 var sp *samlsp.Middleware
+var clientID string
+var clientSecret string
 
 func Init() {
 
 	authConfig := config.GetThelivConfig().Auth
+	clientID = authConfig.ClientID
+	clientSecret = authConfig.ClientSecret
 
 	keyPair, err1 := tls.X509KeyPair(authConfig.Cert, authConfig.Key)
 	if err1 != nil {
@@ -206,11 +218,83 @@ func (Samlinfo) GetADgroups(r *http.Request) ([]string, error) {
 			if !ok {
 				return nil, errors.New("do not get the AD group")
 			}
-			//change it after we know how to use this link
-			adgroups = adgrouplink
+			ads, err := GetADgroupsByLink(adgrouplink[0])
+			if err != nil {
+				return nil, err
+			}
+			return ads, nil
 		}
 
 		return adgroups, nil
 	}
 	return nil, errors.New("get wrong session")
+}
+
+func GetADgroupsByLink(link string) ([]string, error) {
+	//check whether link is recognized
+	//change client id and secret as input
+	url, err := url.Parse(link)
+	if err != nil {
+		return nil, err
+	}
+	if url.Host != "graph.windows.net" || strings.Split(url.Path, "/")[2] != "users" || strings.Split(url.Path, "/")[4] != "getMemberObjects" {
+		return nil, errors.New("unrecognized adgroup link")
+	}
+	tenantId := strings.Split(url.Path, "/")[1]
+	userId := strings.Split(url.Path, "/")[3]
+	//THE GO SDK IS IN PREVIEW. NON-PRODUCTION USE ONLY
+	cred, err := azidentity.NewClientSecretCredential(
+		tenantId,
+		clientID,
+		clientSecret,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	auth, err := a.NewAzureIdentityAuthenticationProviderWithScopes(cred, []string{"https://graph.microsoft.com/.default"})
+	if err != nil {
+		fmt.Printf("Error authentication provider: %v\n", err)
+		return nil, err
+	}
+	requestAdapter, err := msgraphsdk.NewGraphRequestAdapter(auth)
+	if err != nil {
+		fmt.Printf("Error creating adapter: %v\n", err)
+		return nil, err
+	}
+
+	graphClient := msgraphsdk.NewGraphServiceClient(requestAdapter)
+
+	requestParameters := &memberof.MemberOfRequestBuilderGetQueryParameters{
+		Select: []string{"displayName"},
+	}
+	options := &memberof.MemberOfRequestBuilderGetOptions{
+		Q: requestParameters,
+	}
+	result, err := graphClient.UsersById(userId).MemberOf().Get(options)
+	if err != nil {
+		return nil, err
+	}
+	adgroups := []string{}
+	for _, value := range result.GetValue() {
+		data := *value.Entity.GetAdditionalData()["displayName"].(*string)
+		adgroups = append(adgroups, data)
+	}
+
+	for {
+		if result.GetNextLink() == nil {
+			break
+		}
+		result, err = memberof.NewMemberOfRequestBuilder(*result.GetNextLink(), requestAdapter).Get(nil)
+		if err != nil {
+			fmt.Printf("Error getting Adgroups: %v\n", err)
+			return nil, err
+		}
+		for _, value := range result.GetValue() {
+			data := *value.Entity.GetAdditionalData()["displayName"].(*string)
+			adgroups = append(adgroups, data)
+		}
+	}
+	return adgroups, nil
 }
