@@ -1,0 +1,381 @@
+<div class="theliv-resource-group-content-container">
+    <div *ngIf="gridToggle && popupResource" class="overlay">
+        <div class="popup">
+            <h2>{{popupResource}}.yaml
+                <span class="icon">
+                    <fa-icon [icon]="faCopy" (click)="socialUtil.copyYamlCode(popupTemplate)"></fa-icon>
+                </span>
+            </h2>
+            <a class="close" (click)="close()">&times;</a>
+            <div class="content">
+                <pre class="code-content"><code #codeinput>{{popupTemplate}}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="group-container">
+        <div class="resource-group-header"> 
+            <div class="resource-group-header-title" >
+                <div class="resource-group-header-title-layout" >
+                    <div class="resource-group-header-title-layout-title" >
+                        {{selectedResource.topResourceType.toUpperCase()}}
+                        <div class="resource-group-header-title-icon" [routerLink]="['../../overview']" [queryParams]="{cluster: cluster, namespace: ns}">
+                            <fa-icon [icon]="faArrowLeft"></fa-icon>
+                            <span>Back</span>
+                        </div>
+                    </div>
+                    <div class="resource-group-header-title-layout-subtitle" >
+                        {{selectedResource.name}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div *ngIf="podResource && podResource.length > 0" class="pod-container block"
+            [class.flex-container]="podResource.length > 1">
+            <div class="resource-detail-content" *ngFor="let resource of podResource">
+                <div class="resource-detail-content-header">
+                    <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
+                    <div class="resource-detail-content-header-layout">
+                        <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}: 
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                        </div>
+                        <div class="resource-detail-content-subtitle error-msg">
+                            {{resource.issue.name}}
+                            <span class="resource-detail-content-time">{{resource.issue.createdTime | date:'MMM d, y'}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-container">
+                    <table id="grid-table">
+                        <tr class="grid-head">
+                            <th>Node</th>
+                            <th>Pod IP</th>
+                            <th>Images</th>
+                        </tr>
+                        <tr class="grid-body animate-repeat">
+                            <td>{{resource.metadata.spec.nodeName}}</td>
+                            <td>{{resource.metadata.status.podIP}}</td>
+                            <td>
+                                <div *ngFor="let imageList of resource.metadata.spec.containers">{{imageList.image}}
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="detail-msg">
+                        <div class="detail-msg-issues">
+                            <div>
+                                <fa-icon [icon]="faExclamationTriangle"></fa-icon>Issues Found:
+                            </div>
+                            <p>{{resource.issue.description}}</p>
+                            <p *ngIf="resource.issue.reason">Reason: {{resource.reason}}</p>
+                        </div>
+                        <div class="detail-msg-solution">
+                            <div>
+                                <fa-icon [icon]="faLightbulb"></fa-icon>Recommend Solutions:
+                            </div>
+                            <p *ngIf="!resource.issue.solutions">No recommend solution</p>
+                            <ul *ngIf="resource.issue.solutions">
+                                <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.deeplink" class="detail-msg-link">
+                            <div>
+                                <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
+                            </div>
+                            <ul *ngIf="resource.deeplink">
+                                <li *ngFor="let deeplink of resource.deeplink | keyvalue">
+                                    <a class="link" target="_blank" [href]="deeplink.value">{{deeplink.key}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.issue.documents" class="detail-msg-docs">
+                            <div *ngFor="let document of resource.issue.documents">
+                                <fa-icon [icon]="faBookReader"></fa-icon>
+                                <a class="link" target="_blank" [href]="document">Click here to view supporting
+                                    documentation</a>
+                            </div>
+                        </div>
+                        <div class="label-content">
+                            <label class="detail-label" *ngFor="let label of resource.labels | keyvalue">{{label.key}}:
+                                {{label.value}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="deployResource && deployResource.length > 0" class="deployment-container block">
+            <div class="resource-detail-content" *ngFor="let resource of deployResource">
+                <div class="resource-detail-content-header">
+                    <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
+                    <div class="resource-detail-content-header-layout">
+                        <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}:
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                        </div>
+                        <div class="resource-detail-content-subtitle error-msg">
+                            {{resource.issue.name}}
+                            <span class="resource-detail-content-time">{{resource.issue.createdTime | date:'MMM d, y'}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-container">
+                    <div class="detail-msg">
+                        <div class="detail-msg-issues">
+                            <div>
+                                <fa-icon [icon]="faExclamationTriangle"></fa-icon>Issues Found:
+                            </div>
+                            <p>{{resource.issue.description}}</p>
+                            <p *ngIf="resource.issue.reason">Reason: {{resource.reason}}</p>
+                        </div>
+                        <div class="detail-msg-solution">
+                            <div>
+                                <fa-icon [icon]="faLightbulb"></fa-icon>Recommend Solutions:
+                            </div>
+                            <p *ngIf="!resource.issue.solutions">No recommend solution</p>
+                            <ul *ngIf="resource.issue.solutions">
+                                <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.deeplink" class="detail-msg-link">
+                            <div>
+                                <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
+                            </div>
+                            <ul *ngIf="resource.deeplink">
+                                <li *ngFor="let deeplink of resource.deeplink | keyvalue">
+                                    <a class="link" target="_blank" [href]="deeplink.value">{{deeplink.key}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.issue.documents" class="detail-msg-docs">
+                            <div *ngFor="let document of resource.issue.documents">
+                                <fa-icon [icon]="faBookReader"></fa-icon>
+                                <a class="link" target="_blank" [href]="document">Check the reference document related
+                                    to this issue</a>
+                            </div>
+                        </div>
+                        <div class="label-content">
+                            <label class="detail-label" *ngFor="let label of resource.labels | keyvalue">{{label.key}}:
+                                {{label.value}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+        <div *ngIf="svcResource && svcResource.length > 0" class="service-container block">
+            <div class="resource-detail-content" *ngFor="let resource of svcResource; let index = index">
+                <div class="resource-detail-content-header">
+                    <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
+                    <div class="resource-detail-content-header-layout">
+                        <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}:
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                        </div>
+                        <div class="resource-detail-content-subtitle error-msg">
+                            {{resource.issue.name}}
+                            <span class="resource-detail-content-time">{{resource.issue.createdTime | date:'MMM d, y'}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-container">
+                    <table id="grid-table">
+                        <tr class="grid-head">
+                            <th>Type</th>
+                            <th>Cluster-IP</th>
+                            <th>Port(s)</th>
+                            <th>Target Port</th>
+                            <th>Selector</th>
+                        </tr>
+                        <tr class="grid-body animate-repeat">
+                            <td>{{resource.metadata.spec.type}}</td>
+                            <td>{{resource.metadata.spec.clusterIP}}</td>
+                            <td>{{resource.metadata.spec.ports[0].port}}</td>
+                            <td>{{resource.metadata.spec.ports[0].targetPort}}</td>
+                            <td *ngFor="let selector of resource.metadata.spec.selector| keyvalue">{{selector.key}}={{selector.value}}</td>
+                        </tr>
+                    </table>
+                    <!-- <h5>Selector:</h5>
+                    <div class="selector-content">
+                        <label class="detail-label" *ngFor="let selector of resource.metadata.spec.selector| keyvalue">{{selector.key}}{{selector.value}}</label>
+                    </div> -->
+                </div>
+                <div class="grid-container">
+                    <div class="detail-msg">
+                        <div class="detail-msg-issues">
+                            <div>
+                                <fa-icon [icon]="faExclamationTriangle"></fa-icon>Issues Found:
+                            </div>
+                            <p>{{resource.issue.description}}</p>
+                            <p *ngIf="resource.issue.reason">Reason: {{resource.reason}}</p>
+                        </div>
+                        <div class="detail-msg-solution">
+                            <div>
+                                <fa-icon [icon]="faLightbulb"></fa-icon>Recommend Solutions:
+                            </div>
+                            <p *ngIf="!resource.issue.solutions">No recommend solution</p>
+                            <ul *ngIf="resource.issue.solutions">
+                                <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.deeplink" class="detail-msg-link">
+                            <div>
+                                <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
+                            </div>
+                            <ul *ngIf="resource.deeplink">
+                                <li *ngFor="let deeplink of resource.deeplink | keyvalue">
+                                    <a class="link" target="_blank" [href]="deeplink.value">{{deeplink.key}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.issue.documents" class="detail-msg-docs">
+                            <div *ngFor="let document of resource.issue.documents">
+                                <fa-icon [icon]="faBookReader"></fa-icon>
+                                <a class="link" target="_blank" [href]="document">Check the reference document related
+                                    to this issue</a>
+                            </div>
+                        </div>
+                        <div class="label-content">
+                            <label class="detail-label" *ngFor="let label of resource.labels | keyvalue">{{label.key}}:
+                                {{label.value}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="ingressResource && ingressResource.length > 0" class="ingress-container block"
+            [class.flex-container]="ingressResource.length > 1">
+            <div class="resource-detail-content" *ngFor="let resource of ingressResource; let index = index">
+                <div class="resource-detail-content-header">
+                    <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
+                    <div class="resource-detail-content-header-layout">
+                        <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}:
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                        </div>
+                        <div class="resource-detail-content-subtitle error-msg">
+                            {{resource.issue.name}}
+                            <span class="resource-detail-content-time">{{resource.issue.createdTime | date:'MMM d, y'}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-container">
+                    <table id="grid-table">
+                        <tr class="grid-head">
+                            <th *ngIf="resource.metadata.spec.backend">Backend</th>
+                            <th *ngIf="resource.metadata.spec.defaultBackend">Default Backend</th>
+                            <th>Hosts</th>
+                            <th>Address</th>
+                        </tr>
+                        <tr class="grid-body animate-repeat">
+                            <td *ngIf="resource.metadata.spec.backend">{{resource.metadata.spec.backend.serviceName}}:{{resource.metadata.spec.backend.servicePort}}</td>
+                            <td *ngIf="resource.metadata.spec.defaultBackend && resource.metadata.spec.defaultBackend.service">{{resource.metadata.spec.defaultBackend.service.name}}:{{resource.metadata.spec.defaultBackend.service.port.number ? resource.metadata.spec.defaultBackend.service.port.number : resource.metadata.spec.defaultBackend.service.port.name}}</td>
+                            <td *ngFor="let rule of resource.metadata.spec.rules">{{rule.host}}</td>
+                            <td>{{resource.metadata.status.loadBalancer.ingress[0].hostname}}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="grid-container">
+                    <div class="detail-msg">
+                        <div class="detail-msg-issues">
+                            <div>
+                                <fa-icon [icon]="faExclamationTriangle"></fa-icon>Issues Found:
+                            </div>
+                            <p>{{resource.issue.description}}</p>
+                            <p *ngIf="resource.issue.reason">Reason: {{resource.reason}}</p>
+                        </div>
+                        <div class="detail-msg-solution">
+                            <div>
+                                <fa-icon [icon]="faLightbulb"></fa-icon>Recommend Solutions:
+                            </div>
+                            <p *ngIf="!resource.issue.solutions">No recommend solution</p>
+                            <ul *ngIf="resource.issue.solutions">
+                                <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.deeplink" class="detail-msg-link">
+                            <div>
+                                <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
+                            </div>
+                            <ul *ngIf="resource.deeplink">
+                                <li *ngFor="let deeplink of resource.deeplink | keyvalue">
+                                    <a class="link" target="_blank" [href]="deeplink.value">{{deeplink.key}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.issue.documents" class="detail-msg-docs">
+                            <div *ngFor="let document of resource.issue.documents">
+                                <fa-icon [icon]="faBookReader"></fa-icon>
+                                <a class="link" target="_blank" [href]="document">Check the reference document related
+                                    to this issue</a>
+                            </div>
+                        </div>
+                        <div class="label-content">
+                            <label class="detail-label" *ngFor="let label of resource.labels | keyvalue">{{label.key}}:
+                                {{label.value}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div *ngIf="otherResource && otherResource.length > 0" class="other-container block">
+            <div class="resource-detail-content" *ngFor="let resource of otherResource">
+                <div class="resource-detail-content-header">
+                    <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
+                    <div class="resource-detail-content-header-layout">
+                        <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}:
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                        </div>
+                        <div class="resource-detail-content-subtitle error-msg">
+                            {{resource.issue.name}}
+                            <span class="resource-detail-content-time">{{resource.issue.createdTime | date:'MMM d, y'}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-container">
+                    <div class="detail-msg">
+                        <div class="detail-msg-issues">
+                            <div>
+                                <fa-icon [icon]="faExclamationTriangle"></fa-icon>Issues Found:
+                            </div>
+                            <p>{{resource.issue.description}}</p>
+                            <p *ngIf="resource.issue.reason">Reason: {{resource.reason}}</p>
+                        </div>
+                        <div class="detail-msg-solution">
+                            <div>
+                                <fa-icon [icon]="faLightbulb"></fa-icon>Recommend Solutions:
+                            </div>
+                            <p *ngIf="!resource.issue.solutions">No recommend solution</p>
+                            <ul *ngIf="resource.issue.solutions">
+                                <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.deeplink" class="detail-msg-link">
+                            <div>
+                                <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
+                            </div>
+                            <ul *ngIf="resource.deeplink">
+                                <li *ngFor="let deeplink of resource.deeplink | keyvalue">
+                                    <a class="link" target="_blank" [href]="deeplink.value">{{deeplink.key}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.issue.documents" class="detail-msg-docs">
+                            <div *ngFor="let document of resource.issue.documents">
+                                <fa-icon [icon]="faBookReader"></fa-icon>
+                                <a class="link" target="_blank" [href]="document">Check the reference document related
+                                    to this issue</a>
+                            </div>
+                        </div>
+                        <div class="label-content">
+                            <label class="detail-label" *ngFor="let label of resource.labels | keyvalue">{{label.key}}:
+                                {{label.value}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>

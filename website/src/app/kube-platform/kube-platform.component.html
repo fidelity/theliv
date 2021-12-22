@@ -1,0 +1,153 @@
+<div class="search-menu">
+    <div class="search-bar">
+        <fa-icon class="search" [icon]="faSearch"></fa-icon>
+        <input type="text" readonly class="search-box" autofocus="">
+        <div class="search-items">
+            <div *ngIf="selectedClusters" class="search item">
+                <span>{{selectedClusters}}</span>
+                <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedClusters=''"></fa-icon>
+            </div>
+            <div *ngIf="selectedNs" class="search item">
+                <span>{{selectedNs}}</span>
+                <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedNs=''"></fa-icon>
+            </div>
+        </div>
+    </div>
+
+    <div class="search-cluster">
+        <img class="search-icon" src="assets/images/kube/cluster.svg" />
+        <!--
+        <div class="select">
+            <fa-icon class="fa-spin" *ngIf="clusters && clusters.length === 0" [icon]="faSpinner"></fa-icon>
+            <select [(ngModel)]="selectedClusters" name="cluster" (change)="getNSByCluster()" required>
+                <option value="" disabled selected>Cluster</option>
+                <option *ngFor="let cluster of clusters" [value]="cluster" [attr.selected]="cluster === selectedClusters ? true : null ">
+                    {{cluster}}
+                </option>
+            </select>
+        </div>
+        -->
+        <mat-form-field class="fit-width">
+            <input type="text" matInput [formControl]="clusterFormControl" [matAutocomplete]="auto" [(ngModel)]="selectedClusters" placeholder="Cluster">
+            <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" (optionSelected)="getNSByCluster()">
+                <mat-option *ngFor="let option of clusterOptions | async" [value]="option">
+                    {{option}}
+                </mat-option>
+            </mat-autocomplete>
+        </mat-form-field>
+    </div>
+    
+    <div class="search-namespace">
+        <img class="search-icon" src="assets/images/kube/ns.png" />
+        <!--
+        <div class="select">
+            <fa-icon class="fa-spin" *ngIf="namespaces && namespaces.length === 0" [icon]="faSpinner"></fa-icon>
+            <select [(ngModel)]="selectedNs" name="namespace" (change)="getSelectedQuery($event)" required>
+                <option value="" disabled selected>Namespace</option>
+                <option *ngFor="let ns of namespaces" [value]="ns"
+                [attr.selected]="ns === selectedNs ? true : null ">
+                    {{ns}}
+                </option>
+            </select>
+        </div>
+        -->
+        <mat-form-field class="fit-width">
+            <mat-label>Namespace</mat-label>
+            <mat-select [(value)]="selectedNs" (selectionChange)="getSelectedQuery($event)">
+                <mat-option *ngFor="let namespace of namespaces" [value]="namespace.value">
+                    {{namespace.text}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+
+    <!-- <button class="search-button" [disabled]="selectedNs==='' || selectedClusters===''" (click)="getKubeResourceInfo()">Diagnosis</button> -->
+</div>
+
+<div class="main-container">
+    <div class="search-type">
+        <div class="alert">
+            <div class="alert-title"><fa-icon [icon]="faBell" style="margin-right:5px;"></fa-icon>Notification</div>
+            <div class="alert-subtitle">
+                theliv.io is an intelligence platform, which is used to provide a place for user to check and diagnosis Kubernetes issues.
+                We'd like you to join us to optimize it. <a href="#">Feedback</a>.
+            </div>
+        </div>
+        <div class="resource-filter">
+            <div class="resource-filter-title">Type of resource</div>
+            <div class="resource-wrapper">
+                <div class="type-container" *ngFor="let type of resourceTypes">
+                    <input type="checkbox" id="{{type.name.toLowerCase()}}" class="resource-style" [value]="type.name"
+                    [(ngModel)]="type.isChecked" (change)="changeSelection($event, 'type')">
+                    <label for="{{type.name.toLowerCase()}}">{{type.name}}</label>
+                    <span class="resource-number">{{type.count}}</span>
+                </div>
+            </div>
+        </div>
+        <div class="resource-filter">
+            <div class="resource-filter-title">Problem Domain</div>
+            <div class="resource-wrapper">
+                <div class="type-container" *ngFor="let issue of proDomains">
+                    <input type="checkbox" id="{{issue.name.toLowerCase()}}" class="resource-style" [value]="issue.name"
+                    [(ngModel)]="issue.isChecked" (change)="changeSelection($event, 'domain')">
+                    <label for="{{issue.name.toLowerCase()}}">{{issue.name}}</label>
+                    <span class="resource-number">{{issue.count}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="loading" class="loading">
+        <fa-icon class="fa-spin" [icon]="faSpinner"></fa-icon>
+    </div>
+
+    <div *ngIf="resourceGroups && resourceGroups.length === 0 && selectedClusters && selectedNs && !loading" class="searched-resources">
+        <div class="searched-show">Cluster: {{selectedClusters}} | Namespace: {{selectedNs}}</div>
+        <div *ngIf="selectedClusters && selectedNs && !loading" class="searched-content">
+            <ul class="process">
+                <li *ngIf="count===0" class="process__item">
+                    <span class="process__title">No Issue(s) Detected!</span>
+                    <span class="process__subtitle"><fa-icon [icon]="faCheck"></fa-icon>You are good to go</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div *ngIf="resourceGroups && resourceGroups.length >0 && !loading" class="searched-resources">
+        <div class="searched-bar">
+            <!-- <div class="searched-show">Overview of issues in cluster: {{selectedClusters}}</div> -->
+            <div class="searched-show">Cluster: {{selectedClusters}} | Namespace: {{selectedNs}}</div>
+            <!-- <div class="searched-time">{{now | date:'fullDate'}}</div> -->
+            <!-- <div class="searched-sort select">Sort by:
+                <select [(ngModel)]="sortBy" name="sort" required>
+                    <option deafult selected [value]="'time'">Newest Post</option>
+                </select>
+            </div> -->
+        </div>
+        <div class="searched-content">
+            <ul class="process">
+                <!-- <li class="process__item">
+                  <span class="process__number">0</span>
+                  <span class="process__title">Cluster</span>
+                  <span class="process__subtitle">{{selectedClusters}} is healthy !</span>
+                </li>
+              
+                <li class="process__item">
+                  <span class="process__number">0</span>
+                  <span class="process__title">Namespace</span>
+                  <span class="process__subtitle">{{selectedNs}} is healthy !</span>
+                </li> -->
+              
+                <li *ngIf="count>0" class="process__item" [class.issue]="count>0">
+                  <!-- <span class="process__number">{{count}} Issue(s) found</span> -->
+                  <span class="process__title">{{count}} Issue(s) found</span>
+                  <!-- <span class="process__subtitle">Click on the report cards below for more details.</span> -->
+                </li>
+            </ul>
+        </div>
+
+        <div class="resource-card-container">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+</div>

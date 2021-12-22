@@ -1,0 +1,120 @@
+.logo {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 28px;
+  cursor: pointer;
+  &::after{
+    content: "";
+    border-right: 12px solid var(--active-color);
+    width: 6px;
+    height: 20px;
+    margin-left: -0.12em;
+  }
+  .logo-icon {
+    height: 60px;
+    margin-right: 12px;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  transition: box-shadow 0.3s;
+  flex-shrink: 0;
+  padding: 0 40px;
+  white-space: nowrap;
+  background-color: var(--header-bg-color);
+  height: 60px;
+  width: 100%;
+  font-size: 14px;
+  justify-content: space-between;
+  &-menu a {
+    text-decoration: none;
+    color: var(--body-color);
+    font-weight: 500;
+  }
+  &-menu a:hover {
+    color: var(--active-color);
+  }
+  &-menu a:not(:first-child) {
+    margin-left: 30px;
+  }
+  &-menu a.active {
+    color: var(--active-color);
+  }
+}
+
+.user-settings {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  svg {
+    width: 20px;
+    color: #94949f;
+    margin-top: 6px;
+  }
+  // fa-icon {
+  //   width: 20px;
+  // }
+  .dark-light {
+    position: relative;
+    margin-right: 8px;
+    padding-right: 8px;
+    border-right: 2px solid #d6d6db;
+  }
+  .user-menu {
+    position: relative;
+    margin-right: 8px;
+    padding-right: 8px;
+    border-right: 2px solid #d6d6db;
+    &:before {
+      position: absolute;
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      border: 2px solid var(--header-bg-color);
+      right: 6px;
+      top: -1px;
+      background-color: var(--active-color);
+    }
+  }
+  .user-profile {
+    // width: 32px;
+    width: 20px;
+    // height: 32px;
+    border-radius: 50%;
+    -o-object-fit: cover;
+    object-fit: cover;
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+}
+
+@media screen and (max-width: 760px) {
+  .user-name {
+    display: none;
+  }
+
+  .user-profile {
+    margin-right: 0;
+  }
+}
+
+@media screen and (max-width: 620px) {
+  .header-menu a:not(:first-child) {
+    margin-left: 10px;
+  }
+}
+@media screen and (max-width: 590px) {
+  .header-menu {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 380px) {
+  .header {
+    padding: 0 20px;
+  }
+}

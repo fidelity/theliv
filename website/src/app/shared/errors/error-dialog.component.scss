@@ -1,0 +1,65 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    max-height: 100%;
+    height: 100%;
+    z-index: 5;
+    // background: rgba(255,255,255,0.5);
+    background: rgba(0, 0, 0, 0.7);
+    .dialog {
+        margin: 20px auto;
+        padding: 10px 25px;
+        background: var(--header-bg-color);
+        border-radius: 5px;
+        width: 30%;
+        height: 20%;
+        // height: calc(100vh - 40px);
+        // position: relative;
+        position: fixed;
+        top: 20%;
+        left: 35%;
+        right: 35%;
+        // transition: all 5s ease-in-out;
+    }
+  
+    .dialog h2 {
+        margin-top: 10px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--subtitle-color);
+        font-family: Tahoma, Arial, sans-serif;
+        span.icon {
+            font-size: 18px;
+            margin-left: 10px;
+            cursor: pointer;
+            fa-icon {
+                color: var(--subtitle-color);
+                &:hover {
+                    color: var(--active-color);
+                }
+            }
+        }
+    }
+    
+    .dialog .close {
+        position: absolute;
+        top: 15px;
+        right: 30px;
+        transition: all 200ms;
+        font-size: 30px;
+        color: var(--subtitle-color);
+        font-weight: bold;
+        text-decoration: none;
+        &:hover {
+            border-bottom: none;
+        }
+    }
+    .dialog .close:hover {
+        color: var(--active-color);
+    }
+    .dialog .content {
+        height: calc(100vh - 150px);
+        overflow: auto;
+    }
+  }
