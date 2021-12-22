@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.13.1
-	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.8.2
+	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.9.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.1
 	github.com/microsoft/kiota/authentication/go/azure v0.0.0-20211221082943-f98d671bb86d

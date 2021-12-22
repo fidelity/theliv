@@ -100,8 +100,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.13.1 h1:HTcy8LAab
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.13.1/go.mod h1:K19IPbjJzW6rWEm7pPNODMmTio71n1/rRE+96nHJ9sU=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.5.2 h1:CKdUNKmuilw/KNmO2Q53Av8u+ZyXMC2M9aX8Z+c/gzg=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.5.2/go.mod h1:FgR1tCsn8C6+Hf+N5qkfrE4IXvUL1RgW87sunJ+5J4I=
-github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.8.2 h1:F7U6Kwf2bNTtTEKZqgj4aJtxSqwcxO9Y8wY96aW6FJk=
-github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.8.2/go.mod h1:qTg61xuI2odbRW3V0eMBWgKpyVPpICeN+kQjl21/hys=
+github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.9.0 h1:cnnMn39MkN2wFwjNpo9P0u5UuJLVSg/OI9oK5qyLH2U=
+github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.9.0/go.mod h1:qTg61xuI2odbRW3V0eMBWgKpyVPpICeN+kQjl21/hys=
 github.com/aws/aws-sdk-go-v2/service/sso v1.6.2/go.mod h1:KnIpszaIdwI33tmc/W/GGXyn22c1USYxA/2KyvoeDY0=
 github.com/aws/aws-sdk-go-v2/service/sts v1.11.1/go.mod h1:UV2N5HaPfdbDpkgkz4sRzWCvQswZjdO1FfqCWl0t7RA=
 github.com/aws/smithy-go v1.9.0 h1:c7FUdEqrQA1/UVKKCNDFQPNKGp4FQg3YW4Ck5SLTG58=
