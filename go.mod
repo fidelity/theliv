@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.6.4
 	github.com/aws/aws-sdk-go-v2/service/acm v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.25.0
-	github.com/aws/aws-sdk-go-v2/service/eks v1.15.1
+	github.com/aws/aws-sdk-go-v2/service/eks v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.8.2
 	github.com/go-chi/chi/v5 v5.0.7
