@@ -67,6 +67,9 @@ func main() {
 	// userinfo
 	r.Route("/theliv-api/v1/userinfo", router.Userinfo)
 
+	// feedback
+	r.Route("/theliv-api/v1/feedbacks", router.SubmitFeedback)
+
 	// rbac
 	r.Route("/theliv-api/v1/rbac", router.Rbac)
 
