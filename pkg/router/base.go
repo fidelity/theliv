@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"reflect"
 
+	theliverr "github.com/fidelity/theliv/pkg/err"
 	"github.com/go-chi/render"
 )
 
@@ -20,4 +21,9 @@ func processEmpty(w http.ResponseWriter, r *http.Request, content interface{}) b
 		render.Respond(w, r, struct{}{})
 	}
 	return true
+}
+
+func processError(w http.ResponseWriter, r *http.Request, err error) {
+	w.WriteHeader(theliverr.GetStatusCode(err))
+	render.JSON(w, r, err)
 }
