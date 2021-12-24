@@ -219,6 +219,8 @@ export class KubePlatformComponent implements OnInit {
       this.selectedNs = ''
       this.namespaces = []
       this.resourceGroups = []
+      this.resourceTypes = []
+      this.proDomains = []
     }
   }
 

@@ -5,7 +5,7 @@
         <div class="search-items">
             <div *ngIf="selectedClusters" class="search item">
                 <span>{{selectedClusters}}</span>
-                <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedClusters=''; selectedNs=''; namespaces=[]; resourceGroups=[]"></fa-icon>
+                <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedClusters=''; selectedNs=''; namespaces=[]; resourceGroups=[]; resourceTypes=[]; proDomains=[]"></fa-icon>
             </div>
             <div *ngIf="selectedNs" class="search item">
                 <span>{{selectedNs}}</span>

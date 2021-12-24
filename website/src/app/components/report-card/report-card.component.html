@@ -24,7 +24,7 @@
         
         <div class="resource-cards">
             <div class="resource-card" [ngClass]="{'resource-card-level-0': resource.level===0}"  *ngFor="let resource of resourceGroup; let index = index">
-                <div *ngIf="resource.resources" [routerLink]="['../issue', resource.id]" [queryParams]="{cluster: cluster, namespace: ns}">
+                <div *ngIf="resource.resources" [routerLink]="['../issue', resource.id]">
                     <div class="resource-card-header">
                         <img class="kube-icon" src="assets/images/kube/{{resource.topResourceType.toLowerCase()}}.png" />
                         <div class="resource-action">
