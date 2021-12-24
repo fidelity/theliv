@@ -5,7 +5,7 @@
         <div class="search-items">
             <div *ngIf="selectedClusters" class="search item">
                 <span>{{selectedClusters}}</span>
-                <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedClusters=''"></fa-icon>
+                <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedClusters=''; selectedNs=''; namespaces=[]; resourceGroups=[]"></fa-icon>
             </div>
             <div *ngIf="selectedNs" class="search item">
                 <span>{{selectedNs}}</span>
@@ -16,19 +16,8 @@
 
     <div class="search-cluster">
         <img class="search-icon" src="assets/images/kube/cluster.svg" />
-        <!--
-        <div class="select">
-            <fa-icon class="fa-spin" *ngIf="clusters && clusters.length === 0" [icon]="faSpinner"></fa-icon>
-            <select [(ngModel)]="selectedClusters" name="cluster" (change)="getNSByCluster()" required>
-                <option value="" disabled selected>Cluster</option>
-                <option *ngFor="let cluster of clusters" [value]="cluster" [attr.selected]="cluster === selectedClusters ? true : null ">
-                    {{cluster}}
-                </option>
-            </select>
-        </div>
-        -->
         <mat-form-field class="fit-width">
-            <input type="text" matInput [formControl]="clusterFormControl" [matAutocomplete]="auto" [(ngModel)]="selectedClusters" placeholder="Cluster">
+            <input type="text" matInput [formControl]="clusterFormControl" [matAutocomplete]="auto" (input)="checkClusterBlank()" [(ngModel)]="selectedClusters" placeholder="Cluster">
             <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" (optionSelected)="getNSByCluster()">
                 <mat-option *ngFor="let option of clusterOptions | async" [value]="option">
                     {{option}}
@@ -39,18 +28,6 @@
     
     <div class="search-namespace">
         <img class="search-icon" src="assets/images/kube/ns.png" />
-        <!--
-        <div class="select">
-            <fa-icon class="fa-spin" *ngIf="namespaces && namespaces.length === 0" [icon]="faSpinner"></fa-icon>
-            <select [(ngModel)]="selectedNs" name="namespace" (change)="getSelectedQuery($event)" required>
-                <option value="" disabled selected>Namespace</option>
-                <option *ngFor="let ns of namespaces" [value]="ns"
-                [attr.selected]="ns === selectedNs ? true : null ">
-                    {{ns}}
-                </option>
-            </select>
-        </div>
-        -->
         <mat-form-field class="fit-width">
             <mat-label>Namespace</mat-label>
             <mat-select [(value)]="selectedNs" (selectionChange)="getSelectedQuery($event)">
