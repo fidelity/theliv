@@ -147,6 +147,13 @@ $primary-color: #003c71;
             color: var(--subtitle-color);
             line-height: 1.6em;
         }
+        .alert-feedback {
+            font-size: 14px;
+            color: var(--subtitle-color);
+            line-height: 1.6em;
+            margin-top: 8px;
+            font-weight: 500;
+        }
         .alert input {
             width: 100%;
             padding: 10px;

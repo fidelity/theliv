@@ -70,7 +70,7 @@
             <div class="alert-title"><fa-icon [icon]="faBell" style="margin-right:5px;"></fa-icon>Notification</div>
             <div class="alert-subtitle">
                 theliv.io is an intelligence platform, which is used to provide a place for user to check and diagnosis Kubernetes issues.
-                We'd like you to join us to optimize it. <a href="#">Feedback</a>.
+                We'd like you to join us to optimize it. <a (click)="openFeedbackDialog()"><fa-icon [icon]="faPencialAlt" style="margin: 0 5px;"></fa-icon>Feedback</a>
             </div>
         </div>
         <div class="resource-filter">

@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { faSearch, faTimes, faSpinner, faBell, faCheck} from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTimes, faSpinner, faBell, faCheck, faPencilAlt} from '@fortawesome/free-solid-svg-icons';
 import { KubernetesService } from '../services/kubernetes.service';
 import { debounceTime, delay, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { MatOption } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
+import { UserFeedbackComponent } from '../components/user-feedback/user-feedback.component';
 
 export interface NamespaceOption {
   text: string
@@ -23,6 +25,7 @@ export class KubePlatformComponent implements OnInit {
   faSpinner = faSpinner;
   faBell = faBell;
   faCheck = faCheck;
+  faPencialAlt = faPencilAlt;
   loading = false;
   public resourceTypes: any;
   public proDomains: any;
@@ -45,10 +48,13 @@ export class KubePlatformComponent implements OnInit {
   clusterOptions: Observable<string[]> | undefined;
   namespaces: NamespaceOption[] = []
 
+  feedback = '';
+
   constructor(
     private kubeService: KubernetesService,
     private route: ActivatedRoute,
-    private router: Router) { }
+    private router: Router, 
+    private dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.resourceGroups = null;
@@ -259,6 +265,18 @@ export class KubePlatformComponent implements OnInit {
   getSelectedQuery(e: any): void {
     // console.log(e.value);
     this.router.navigate(['kubernetes'], { queryParams: { cluster: this.selectedClusters, namespace: e.value } });
+  }
+
+
+  openFeedbackDialog(): void {
+    const dialogRef = this.dialog.open(UserFeedbackComponent, {
+      data: {feedback: this.feedback},
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      this.feedback = result;
+    });
   }
 
 }

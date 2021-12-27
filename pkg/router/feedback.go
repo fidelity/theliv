@@ -3,7 +3,6 @@ package router
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -29,10 +28,7 @@ func SubmitFeedback(r chi.Router) {
 		var d Feedback
 		err := json.NewDecoder(r.Body).Decode(&d)
 		if err != nil {
-			//TODO log & error handling
-			log.Printf("Error reading body: %v", err)
-			http.Error(w, "can't read body", http.StatusBadRequest)
-			return
+			processError(w, r, err)
 		}
 		currentTime := time.Now()
 		timestr := getTimeStr(currentTime)
@@ -41,9 +37,7 @@ func SubmitFeedback(r chi.Router) {
 
 		user, err := authmiddleware.GetUser(r)
 		if err != nil {
-			//TODO log & error handling
-			http.Error(w, err.Error(), 500)
-			return
+			processError(w, r, err)
 		}
 		data := FeebackData{
 			User:    user,
@@ -53,13 +47,11 @@ func SubmitFeedback(r chi.Router) {
 
 		err = etcd.Put(key, data)
 		if err != nil {
-			//TODO log & error handling
-			http.Error(w, err.Error(), 500)
-			return
+			processError(w, r, err)
+		} else {
+			s := "Feedback received."
+			render.JSON(w, r, s)
 		}
-
-		s := "Feedback received."
-		render.JSON(w, r, s)
 	})
 
 }

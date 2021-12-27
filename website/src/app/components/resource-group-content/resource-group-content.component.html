@@ -1,18 +1,17 @@
-<div class="theliv-resource-group-content-container">
-    <div *ngIf="gridToggle && popupResource" class="overlay">
-        <div class="popup">
-            <h2>{{popupResource}}.yaml
-                <span class="icon">
-                    <fa-icon [icon]="faCopy" (click)="socialUtil.copyYamlCode(popupTemplate)"></fa-icon>
-                </span>
-            </h2>
-            <a class="close" (click)="close()">&times;</a>
-            <div class="content">
-                <pre class="code-content"><code #codeinput>{{popupTemplate}}</code></pre>
-            </div>
+<div *ngIf="gridToggle && popupResource" class="overlay">
+    <div class="popup">
+        <h2>{{popupResource}}.yaml
+            <span class="icon">
+                <fa-icon [icon]="faCopy" (click)="socialUtil.copyYamlCode(popupTemplate)"></fa-icon>
+            </span>
+        </h2>
+        <a class="close" (click)="close()">&times;</a>
+        <div class="content">
+            <pre class="code-content"><code #codeinput>{{popupTemplate}}</code></pre>
         </div>
     </div>
-
+</div>
+<div class="theliv-resource-group-content-container">
     <div class="group-container">
         <div class="resource-group-header"> 
             <div class="resource-group-header-title" >
