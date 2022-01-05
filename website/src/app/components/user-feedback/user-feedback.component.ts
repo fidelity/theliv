@@ -30,7 +30,16 @@ export class UserFeedbackComponent implements OnInit {
   onSubmit(): void {
     this.complete = true;
     console.log(this.data.feedback);
-    this.kubeService.postUserFeedback(this.data.feedback);
+    this.kubeService.postUserFeedback(this.data.feedback).subscribe(
+      (res: any) => {
+        if (res) {
+          console.log(res);
+        }
+      },
+      (err: any) => {
+        console.log('Post Feedback Error: ', err);
+      }
+    );
   }
 
   
