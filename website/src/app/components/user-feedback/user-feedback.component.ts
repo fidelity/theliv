@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import { KubernetesService } from 'src/app/services/kubernetes.service';
@@ -14,6 +15,8 @@ export interface FeedbackData {
 export class UserFeedbackComponent implements OnInit {
 
   complete = false;
+  completeMsg = '';
+  completeError = false;
 
   constructor(
     public dialogRef: MatDialogRef<UserFeedbackComponent>,
@@ -35,12 +38,14 @@ export class UserFeedbackComponent implements OnInit {
         if (res) {
           console.log(res);
         }
+        this.completeError = false;
+        this.completeMsg = 'Your feedback has been received. Thank you for helping us improve!';
       },
       (err: any) => {
         console.log('Post Feedback Error: ', err);
+        this.completeError = true;
+        this.completeMsg = 'Error occurred when posting feedback: ' + err.status + ' ' + err.statusText;
       }
     );
   }
-
-  
 }

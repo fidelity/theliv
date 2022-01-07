@@ -163,6 +163,23 @@ $primary-color: #003c71;
             border: none;
             font-size: 13px;
         }
+        button {
+            border: none;
+            display: inline-block;
+            color: var(--active-color);
+            background-color: var(--alert-bg-color);
+            padding: 8px 10px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            height: 50px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            box-shadow: 4px 6px 10px 2px var(--search-border-color);
+            &:hover{
+                transform: scale(1.06);
+            }
+        }
     }
 
     .resource-filter {

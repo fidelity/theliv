@@ -5,16 +5,16 @@
             <div>
                 <p>What can we do better?</p>
                 <div class="textarea">
-                    <textarea name="" id="" [(ngModel)]="data.feedback"></textarea>
+                    <textarea maxlength="200" [(ngModel)]="data.feedback"></textarea>
                 </div>
             </div>
             <div class="buttons">
                 <button class="cancel-button " (click)="onNoClick()">Cancel</button>
-                <button class="submit-button" (click)="onSubmit()">Submit</button>
+                <button class="submit-button" (click)="onSubmit()" [disabled]="this.data.feedback.length===0">Submit</button>
             </div>
         </div>
         <div class="feedback-complete" *ngIf="complete">
-            <p>Your feedback has been received. Thank you for helping us improve!</p>
+            <p [ngStyle]="{'color':completeError ? 'red' : '' }">{{completeMsg}}</p>
             <div class="buttons">
                 <button class="cancel-button " (click)="onNoClick()">Ok</button>
             </div>
