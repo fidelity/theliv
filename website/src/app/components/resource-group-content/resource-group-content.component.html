@@ -18,7 +18,7 @@
                 <div class="resource-group-header-title-layout" >
                     <div class="resource-group-header-title-layout-title" >
                         {{selectedResource.topResourceType.toUpperCase()}}
-                        <div class="resource-group-header-title-icon" [routerLink]="['../../overview']">
+                        <div class="resource-group-header-title-icon" [routerLink]="['../../overview']" [queryParams]="{cluster: cluster, namespace: ns}">
                             <fa-icon [icon]="faArrowLeft"></fa-icon>
                             <span>Back</span>
                         </div>
