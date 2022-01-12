@@ -10,6 +10,7 @@ import (
 	"github.com/fidelity/theliv/pkg/auth/authmiddleware"
 	"github.com/fidelity/theliv/pkg/auth/samlmethod"
 	"github.com/fidelity/theliv/pkg/config"
+	err "github.com/fidelity/theliv/pkg/err"
 	logger "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/router"
 
@@ -51,6 +52,9 @@ func main() {
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
 
 	r.Use(authmiddleware.StartAuth)
+
+	// Add panic handling middleware
+	r.Use(err.PanicHandler)
 
 	r.Route("/theliv-api/v1/health", router.HealthCheck)
 

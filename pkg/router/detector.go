@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/fidelity/theliv/internal/problem"
 	"github.com/fidelity/theliv/pkg/config"
-	theliverr "github.com/fidelity/theliv/pkg/err"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	observability "github.com/fidelity/theliv/pkg/observability"
 	datadog "github.com/fidelity/theliv/pkg/observability/datadog"
@@ -23,14 +22,12 @@ func Detector(r chi.Router) {
 }
 
 func detect(w http.ResponseWriter, r *http.Request) {
-	defer theliverr.PanicHandler(w)
 	con, err := service.Detect(createDetectorInputWithContext(r))
 	if err != nil {
-		// TODO error
-		w.WriteHeader(theliverr.GetStatusCode(err))
-		render.JSON(w, r, err)
+		processError(w, r, err)
+	} else {
+		render.JSON(w, r, con)
 	}
-	render.JSON(w, r, con)
 }
 
 func createDetectorInputWithContext(r *http.Request) context.Context {
