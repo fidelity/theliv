@@ -57,7 +57,7 @@ export class KubePlatformComponent implements OnInit {
 
   ngOnInit(): void {
     this.resourceGroups = null;
-    // this.router.routeReuseStrategy.shouldReuseRoute = () => false;h
+    // this.router.routeReuseStrategy.shouldReuseRoute = () => false;
     this.kubeService.getClusters().subscribe((res: any) => {
       if (res) {
         this.clusters = res;
