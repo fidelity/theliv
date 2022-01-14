@@ -19,7 +19,8 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { ErrorDialog } from './shared/errors/error-dialog.component';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input'
-import { MatSelectModule } from '@angular/material/select'
+import { MatSelectModule } from '@angular/material/select';
+import { UserFeedbackComponent } from './components/user-feedback/user-feedback.component'
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import { MatSelectModule } from '@angular/material/select'
     ResourceGroupContentComponent,
     ReportCardComponent,
     KafkaComponent,
-    ErrorDialog
+    ErrorDialog,
+    UserFeedbackComponent
   ],
   imports: [
     BrowserModule,

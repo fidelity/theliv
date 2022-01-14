@@ -1,0 +1,25 @@
+<div class="overlay">
+    <div class="dialog">
+        <h1>Feedback</h1>
+        <div class="feedback" *ngIf="!complete">
+            <div>
+                <p>What can we do better?</p>
+                <div class="textarea">
+                    <textarea maxlength="200" [(ngModel)]="data.feedback"></textarea>
+                </div>
+            </div>
+            <div class="buttons">
+                <button class="cancel-button " (click)="onNoClick()">Cancel</button>
+                <button class="submit-button" (click)="onSubmit()" [disabled]="this.data.feedback.length===0">Submit</button>
+            </div>
+        </div>
+        <div class="feedback-complete" *ngIf="complete">
+            <p [ngStyle]="{'color':completeError ? 'red' : '' }">{{completeMsg}}</p>
+            <div class="buttons">
+                <button class="cancel-button " (click)="onNoClick()">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+

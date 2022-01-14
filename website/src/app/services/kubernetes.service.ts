@@ -57,6 +57,16 @@ export class KubernetesService {
     );
   }
 
+  public postUserFeedback(msg: string): Observable<any> {
+    const url = `${this.kubeEndpoint}/feedbacks`;
+    var body = {
+      "message": msg
+    }
+    return this.httpClient.post(url, body, this.headers).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   private handleError(response: HttpResponse<any> | any): any {
     return throwError(response || 'Service error');
   }
