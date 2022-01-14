@@ -28,6 +28,7 @@
     
     <div class="search-namespace">
         <img class="search-icon" src="assets/images/kube/ns.png" />
+        <fa-icon class="fa-spin" *ngIf="selectedClusters && !clusterInputing && namespaces && namespaces.length === 0" [icon]="faSpinner"></fa-icon>
         <mat-form-field class="fit-width">
             <mat-label>Namespace</mat-label>
             <mat-select [(value)]="selectedNs" (selectionChange)="getSelectedQuery($event)">
