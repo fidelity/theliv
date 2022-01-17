@@ -46,6 +46,7 @@ export class KubePlatformComponent implements OnInit {
   clusterFormControl = new FormControl();
   clusterOptions: Observable<string[]> | undefined;
   namespaces: NamespaceOption[] = []
+  clusterInputing = false
 
   feedback = '';
 
@@ -221,6 +222,7 @@ export class KubePlatformComponent implements OnInit {
   }
 
   checkClusterBlank(){
+    this.clusterInputing = true
     if (this.selectedClusters == '') {
       this.selectedNs = ''
       this.namespaces = []
@@ -231,12 +233,13 @@ export class KubePlatformComponent implements OnInit {
   }
 
   getNSByCluster(): void {
-    this.router.navigate(['kubernetes']);
-    this.resourceGroups = [];
-    this.selectedNs = '';
-    this.kubeService.selectedNs$.next(this.selectedNs);
-    this.kubeService.resourceList$.next(this.resourceGroups);
-    this.getNamespaces()
+    this.clusterInputing = false
+    this.router.navigate(['kubernetes'], { queryParams: { cluster: this.selectedClusters } });
+    // this.resourceGroups = [];
+    // this.selectedNs = '';
+    // this.kubeService.selectedNs$.next(this.selectedNs);
+    // this.kubeService.resourceList$.next(this.resourceGroups);
+    // this.getNamespaces()
   }
 
   getNamespaces(): void {
@@ -258,13 +261,13 @@ export class KubePlatformComponent implements OnInit {
   }
 
   getSelectedQuery(e: any): void {
-    this.router.navigate(['kubernetes']);
-    this.resourceGroups = [];
-    this.kubeService.selectedClusters$.next(this.selectedClusters);
-    this.kubeService.selectedNs$.next(this.selectedNs);
-    if (this.selectedClusters && this.selectedNs) {
-      this.getKubeResourceInfo();
-    }
+    this.router.navigate(['kubernetes'], { queryParams: { cluster: this.selectedClusters, namespace: e.value } });
+    // this.resourceGroups = [];
+    // this.kubeService.selectedClusters$.next(this.selectedClusters);
+    // this.kubeService.selectedNs$.next(this.selectedNs);
+    // if (this.selectedClusters && this.selectedNs) {
+    //   this.getKubeResourceInfo();
+    // }
   }
 
 
