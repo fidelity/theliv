@@ -5,8 +5,8 @@ go 1.17
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v0.12.0
 	github.com/DataDog/datadog-api-client-go v1.7.0
-	github.com/aws/aws-sdk-go-v2 v1.11.2
-	github.com/aws/aws-sdk-go-v2/credentials v1.6.4
+	github.com/aws/aws-sdk-go-v2 v1.13.0
+	github.com/aws/aws-sdk-go-v2/credentials v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.15.1
@@ -33,10 +33,10 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v0.8.2 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.0.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.5.2 // indirect
-	github.com/aws/smithy-go v1.9.0 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.4 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.2.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.7.0 // indirect
+	github.com/aws/smithy-go v1.10.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
