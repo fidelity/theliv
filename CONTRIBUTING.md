@@ -1,6 +1,6 @@
 # Contributing to Theliv
 
-Thank you for considering to contribute to Thelv 🎉👍
+Thank you for considering to contribute to Theliv 🎉👍
 
 This document will provide help on how to go about this. You can contribute in the following ways:
 
