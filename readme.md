@@ -37,3 +37,7 @@ Finally theliv aims to be an extensible framework where custom checks can be plu
 ### Non-Goals
 
 Theliv should NOT be another k8s dashboard. There are lots of dashboards out there today that already does it. E.g K8s dashboard, vmware tanzu octant (https://github.com/vmware-tanzu/octant), Lens IDE etc. While such tools are still very useful, it still depends on how good the developer is comfortable with debugging an issue using those tools. Theliv in contrast does not project data using which you can debug, rather debugs the problem on your behalf and shows it to you. Large enterprises with tens of thousands on developers with varying knowledge on infrastructure in general, will still need some tool that will tell them directly what an issue is. Theliv aims to be that tool.
+
+## Contributions
+
+Contributions are very welcome. Please read the [contributing guide](CONTRIBUTING.md) or see the docs.
