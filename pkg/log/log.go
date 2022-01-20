@@ -1,3 +1,8 @@
+/*
+ * Copyright FMR LLC <opensource@fidelity.com>
+ *
+ * SPDX-License-Identifier: Apache
+ */
 package logging
 
 import (
