@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { faSearch, faTimes, faSpinner, faBell, faCheck} from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTimes, faSpinner, faBell, faCheck, faPencilAlt} from '@fortawesome/free-solid-svg-icons';
 import { KubernetesService } from '../services/kubernetes.service';
 import { debounceTime, delay, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
-import { MatOption } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
+import { UserFeedbackComponent } from '../components/user-feedback/user-feedback.component';
 
 export interface NamespaceOption {
   text: string
@@ -23,6 +24,7 @@ export class KubePlatformComponent implements OnInit {
   faSpinner = faSpinner;
   faBell = faBell;
   faCheck = faCheck;
+  faPencialAlt = faPencilAlt;
   loading = false;
   public resourceTypes: any;
   public proDomains: any;
@@ -44,11 +46,15 @@ export class KubePlatformComponent implements OnInit {
   clusterFormControl = new FormControl();
   clusterOptions: Observable<string[]> | undefined;
   namespaces: NamespaceOption[] = []
+  clusterInputing = false
+
+  feedback = '';
 
   constructor(
     private kubeService: KubernetesService,
     private route: ActivatedRoute,
-    private router: Router) { }
+    private router: Router, 
+    private dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.resourceGroups = null;
@@ -69,42 +75,23 @@ export class KubePlatformComponent implements OnInit {
     }, (err: any) => {
       console.log('Get Clusters Information Error: ', err);
     });
-    this.route.queryParamMap/*.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      delay(10),
-      switchMap((params: any) => {
-        this.selectedClusters = params.get('cluster') || '';
-        this.kubeService.selectedClusters$.next(this.selectedClusters);
-        this.selectedNs = params.get('namespace') || '';
-        this.kubeService.selectedNs$.next(this.selectedNs);
-        if (this.selectedClusters) {
-          return this.kubeService.getAllNamespaces(this.selectedClusters);
-        }
-        else {
-          return of(null);
-        }
-      }),
-      // map((res: any) => {
-      //   return res;
-      // })
-    )*/.subscribe((params: any) => {
-        this.selectedClusters = params.get('cluster') || '';
-        this.kubeService.selectedClusters$.next(this.selectedClusters);
-        this.selectedNs = params.get('namespace') || '';
-        this.kubeService.selectedNs$.next(this.selectedNs);
-        if (this.selectedClusters) {
-          this.kubeService.getAllNamespaces(this.selectedClusters)
-          .subscribe((res) => {
-            this.namespaces = [];
-            res.forEach((ele: string) => {
-                this.namespaces.push({text: ele, value: ele})
-            });
-          });
-        }
-        if (this.selectedClusters && this.selectedNs) {
-          this.getKubeResourceInfo();
-        }
+
+    this.route.queryParamMap.subscribe((params: any) => {
+      this.resourceGroups = [];
+      if (params.get('cluster')) {
+        this.selectedClusters = params.get('cluster')
+      }
+      this.kubeService.selectedClusters$.next(this.selectedClusters);
+
+      if (params.get('namespace')) {
+        this.selectedNs = params.get('namespace');
+      }
+      this.kubeService.selectedNs$.next(this.selectedNs);
+
+      this.getNamespaces()
+      if (this.selectedClusters && this.selectedNs) {
+        this.getKubeResourceInfo();
+      }
     });
   }
 
@@ -234,31 +221,66 @@ export class KubePlatformComponent implements OnInit {
     this.resourceGroups = resultList;
   }
 
+  checkClusterBlank(){
+    this.clusterInputing = true
+    if (this.selectedClusters == '') {
+      this.selectedNs = ''
+      this.namespaces = []
+      this.resourceGroups = []
+      this.resourceTypes = []
+      this.proDomains = []
+    }
+  }
 
   getNSByCluster(): void {
+    this.clusterInputing = false
     this.router.navigate(['kubernetes'], { queryParams: { cluster: this.selectedClusters } });
-    // this.namespaces = [];
     // this.resourceGroups = [];
     // this.selectedNs = '';
     // this.kubeService.selectedNs$.next(this.selectedNs);
     // this.kubeService.resourceList$.next(this.resourceGroups);
-    // this.kubeService.getAllNamespaces(this.selectedClusters).subscribe(
-    //   (res: any) => {
-    //     if (res) {
-    //       res.forEach((ele: string) => {
-    //         this.namespaces.push({text: ele, value: ele})
-    //       });
-    //     }
-    //   },
-    //   (err: any) => {
-    //     console.log(`Get Namespace in Cluster ${this.selectedClusters} Error: `, err);
-    //   }
-    // );
+    // this.getNamespaces()
+  }
+
+  getNamespaces(): void {
+    if (this.selectedClusters) {
+      this.kubeService.getAllNamespaces(this.selectedClusters).subscribe(
+        (res: any) => {
+          if (res) {
+            this.namespaces = []
+            res.forEach((ele: string) => {
+              this.namespaces.push({text: ele, value: ele})
+            });
+          }
+        },
+        (err: any) => {
+          console.log(`Get Namespace in Cluster ${this.selectedClusters} Error: `, err);
+        }
+      );
+    }
   }
 
   getSelectedQuery(e: any): void {
-    // console.log(e.value);
     this.router.navigate(['kubernetes'], { queryParams: { cluster: this.selectedClusters, namespace: e.value } });
+    // this.resourceGroups = [];
+    // this.kubeService.selectedClusters$.next(this.selectedClusters);
+    // this.kubeService.selectedNs$.next(this.selectedNs);
+    // if (this.selectedClusters && this.selectedNs) {
+    //   this.getKubeResourceInfo();
+    // }
+  }
+
+
+  openFeedbackDialog(): void {
+    const dialogRef = this.dialog.open(UserFeedbackComponent, {
+      data: {feedback: this.feedback},
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      result = 'The dialog was closed';
+      console.log(result);
+      this.feedback = '';
+    });
   }
 
 }

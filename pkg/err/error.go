@@ -59,22 +59,28 @@ func (s ErrorType) String() string {
 	}
 }
 
-// Used in the controller, to catch unhandled Panic
+// Used as middleware, to catch unhandled Panic
 // Return error message, Http status 500.
-func PanicHandler(w http.ResponseWriter) {
-	if err := recover(); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		message := ""
-		switch e := err.(type) {
-		case string:
-			message = e
-		case runtime.Error:
-			message = e.Error()
-		case error:
-			message = e.Error()
-		}
-		w.Write([]byte(message))
+func PanicHandler(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				message := ""
+				switch e := err.(type) {
+				case string:
+					message = e
+				case runtime.Error:
+					message = e.Error()
+				case error:
+					message = e.Error()
+				}
+				w.Write([]byte(message))
+			}
+		}()
+		next.ServeHTTP(w, r)
 	}
+	return http.HandlerFunc(fn)
 }
 
 // If CommonError and Kind is DB/Cloud/Log/K8s, return 503.

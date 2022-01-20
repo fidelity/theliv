@@ -274,9 +274,9 @@ func getTopResource(mo metav1.Object, client *kubeclient.KubeClient) (metav1.Obj
 
 	owner, err := client.GetOwner(context.TODO(), *oref, mo.GetNamespace())
 	if err != nil {
-		//TODO
 		fmt.Printf("Failed to get owner resource from owner reference, %v", err)
-		return nil, nil
+		// return the resource itself if cannot get its owner
+		return mo, nil
 	}
 	return getTopResource(owner, client)
 }

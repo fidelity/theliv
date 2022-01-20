@@ -10,6 +10,7 @@ import (
 	"github.com/fidelity/theliv/pkg/auth/authmiddleware"
 	"github.com/fidelity/theliv/pkg/auth/samlmethod"
 	"github.com/fidelity/theliv/pkg/config"
+	err "github.com/fidelity/theliv/pkg/err"
 	logger "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/router"
 
@@ -52,6 +53,9 @@ func main() {
 
 	r.Use(authmiddleware.StartAuth)
 
+	// Add panic handling middleware
+	r.Use(err.PanicHandler)
+
 	r.Route("/theliv-api/v1/health", router.HealthCheck)
 
 	// List cluster and namespaces
@@ -62,6 +66,9 @@ func main() {
 
 	// userinfo
 	r.Route("/theliv-api/v1/userinfo", router.Userinfo)
+
+	// feedback
+	r.Route("/theliv-api/v1/feedbacks", router.SubmitFeedback)
 
 	// rbac
 	r.Route("/theliv-api/v1/rbac", router.Rbac)
