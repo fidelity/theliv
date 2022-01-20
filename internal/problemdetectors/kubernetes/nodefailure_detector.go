@@ -2,9 +2,10 @@ package kubernetes
 
 import (
 	"context"
-	golog "log"
 	"net/url"
 	"strings"
+
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/fidelity/theliv/internal/problem"
 	"github.com/fidelity/theliv/pkg/kubeclient"
@@ -97,7 +98,7 @@ func (d NodeFailureDetector) Detect(ctx context.Context) ([]problem.Problem, err
 
 	client, err := kubeclient.NewKubeClient(d.DetectorInput.Kubeconfig)
 	if err != nil {
-		golog.Printf("ERROR - Got error when getting deployment client with kubeclient, error is %s", err)
+		log.S().Errorf("Got error when getting deployment client with kubeclient, error is %s", err)
 	}
 	nodes := &v1.NodeList{}
 	listOptions := metav1.ListOptions{}
@@ -139,7 +140,7 @@ func addToNodeProblem(d NodeFailureDetector, no v1.Node, prob *problem.Problem, 
 
 		doc, err := url.Parse(DocLink)
 		if err != nil {
-			golog.Printf("WARN - error occurred creating Problem.Docs, error is %s", err)
+			log.S().Warnf("error occurred creating Problem.Docs, error is %s", err)
 		}
 
 		prob = &problem.Problem{
