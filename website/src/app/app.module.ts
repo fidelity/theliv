@@ -13,7 +13,6 @@ import { KubePlatformComponent } from './kube-platform/kube-platform.component';
 import { ResourceGroupContentComponent } from './components/resource-group-content/resource-group-content.component';
 import { ReportCardComponent } from './components/report-card/report-card.component';
 import { SocialUtil } from './shared/util/social-util';
-import { KafkaComponent } from './kafka/kafka.component';
 import { UnauthorizedInterceptor } from './shared/util/unauthorized-interceptor';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ErrorDialog } from './shared/errors/error-dialog.component';
@@ -29,7 +28,6 @@ import { UserFeedbackComponent } from './components/user-feedback/user-feedback.
     KubePlatformComponent,
     ResourceGroupContentComponent,
     ReportCardComponent,
-    KafkaComponent,
     ErrorDialog,
     UserFeedbackComponent
   ],
