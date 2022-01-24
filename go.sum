@@ -405,8 +405,8 @@ github.com/microsoft/kiota/http/go/nethttp v0.0.0-20211203130928-8449c9e67101 h1
 github.com/microsoft/kiota/http/go/nethttp v0.0.0-20211203130928-8449c9e67101/go.mod h1:GHdBYJaaiuZKz78KcLSrjcin5FGXUK3e0wlX69NJMwE=
 github.com/microsoft/kiota/serialization/go/json v0.0.0-20211112084539-17ac73ffdc7c h1:9ZBo0/aKvkoMvWQw1UwQtO/lHA5vIF1VvwlxuwQr7E4=
 github.com/microsoft/kiota/serialization/go/json v0.0.0-20211112084539-17ac73ffdc7c/go.mod h1:edr20sXHBVGx5B4Y2sQoXzJqMRIpsCmqT3Fbq1NRiR0=
-github.com/microsoftgraph/msgraph-sdk-go v0.3.2 h1:1XuL5/QgKZHpXlse1wZWdxsv5RfB5dZzllqECHb6kw0=
-github.com/microsoftgraph/msgraph-sdk-go v0.3.2/go.mod h1:uaXq3Vn693ZHLVYGgYpG/uwEjY/hMNjfgoXOqCd55wE=
+github.com/microsoftgraph/msgraph-sdk-go v0.6.0 h1:zGU1lu+FkynJCW6fJP/+lCM+XJeWZfHpCILsLSAeJ2w=
+github.com/microsoftgraph/msgraph-sdk-go v0.6.0/go.mod h1:uaXq3Vn693ZHLVYGgYpG/uwEjY/hMNjfgoXOqCd55wE=
 github.com/microsoftgraph/msgraph-sdk-go-core v0.0.5 h1:TOvlb6AKhauMOSsuzKzMoGlOtAXkOX1pkZkzkEgDPBA=
 github.com/microsoftgraph/msgraph-sdk-go-core v0.0.5/go.mod h1:nYdjnZVd5dsHumrF4bz+IJeozvcOsoUObmdAIa0rKQE=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
