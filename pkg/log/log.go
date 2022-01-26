@@ -34,11 +34,17 @@ func DefaultLogConfig(level int) zap.Config {
 
 // Return default Logger instance.
 func L() *zap.Logger {
+	if DefaultLogger == nil {
+		NewDefaultLogger(DefaultLogConfig(0))
+	}
 	return DefaultLogger
 }
 
 // Return default Logger.Sugar instance.
 func S() *zap.SugaredLogger {
+	if DefaultLogger == nil {
+		NewDefaultLogger(DefaultLogConfig(0))
+	}
 	return DefaultLogger.Sugar()
 }
 

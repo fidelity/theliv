@@ -1,8 +1,3 @@
-/*
- * Copyright FMR LLC <opensource@fidelity.com>
- *
- * SPDX-License-Identifier: Apache
- */
 package ingress
 
 import (
@@ -13,9 +8,10 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
-	golog "log"
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
@@ -36,6 +32,7 @@ import (
 
 // compiler to validate if the struct indeed implements the interface
 var _ problem.Detector = (*IngressEksDetector)(nil)
+var wg sync.WaitGroup
 
 const (
 	IngressEksDetectorName  = "IngressEksDetector"
@@ -99,12 +96,17 @@ type IngressEksDetector struct {
 	name          string
 }
 
+type TargetGroupTags struct {
+	arn       *string
+	tagOutput *tag.GetResourcesOutput
+}
+
 // Detect ingress issues, including annotation, ingress/service mapping, AWS related resource,
 // application load balancer, target group and SSL certificate valid period.
 func (d IngressEksDetector) Detect(ctx context.Context) ([]problem.Problem, error) {
 	client, err := kubeclient.NewKubeClient(d.DetectorInput.Kubeconfig)
 	if err != nil {
-		golog.Printf("ERROR - Got error when getting deployment client with kubeclient, error is %s", err)
+		log.S().Errorf("Got error when getting deployment client with kubeclient, error is %s", err)
 	}
 	namespace := kubeclient.NamespacedName{
 		Namespace: d.DetectorInput.Namespace,
@@ -116,24 +118,27 @@ func (d IngressEksDetector) Detect(ctx context.Context) ([]problem.Problem, erro
 	problems := make([]problem.Problem, 0)
 	ingresses := []network.Ingress{}
 
-	checkAnnotation(d.Domain(), namespace.Namespace, ingressList, &ingresses, &problems)
+	if len(ingressList.Items) == 0 {
+		log.S().Info("No ingress found in namespace")
+	} else {
+		checkAnnotation(d.Domain(), namespace.Namespace, ingressList, &ingresses, &problems)
 
-	checkService(ctx, d.Domain(), namespace, client, &ingresses, &problems)
+		checkService(ctx, d.Domain(), namespace, client, &ingresses, &problems)
 
-	checkAlb(ctx, d.Domain(), d.DetectorInput, namespace.Namespace, &ingresses, &problems)
+		checkAlb(ctx, d.Domain(), d.DetectorInput, namespace.Namespace, &ingresses, &problems)
 
-	checkTargetGroups(ctx, d.Domain(), namespace.Namespace, d.DetectorInput.AwsConfig, &ingresses, &problems)
+		checkTargetGroups(ctx, d.Domain(), namespace.Namespace, d.DetectorInput.AwsConfig, &ingresses, &problems)
 
-	// eksClusterInfo, err := GetEksClusterInfo(ctx, d.DetectorInput.AwsConfig, d.DetectorInput.ClusterName)
-	// if err == nil {
-	// 	CheckIngressSecurityGroup(ctx, d.Domain(), namespace.Namespace, d.DetectorInput.AwsConfig, &ingresses,
-	// 		eksClusterInfo.Cluster.ResourcesVpcConfig.VpcId, &problems)
-	// } else {
-	// 	golog.Println("WARN - AWS configuration not provided, skip AWS resources validation.")
-	// }
+		// eksClusterInfo, err := GetEksClusterInfo(ctx, d.DetectorInput.AwsConfig, d.DetectorInput.ClusterName)
+		// if err == nil {
+		// 	CheckIngressSecurityGroup(ctx, d.Domain(), namespace.Namespace, d.DetectorInput.AwsConfig, &ingresses,
+		// 		eksClusterInfo.Cluster.ResourcesVpcConfig.VpcId, &problems)
+		// } else {
+		// 	golog.Println("WARN - AWS configuration not provided, skip AWS resources validation.")
+		// }
 
-	checkSSLCertificate(ctx, d.Domain(), namespace.Namespace, d.DetectorInput.AwsConfig, &ingresses, &problems)
-
+		checkSSLCertificate(ctx, d.Domain(), namespace.Namespace, d.DetectorInput.AwsConfig, &ingresses, &problems)
+	}
 	return problems, nil
 }
 
@@ -150,7 +155,7 @@ func checkDynamicAnnotation(target string) bool {
 // https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/ingress/annotations/
 func checkAnnotation(domainName problem.DomainName, namespace string, ingressList *network.IngressList,
 	ingresses *[]network.Ingress, problems *[]problem.Problem) {
-	golog.Printf("INFO - Checking ingress annotations")
+	log.S().Info("Checking ingress annotations")
 	affectedResources, sslAffectedResources := make(map[string]problem.ResourceDetails),
 		make(map[string]problem.ResourceDetails)
 	annotationProblem, sslAnnotationProblem := problem.Problem{}, problem.Problem{}
@@ -198,7 +203,7 @@ func checkAnnotation(domainName problem.DomainName, namespace string, ingressLis
 	if len(affectedResources) > 0 {
 		doc, err := url.Parse(SSLAnnotationDoc)
 		if err != nil {
-			golog.Printf("WARN - error occurred creating Problem.Docs, error is %s", err)
+			log.S().Warnf("error occurred creating Problem.Docs, error is %s", err)
 		}
 		annotationProblem = problem.Problem{
 			DomainName:        domainName,
@@ -214,7 +219,7 @@ func checkAnnotation(domainName problem.DomainName, namespace string, ingressLis
 	if len(sslAffectedResources) > 0 {
 		doc, err := url.Parse(SSLAnnotationDoc)
 		if err != nil {
-			golog.Printf("WARN - error occurred creating Problem.Docs, error is %s", err)
+			log.S().Warnf("error occurred creating Problem.Docs, error is %s", err)
 		}
 		sslAnnotationProblem = problem.Problem{
 			DomainName:        domainName,
@@ -240,7 +245,7 @@ func checkService(ctx context.Context, domainName problem.DomainName, namespace 
 	for _, ingress := range *ingresses {
 		for _, rule := range ingress.Spec.Rules {
 			for _, path := range rule.HTTP.Paths {
-				golog.Printf("INFO - Checking ingress path %s, service %s, port %d", path.Path,
+				log.S().Infof("Checking ingress path %s, service %s, port %d", path.Path,
 					path.Backend.Service.Name, path.Backend.Service.Port.Number)
 				serviceExist := false
 				for _, service := range serviceList.Items {
@@ -257,7 +262,7 @@ func checkService(ctx context.Context, domainName problem.DomainName, namespace 
 					}
 				}
 				if !serviceExist {
-					golog.Printf("INFO - Found ingress rule issue, service %s, port %d, path %s",
+					log.S().Infof("Found ingress rule issue, service %s, port %d, path %s",
 						path.Backend.Service.Name, path.Backend.Service.Port.Number, path.Path)
 					details := map[string]string{
 						"serviceName": path.Backend.Service.Name,
@@ -278,7 +283,7 @@ func checkService(ctx context.Context, domainName problem.DomainName, namespace 
 		}
 		doc, err := url.Parse(InvalidIngressPathDoc)
 		if err != nil {
-			golog.Printf("WARN - error occurred creating Problem.Docs, error is %s", err)
+			log.S().Warnf("error occurred creating Problem.Docs, error is %s", err)
 		}
 		if len(affectedResources[ingress.Name].Details) > 0 {
 			item := affectedResources[ingress.Name]
@@ -309,7 +314,7 @@ func checkAlb(ctx context.Context, domainName problem.DomainName, input *problem
 	namespace string, ingresses *[]network.Ingress, problems *[]problem.Problem) {
 
 	if input.AwsConfig.Region == "" {
-		golog.Println("WARN - AWS configuration not provided, skip AWS resources validation.")
+		log.S().Warnf("AWS configuration not provided, skip AWS resources validation.")
 		return
 	}
 
@@ -317,103 +322,116 @@ func checkAlb(ctx context.Context, domainName problem.DomainName, input *problem
 	output, err := client.DescribeLoadBalancers(ctx, &elb.DescribeLoadBalancersInput{})
 
 	if err != nil {
-		golog.Printf("WARN - Error occurred while get AWS ALB info, error is %s", err)
+		log.S().Warnf("Error occurred while get AWS ALB info, error is %s", err)
 		return
 	}
 
-	tagClient := tag.NewFromConfig(input.AwsConfig)
-
+	length := len(*ingresses)
+	resChan := make(chan []problem.Problem, length)
+	wg.Add(length)
 	for _, ingress := range *ingresses {
-		tagKey := "ingress.k8s.aws/stack"
-		tagValue := fmt.Sprintf("%s/%s", namespace, ingress.Name)
-		albExist := false
+		go checkIngressAlb(ctx, domainName, namespace, ingress, input, output, resChan)
+	}
+	wg.Wait()
+	close(resChan)
+	for val := range resChan {
+		*problems = append(*problems, val...)
+	}
+}
 
-		var targetAlb types.LoadBalancer
+func checkIngressAlb(ctx context.Context, domainName problem.DomainName, namespace string, ingress network.Ingress,
+	input *problem.DetectorCreationInput, output *elb.DescribeLoadBalancersOutput,
+	resChan chan []problem.Problem) {
+
+	defer wg.Done()
+	tagValue := fmt.Sprintf("%s/%s", namespace, ingress.Name)
+	albExist := false
+	problems := make([]problem.Problem, 0)
+
+	var targetAlb types.LoadBalancer
+
+	for _, ing := range ingress.Status.LoadBalancer.Ingress {
+		albExist = false
 		for _, alb := range output.LoadBalancers {
-			tagOutput, err := awsclient.GetTagByArn(ctx, tagClient, alb.LoadBalancerArn)
-
-			if err != nil {
-				golog.Printf("WARN - Error occurred while get AWS ALB tag, error is %s", err)
+			if ing.Hostname == *alb.DNSName {
+				albExist = true
+				targetAlb = alb
 				break
 			}
-			for _, res := range tagOutput.ResourceTagMappingList {
-				for _, tag := range res.Tags {
-					if *tag.Key == tagKey && *tag.Value == tagValue {
-						albExist = true
-						targetAlb = alb
-						break
-					}
-				}
-			}
 		}
-		error := ""
-		if albExist {
-			switch targetAlb.State.Code {
-			case types.LoadBalancerStateEnumActive:
-				golog.Printf("INFO - ALB %s is in %s state", tagValue, targetAlb.State.Code)
-			case types.LoadBalancerStateEnumProvisioning:
-				error = fmt.Sprintf("ALB %s is in %s state", tagValue, targetAlb.State.Code)
-				golog.Printf("WARN - %s", error)
-			case types.LoadBalancerStateEnumFailed:
-				error = fmt.Sprintf("ALB %s is in %s state", tagValue, targetAlb.State.Code)
-				golog.Printf("WARN - %s", error)
-			case types.LoadBalancerStateEnumActiveImpaired:
-				error = fmt.Sprintf("ALB %s is in %s state", tagValue, targetAlb.State.Code)
-				golog.Printf("WARN - %s", error)
-			default:
-				error = fmt.Sprintf("ALB %s is in unknown state", tagValue)
-				golog.Printf("WARN - ALB %s is in unknown state", tagValue)
-			}
-		} else {
-			error = fmt.Sprintf("ALB %s not found", tagValue)
-			golog.Printf("WARN - %s", error)
-			doc, err := url.Parse(InvalidIngressPathDoc)
-			if err != nil {
-				golog.Printf("WARN - error occurred creating Problem.Docs, error is %s", err)
-			}
-			var deeplink *url.URL
-			if input.LogRetriever != nil {
-				endTime := time.Now()
-				logsLink := input.LogDeeplinkRetriever.GetLogDeepLink(
-					input.ClusterName, namespace, ingress.Name, true, true,
-					kubernetes.SetStartTime(endTime, kubernetes.EventLogTimespan), endTime)
-				deeplink, err = url.Parse(logsLink)
-				if err != nil {
-					golog.Printf("WARN - Log url generation failed %s", err)
-				}
-			}
-			problem := problem.Problem{
-				DomainName:  domainName,
-				Name:        ALBNotExistTitle,
-				Description: ALBNotExistDesc,
-				Docs:        []*url.URL{doc},
-				Tags:        InvalidIngressTags,
-				Level:       problem.UserNamespace,
-				AffectedResources: map[string]problem.ResourceDetails{
-					ingress.Name: {
-						Resource: &ingress,
-						Details:  map[string]string{},
-						Deeplink: map[problem.DeeplinkType]*url.URL{problem.DeeplinkKubeletLog: deeplink},
-						NextSteps: kubernetes.GetSolutionsByTemplate(ALBNotCreatedSolution,
-							map[string]interface{}{
-								"alb": tagValue,
-							}, true),
-					},
-				},
-			}
-			*problems = append(*problems, problem)
-		}
-		if error != "" {
-			*problems = append(*problems, *createProblem(domainName, &ingress, "ALB", tagValue, error))
+		if !albExist {
+			break
 		}
 	}
+
+	errorMsg := ""
+	if albExist {
+		switch targetAlb.State.Code {
+		case types.LoadBalancerStateEnumActive:
+			log.S().Infof("ALB %s is in %s state", tagValue, targetAlb.State.Code)
+		case types.LoadBalancerStateEnumProvisioning:
+			errorMsg = fmt.Sprintf("ALB %s is in %s state", tagValue, targetAlb.State.Code)
+			log.S().Warn(errorMsg)
+		case types.LoadBalancerStateEnumFailed:
+			errorMsg = fmt.Sprintf("ALB %s is in %s state", tagValue, targetAlb.State.Code)
+			log.S().Warn(errorMsg)
+		case types.LoadBalancerStateEnumActiveImpaired:
+			errorMsg = fmt.Sprintf("ALB %s is in %s state", tagValue, targetAlb.State.Code)
+			log.S().Warn(errorMsg)
+		default:
+			errorMsg = fmt.Sprintf("ALB %s is in unknown state", tagValue)
+			log.S().Warnf("ALB %s is in unknown state", tagValue)
+		}
+		if errorMsg != "" {
+			problems = append(problems, *createProblem(domainName, &ingress, "ALB", tagValue, errorMsg))
+		}
+	} else {
+		errorMsg = fmt.Sprintf("ALB %s not found", tagValue)
+		log.S().Warn(errorMsg)
+		doc, err := url.Parse(InvalidIngressPathDoc)
+		if err != nil {
+			log.S().Warnf("error occurred creating Problem.Docs, error is %s", err)
+		}
+		var deeplink *url.URL
+		if input.LogRetriever != nil {
+			endTime := time.Now()
+			logsLink := input.LogDeeplinkRetriever.GetLogDeepLink(
+				input.ClusterName, namespace, ingress.Name, true, true,
+				kubernetes.SetStartTime(endTime, kubernetes.EventLogTimespan), endTime)
+			deeplink, err = url.Parse(logsLink)
+			if err != nil {
+				log.S().Warnf("Log url generation failed %s", err)
+			}
+		}
+		problem := problem.Problem{
+			DomainName:  domainName,
+			Name:        ALBNotExistTitle,
+			Description: ALBNotExistDesc,
+			Docs:        []*url.URL{doc},
+			Tags:        InvalidIngressTags,
+			Level:       problem.UserNamespace,
+			AffectedResources: map[string]problem.ResourceDetails{
+				ingress.Name: {
+					Resource: &ingress,
+					Details:  map[string]string{},
+					Deeplink: map[problem.DeeplinkType]*url.URL{problem.DeeplinkKubeletLog: deeplink},
+					NextSteps: kubernetes.GetSolutionsByTemplate(ALBNotCreatedSolution,
+						map[string]interface{}{
+							"alb": tagValue,
+						}, true),
+				},
+			},
+		}
+		problems = append(problems, problem)
+	}
+	resChan <- problems
 }
 
 func createProblem(domainName problem.DomainName, ingress *network.Ingress, errorType string,
 	key string, value string) *problem.Problem {
 	doc, err := url.Parse(ALBIssueDoc)
 	if err != nil {
-		golog.Printf("WARN - error occurred creating Problem.Docs, error is %s", err)
+		log.S().Warnf("error occurred creating Problem.Docs, error is %s", err)
 	}
 	return &problem.Problem{
 		DomainName:  domainName,
@@ -439,96 +457,134 @@ func createProblem(domainName problem.DomainName, ingress *network.Ingress, erro
 func checkTargetGroups(ctx context.Context, domainName problem.DomainName, namespace string, awsConfig aws.Config,
 	ingresses *[]network.Ingress, problems *[]problem.Problem) {
 	if awsConfig.Region == "" {
-		golog.Println("WARN - AWS configuration not provided, skip AWS resources validation.")
+		log.S().Warn("AWS configuration not provided, skip AWS resources validation.")
 		return
 	}
+	targetGroupTags := map[string]*tag.GetResourcesOutput{}
+	targetGroupMap := map[string]types.TargetGroup{}
 
 	client := elb.NewFromConfig(awsConfig)
 	output, err := client.DescribeTargetGroups(ctx, &elb.DescribeTargetGroupsInput{})
 
 	if err != nil {
-		golog.Printf("WARN - Error occurred while get AWS target group info, error is %s", err)
+		log.S().Warnf("Error occurred while get AWS target group info, error is %s", err)
 		return
 	}
 
 	tagClient := tag.NewFromConfig(awsConfig)
+	length := len(output.TargetGroups)
+	tagChan := make(chan TargetGroupTags, length)
+	wg.Add(length)
+	for _, targetGroup := range output.TargetGroups {
+		arn := targetGroup.TargetGroupArn
+		targetGroupMap[*arn] = targetGroup
+		go func(arn *string) {
+			defer wg.Done()
+			tagOutput, err := awsclient.GetTagByArn(ctx, tagClient, arn)
+			if err != nil {
+				log.S().Warnf("Error occurred while get AWS target group tag, error is %s", err)
+			}
+			tagChan <- TargetGroupTags{arn, tagOutput}
+		}(arn)
+	}
+	wg.Wait()
+	close(tagChan)
+	for val := range tagChan {
+		targetGroupTags[*val.arn] = val.tagOutput
+	}
 
 	resources := map[string]problem.ResourceDetails{}
+	length = len(*ingresses)
+	resChan := make(chan map[string]problem.ResourceDetails, length)
+	wg.Add(length)
 	for _, ingress := range *ingresses {
-		tagKey := "ingress.k8s.aws/stack"
-		tagValue := fmt.Sprintf("%s/%s", namespace, ingress.Name)
-		targetGroupExist := false
-
-		var targetResource types.TargetGroup
-		for _, targetGroup := range output.TargetGroups {
-			tagOutput, err := awsclient.GetTagByArn(ctx, tagClient, targetGroup.TargetGroupArn)
-
-			if err != nil {
-				golog.Printf("WARN - Error occurred while get AWS target group tag, error is %s", err)
-				break
-			}
-			for _, res := range tagOutput.ResourceTagMappingList {
-				for _, tag := range res.Tags {
-					if *tag.Key == tagKey && *tag.Value == tagValue {
-						targetGroupExist = true
-						targetResource = targetGroup
-						break
-					}
-				}
-			}
-		}
-		healthDetails := map[string]string{}
-		if !targetGroupExist {
-			golog.Printf("WARN - %s", fmt.Sprintf("Target group %s not found", tagValue))
-		} else {
-			targetGroupInput := &elb.DescribeTargetHealthInput{
-				TargetGroupArn: targetResource.TargetGroupArn,
-			}
-			targetGroupResp, err := client.DescribeTargetHealth(ctx, targetGroupInput)
-			if err == nil {
-				for _, health := range targetGroupResp.TargetHealthDescriptions {
-					if health.TargetHealth.State == types.TargetHealthStateEnumUnhealthy {
-						// Add all target group issues to the problem's ingress resource.
-						healthDetails[*health.Target.Id] = string(health.TargetHealth.Reason)
-					}
-				}
-			} else {
-				golog.Printf("WARN - Error occurred while get AWS target group health, error is %s", err)
-			}
-		}
-		if len(healthDetails) > 0 {
-			resources = map[string]problem.ResourceDetails{
-				ingress.Name: {
-					Resource: &ingress,
-					Details:  healthDetails,
-					NextSteps: kubernetes.GetSolutionsByTemplate(UnhealthTargetGroupSolution,
-						map[string]interface{}{
-							"targets": mapToString(healthDetails),
-						}, true),
-				},
-			}
+		go checkIngressTargetGroups(ctx, namespace, client, ingress, targetGroupMap, targetGroupTags, resChan)
+	}
+	wg.Wait()
+	close(resChan)
+	for val := range resChan {
+		for k, v := range val {
+			resources[k] = v
 		}
 	}
 
 	doc, err := url.Parse(TargetGroupIssueDoc)
 	if err != nil {
-		golog.Printf("WARN - error occurred creating Problem.Docs, error is %s", err)
+		log.S().Warnf("error occurred creating Problem.Docs, error is %s", err)
 	}
-	problem := problem.Problem{
-		DomainName:        domainName,
-		Name:              TargetGroupIssueTitle,
-		Description:       TargetGroupIssueDesc,
-		Docs:              []*url.URL{doc},
-		Tags:              InvalidIngressTags,
-		Level:             problem.UserNamespace,
-		AffectedResources: resources,
+	if len(resources) > 0 {
+		problem := problem.Problem{
+			DomainName:        domainName,
+			Name:              TargetGroupIssueTitle,
+			Description:       TargetGroupIssueDesc,
+			Docs:              []*url.URL{doc},
+			Tags:              InvalidIngressTags,
+			Level:             problem.UserNamespace,
+			AffectedResources: resources,
+		}
+		*problems = append(*problems, problem)
 	}
-	*problems = append(*problems, problem)
+}
+
+func checkIngressTargetGroups(ctx context.Context, namespace string, client *elb.Client, ingress network.Ingress,
+	targetGroutMap map[string]types.TargetGroup, targetGroupTag map[string]*tag.GetResourcesOutput,
+	resChan chan map[string]problem.ResourceDetails) {
+	defer wg.Done()
+	resources := map[string]problem.ResourceDetails{}
+
+	tagKey := "ingress.k8s.aws/stack"
+	tagValue := fmt.Sprintf("%s/%s", namespace, ingress.Name)
+	targetGroupExist := false
+
+	var targetResource types.TargetGroup
+	for k, targetGroup := range targetGroupTag {
+		for _, res := range targetGroup.ResourceTagMappingList {
+			for _, tag := range res.Tags {
+				if *tag.Key == tagKey && *tag.Value == tagValue {
+					targetGroupExist = true
+					targetResource = targetGroutMap[k]
+					break
+				}
+			}
+		}
+	}
+	healthDetails := map[string]string{}
+	if !targetGroupExist {
+		log.S().Warn(fmt.Sprintf("Target group %s not found", tagValue))
+	} else {
+		targetGroupInput := &elb.DescribeTargetHealthInput{
+			TargetGroupArn: targetResource.TargetGroupArn,
+		}
+		targetGroupResp, err := client.DescribeTargetHealth(ctx, targetGroupInput)
+		if err == nil {
+			for _, health := range targetGroupResp.TargetHealthDescriptions {
+				if health.TargetHealth.State == types.TargetHealthStateEnumUnhealthy {
+					// Add all target group issues to the problem's ingress resource.
+					healthDetails[*health.Target.Id] = string(health.TargetHealth.Reason)
+				}
+			}
+		} else {
+			log.S().Warnf("Error occurred while get AWS target group health, error is %s", err)
+		}
+	}
+	if len(healthDetails) > 0 {
+		resources = map[string]problem.ResourceDetails{
+			ingress.Name: {
+				Resource: &ingress,
+				Details:  healthDetails,
+				NextSteps: kubernetes.GetSolutionsByTemplate(UnhealthTargetGroupSolution,
+					map[string]interface{}{
+						"targets": mapToString(healthDetails),
+					}, true),
+			},
+		}
+	}
+	resChan <- resources
 }
 
 func GetEksClusterInfo(ctx context.Context, awsConfig aws.Config, clusterName string) (*eks.DescribeClusterOutput, error) {
 	if awsConfig.Region == "" {
-		golog.Println("WARN - AWS configuration not provided, skip AWS resources validation.")
+		log.S().Warn("AWS configuration not provided, skip AWS resources validation.")
 		return nil, errors.New("FAILED TO GET AWS EKS CLUSTER INFO")
 	}
 	client := eks.NewFromConfig(awsConfig)
@@ -542,7 +598,7 @@ func GetEksClusterInfo(ctx context.Context, awsConfig aws.Config, clusterName st
 func CheckIngressSecurityGroup(ctx context.Context, domainName problem.DomainName, namespace string, awsConfig aws.Config,
 	ingresses *[]network.Ingress, vpcId *string, problems *[]problem.Problem) {
 	if awsConfig.Region == "" {
-		golog.Println("WARN - AWS configuration not provided, skip AWS resources validation.")
+		log.S().Warn("AWS configuration not provided, skip AWS resources validation.")
 		return
 	}
 	client := ec2.NewFromConfig(awsConfig)
@@ -556,12 +612,12 @@ func CheckIngressSecurityGroup(ctx context.Context, domainName problem.DomainNam
 			}
 		}
 		if securityGroup == "" {
-			golog.Println("INFO - ALB security group not found")
+			log.S().Info("ALB security group not found")
 			continue
 		}
 
 		// Masked arn in log, display directly in UI since there is authentication and authorization.
-		golog.Println("INFO - Found ALB security group")
+		log.S().Info("Found ALB security group")
 		params := ec2.DescribeSecurityGroupsInput{}
 		// The AWS ALB ingress security group supports both id and name.
 		if strings.HasPrefix(securityGroup, "sg-") {
@@ -582,12 +638,12 @@ func CheckIngressSecurityGroup(ctx context.Context, domainName problem.DomainNam
 		}
 		output, err := client.DescribeSecurityGroups(ctx, &params)
 		if err != nil {
-			golog.Printf("WARN - Error occurred while get AWS security group tag, error is %s", err)
+			log.S().Warnf("Error occurred while get AWS security group tag, error is %s", err)
 			break
 		}
 		// TODO need to check security group destination.
 		if len(output.SecurityGroups) == 0 {
-			golog.Println("WARN - No security group defined.")
+			log.S().Warn("No security group defined.")
 		}
 		// for _, sg := range output.SecurityGroups {
 		// 	golog.Println("INFO - Checking security group for ALB")
@@ -598,11 +654,11 @@ func CheckIngressSecurityGroup(ctx context.Context, domainName problem.DomainNam
 func checkSSLCertificate(ctx context.Context, domainName problem.DomainName, namespace string, awsConfig aws.Config,
 	ingresses *[]network.Ingress, problems *[]problem.Problem) {
 	if awsConfig.Region == "" {
-		golog.Println("WARN - AWS configuration not provided, skip AWS resources validation.")
+		log.S().Warn("AWS configuration not provided, skip AWS resources validation.")
 		return
 	}
 
-	golog.Printf("INFO - Checking ingress certificate")
+	log.S().Info("Checking ingress certificate")
 	client := acm.NewFromConfig(awsConfig)
 
 	affectedResources := make(map[string]problem.ResourceDetails)
@@ -636,7 +692,7 @@ func checkSSLCertificate(ctx context.Context, domainName problem.DomainName, nam
 								"certificates": certArn,
 							})
 					} else {
-						golog.Printf("WARN - Error occurred while get AWS certificate")
+						log.S().Warn("Error occurred while get AWS certificate")
 						hasAwsError = true
 					}
 				} else {
@@ -648,7 +704,7 @@ func checkSSLCertificate(ctx context.Context, domainName problem.DomainName, nam
 				}
 			}
 		} else {
-			golog.Printf("WARN - Could not find SSL annotation %s in ingress %s", SSLAnnotation,
+			log.S().Warnf("Could not find SSL annotation %s in ingress %s", SSLAnnotation,
 				ingress.Name)
 		}
 		if !hasAwsError {
@@ -664,7 +720,7 @@ func checkSSLCertificate(ctx context.Context, domainName problem.DomainName, nam
 			}
 			doc, err := url.Parse(InvalidSSLCertDoc)
 			if err != nil {
-				golog.Printf("WARN - error occurred creating Problem.Docs, error is %s", err)
+				log.S().Warnf("error occurred creating Problem.Docs, error is %s", err)
 			}
 			sslProblem = problem.Problem{
 				DomainName:        domainName,
@@ -678,7 +734,7 @@ func checkSSLCertificate(ctx context.Context, domainName problem.DomainName, nam
 		}
 	}
 	if len(sslProblem.AffectedResources) > 0 {
-		golog.Printf("WARN - Found issue found with ingress certificate")
+		log.S().Warnf("Found issue found with ingress certificate")
 		*problems = append(*problems, sslProblem)
 	}
 }
@@ -705,7 +761,7 @@ func checkCertValidPeriod(notAfter *time.Time, notBefore *time.Time, certArn str
 	affectedResources map[string]problem.ResourceDetails, ingress network.Ingress, currentTime time.Time) {
 	maskedArn := kubernetes.MaskString(certArn)
 	if !notAfter.After(currentTime) {
-		golog.Printf("WARN - AWS certificate %s expired, certificate valid until %s",
+		log.S().Warnf("AWS certificate %s expired, certificate valid until %s",
 			maskedArn, notAfter)
 		addIssueToDetails(affectedResources, ingress,
 			map[string]string{ExpiredSSLCertTitle + " " + certArn: fmt.Sprintf(
@@ -714,7 +770,7 @@ func checkCertValidPeriod(notAfter *time.Time, notBefore *time.Time, certArn str
 				"certificates": certArn,
 			})
 	} else if !notBefore.Before(currentTime) {
-		golog.Printf("WARN - AWS certificate %s is not active, certificate will be valid after %s",
+		log.S().Warnf("AWS certificate %s is not active, certificate will be valid after %s",
 			maskedArn, notBefore)
 		addIssueToDetails(affectedResources, ingress,
 			map[string]string{
