@@ -391,8 +391,7 @@ func checkIngressAlb(ctx context.Context, domainName problem.DomainName, namespa
 			problems = append(problems, *createProblem(domainName, &ingress, "ALB", tagValue, errorMsg))
 		}
 	} else {
-		errorMsg = fmt.Sprintf("ALB %s not found", tagValue)
-		log.S().Warn(errorMsg)
+		log.S().Warnf("ALB %s not found", tagValue)
 		doc, err := url.Parse(InvalidIngressPathDoc)
 		if err != nil {
 			log.S().Warnf("error occurred creating Problem.Docs, error is %s", err)
@@ -488,6 +487,7 @@ func checkTargetGroups(ctx context.Context, domainName problem.DomainName, names
 			tagOutput, err := awsclient.GetTagByArn(ctx, tagClient, arn)
 			if err != nil {
 				log.S().Warnf("Error occurred while get AWS target group tag, error is %s", err)
+				return
 			}
 			tagChan <- TargetGroupTags{arn, tagOutput}
 		}(arn)
@@ -570,6 +570,7 @@ func checkIngressTargetGroups(ctx context.Context, namespace string, client *elb
 			}
 		} else {
 			log.S().Warnf("Error occurred while get AWS target group health, error is %s", err)
+			return
 		}
 	}
 	if len(healthDetails) > 0 {
