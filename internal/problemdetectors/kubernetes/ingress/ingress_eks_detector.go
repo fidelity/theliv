@@ -72,6 +72,8 @@ const (
 	TargetGroupIssueDesc    = "The target in ALB's target group is in unhealthy status, please note if all targets are unhealthy, the traffic will be impacted."
 	TargetGroupIssueDoc     = "https://aws.amazon.com/premiumsupport/knowledge-center/elb-fix-failing-health-checks-alb/"
 	HostnameWildcard        = "*"
+	IngressAnnotationAction = "alb.ingress.kubernetes.io/actions."
+	PodNameUseAnnotation    = "use-annotation"
 )
 
 var InvalidIngressTags = []string{"ingress"}
@@ -253,15 +255,27 @@ func checkService(ctx context.Context, domainName problem.DomainName, namespace 
 				log.S().Infof("Checking ingress path %s, service %s, port %d", path.Path,
 					path.Backend.Service.Name, path.Backend.Service.Port.Number)
 				serviceExist := false
-				for _, service := range serviceList.Items {
-					if serviceExist {
+				if path.Backend.Service.Port.Name == PodNameUseAnnotation {
+					_, ok := ingress.ObjectMeta.Annotations[IngressAnnotationAction+path.Backend.Service.Name]
+					if ok {
+						log.S().Infof("found backend action for %s.", path.Backend.Service.Name)
+						serviceExist = true
+						break
+					} else {
+						log.S().Infof("No backend action for %s.", path.Backend.Service.Name)
 						break
 					}
-					if service.Name == path.Backend.Service.Name {
-						for _, port := range service.Spec.Ports {
-							if port.Port == path.Backend.Service.Port.Number {
-								serviceExist = true
-								break
+				} else {
+					for _, service := range serviceList.Items {
+						if serviceExist {
+							break
+						}
+						if service.Name == path.Backend.Service.Name {
+							for _, port := range service.Spec.Ports {
+								if port.Port == path.Backend.Service.Port.Number {
+									serviceExist = true
+									break
+								}
 							}
 						}
 					}
