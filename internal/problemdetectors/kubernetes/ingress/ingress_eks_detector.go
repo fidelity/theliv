@@ -7,6 +7,7 @@ package ingress
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -256,29 +257,40 @@ func checkService(ctx context.Context, domainName problem.DomainName, namespace 
 					path.Backend.Service.Name, path.Backend.Service.Port.Number)
 				serviceExist := false
 				if path.Backend.Service.Port.Name == PodNameUseAnnotation {
-					_, ok := ingress.ObjectMeta.Annotations[IngressAnnotationAction+path.Backend.Service.Name]
+					value, ok := ingress.ObjectMeta.Annotations[IngressAnnotationAction+path.Backend.Service.Name]
 					if ok {
-						log.S().Infof("found backend action for %s.", path.Backend.Service.Name)
-						serviceExist = true
-						break
-					} else {
-						log.S().Infof("No backend action for %s.", path.Backend.Service.Name)
-						break
-					}
-				} else {
-					for _, service := range serviceList.Items {
-						if serviceExist {
+						action := Action{}
+						if err := json.Unmarshal([]byte(value), &action); err != nil {
+							log.S().Warn(err)
 							break
 						}
-						if service.Name == path.Backend.Service.Name {
-							for _, port := range service.Spec.Ports {
-								if port.Port == path.Backend.Service.Port.Number {
-									serviceExist = true
-									break
+						if action.Type == ActionTypeForward {
+							if action.TargetGroupARN != nil {
+								// TODO: to be implemented
+								serviceExist = true
+							} else if action.ForwardConfig != nil {
+								for _, targetGroupTuple := range action.ForwardConfig.TargetGroups {
+									if targetGroupTuple.TargetGroupARN != nil {
+										// TODO: to be implemented
+										serviceExist = true
+									} else {
+										serviceExist = checkSvcNameAndPort(*targetGroupTuple.ServiceName, targetGroupTuple.ServicePort.StrVal,
+											int32(targetGroupTuple.ServicePort.IntValue()), serviceList.Items)
+									}
+									if !serviceExist {
+										break
+									}
 								}
 							}
+						} else {
+							serviceExist = true
 						}
+					} else {
+						log.S().Infof("No backend action for %s.", path.Backend.Service.Name)
 					}
+				} else {
+					serviceExist = checkSvcNameAndPort(path.Backend.Service.Name, path.Backend.Service.Port.Name,
+						path.Backend.Service.Port.Number, serviceList.Items)
 				}
 				if !serviceExist {
 					log.S().Infof("Found ingress rule issue, service %s, port %d, path %s",
@@ -326,6 +338,23 @@ func checkService(ctx context.Context, domainName problem.DomainName, namespace 
 	if len(ingressPathProblem.AffectedResources) > 0 {
 		*problems = append(*problems, ingressPathProblem)
 	}
+}
+
+func checkSvcNameAndPort(name string, portName string, portNum int32, svcs []v1.Service) bool {
+	for _, service := range svcs {
+		if service.Name == name {
+			for _, servicePort := range service.Spec.Ports {
+				if portName != "" && portName == servicePort.Name {
+					return true
+				}
+				if portNum == servicePort.Port {
+					return true
+				}
+			}
+			return false
+		}
+	}
+	return false
 }
 
 // Check AWS application load balancer, find the ALB by tag key ingress.k8s.aws/stack
