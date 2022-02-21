@@ -14,8 +14,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.11.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.1
-	github.com/microsoft/kiota/authentication/go/azure v0.0.0-20211221082943-f98d671bb86d
-	github.com/microsoftgraph/msgraph-sdk-go v0.3.2
+	github.com/microsoft/kiota/authentication/go/azure v0.0.0-20220203083330-462603bf370f
+	github.com/microsoftgraph/msgraph-sdk-go v0.10.0
 	github.com/rajarajanpsj/terraform v0.15.3-dagpkg
 	github.com/stretchr/testify v1.7.0
 	github.com/wangli1030/saml v0.4.7
@@ -29,8 +29,8 @@ require (
 )
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v0.20.0 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/internal v0.8.2 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v0.21.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v0.9.1 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.4 // indirect
@@ -38,6 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.7.0 // indirect
 	github.com/aws/smithy-go v1.10.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
+	github.com/cjlapao/common-go v0.0.18 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/crewjam/httperr v0.2.0 // indirect
@@ -58,10 +59,10 @@ require (
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
-	github.com/microsoft/kiota/abstractions/go v0.0.0-20211202082735-099f3c37853a // indirect
-	github.com/microsoft/kiota/http/go/nethttp v0.0.0-20211203130928-8449c9e67101 // indirect
-	github.com/microsoft/kiota/serialization/go/json v0.0.0-20211112084539-17ac73ffdc7c // indirect
-	github.com/microsoftgraph/msgraph-sdk-go-core v0.0.5 // indirect
+	github.com/microsoft/kiota/abstractions/go v0.0.0-20220216133321-1457eed0a802 // indirect
+	github.com/microsoft/kiota/http/go/nethttp v0.0.0-20220216133321-1457eed0a802 // indirect
+	github.com/microsoft/kiota/serialization/go/json v0.0.0-20220208140201-eb59c2593f0e // indirect
+	github.com/microsoftgraph/msgraph-sdk-go-core v0.0.9 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -77,10 +78,10 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
-	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
-	golang.org/x/sys v0.0.0-20211029165221-6e7872819dc8 // indirect
-	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	google.golang.org/appengine v1.6.7 // indirect
