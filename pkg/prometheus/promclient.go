@@ -62,7 +62,10 @@ func DetectAlerts(ctx context.Context) ([]problem.NewProblem, error) {
 		p := problem.NewProblem{}
 		p.Name = string(alert.Labels[model.LabelName("alertname")])
 		p.Description = string(alert.Annotations[model.LabelName("description")])
-		p.Tags = alert.Labels
+		p.Tags = make(map[string]string)
+		for ln, lv := range alert.Labels {
+			p.Tags[string(ln)] = string(lv)
+		}
 		problems = append(problems, p)
 	}
 	return problems, err

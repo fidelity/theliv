@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/prometheus/common/model"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -341,7 +340,7 @@ const (
 type NewProblem struct {
 	Name              string
 	Description       string
-	Tags              model.LabelSet
+	Tags              map[string]string
 	Details           []string             // output field after detetor. It contains solutions details to show in UI.
 	AffectedResources []NewResourceDetails // output field after detetor. It contains the resources affected by this problem that to show in UI.
 }
