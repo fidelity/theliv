@@ -14,10 +14,12 @@ import (
 
 	golog "log"
 
+	"github.com/fidelity/theliv/internal/problem"
 	"github.com/fidelity/theliv/pkg/service"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	promconfig "github.com/prometheus/common/config"
+	"github.com/prometheus/common/model"
 )
 
 var TLSRoundTripper http.RoundTripper = &http.Transport{
@@ -32,7 +34,7 @@ var TLSRoundTripper http.RoundTripper = &http.Transport{
 	}),
 }
 
-func DetectAlerts(ctx context.Context) (v1.AlertsResult, error) {
+func DetectAlerts(ctx context.Context) ([]problem.NewProblem, error) {
 	input := service.GetDetectorInput(ctx)
 	client, err := api.NewClient(api.Config{
 		Address: "https://tochange.prometheus.host:8443",
@@ -53,7 +55,15 @@ func DetectAlerts(ctx context.Context) (v1.AlertsResult, error) {
 	}
 
 	// TODO: filter by namespace
-	// TODO: build problem from alerts
 
-	return result, err
+	// build problems from  alerts, problem is detector input
+	problems := make([]problem.NewProblem, 0)
+	for _, alert := range result.Alerts {
+		p := problem.NewProblem{}
+		p.Name = string(alert.Labels[model.LabelName("alertname")])
+		p.Description = string(alert.Annotations[model.LabelName("description")])
+		p.Tags = alert.Labels
+		problems = append(problems, p)
+	}
+	return problems, err
 }
