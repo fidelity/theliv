@@ -333,3 +333,23 @@ const (
 	ManagedNamespace
 	UserNamespace
 )
+
+// New Problem struct is for Prometheus alerts feature. It is the input and output struct for detectors.
+// To differentiate with previous Problem struct, it is named as NewProblem.
+// TODO: This is a temporary name, and will be renamed after old code cleanup.
+type NewProblem struct {
+	Name              string
+	Description       string
+	Tags              map[string]string
+	Details           []string             // output field after detetor. It contains solutions details to show in UI.
+	AffectedResources []NewResourceDetails // output field after detetor. It contains the resources affected by this problem that to show in UI.
+}
+
+// To differentiate with previous ResourceDetails struct, it is named as NewResourceDetails.
+// TODO: This is a temporary name, and will be renamed after old code cleanup.
+type NewResourceDetails struct {
+	Object     runtime.Object
+	ObjectKind string
+	OwnerKind  string
+	Owner      runtime.Object
+}
