@@ -17,7 +17,6 @@ import (
 	observability "github.com/fidelity/theliv/pkg/observability"
 	datadog "github.com/fidelity/theliv/pkg/observability/datadog"
 	k8s "github.com/fidelity/theliv/pkg/observability/k8s"
-	"github.com/fidelity/theliv/pkg/prometheus"
 	"github.com/fidelity/theliv/pkg/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -29,7 +28,7 @@ func Detector(r chi.Router) {
 }
 
 func detectPrometheusAlerts(w http.ResponseWriter, r *http.Request) {
-	con, err := prometheus.DetectAlerts(createDetectorInputWithContext(r))
+	con, err := service.DetectAlerts(createDetectorInputWithContext(r))
 	if err != nil {
 		processError(w, r, err)
 	} else {

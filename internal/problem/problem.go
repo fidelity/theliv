@@ -341,8 +341,8 @@ type NewProblem struct {
 	Name              string
 	Description       string
 	Tags              map[string]string
-	Details           []string             // output field after detetor. It contains solutions details to show in UI.
-	AffectedResources []NewResourceDetails // output field after detetor. It contains the resources affected by this problem that to show in UI.
+	Details           []*string             // output field after detetor. It contains solutions details to show in UI.
+	AffectedResources []*NewResourceDetails // output field after detetor. It contains the resources affected by this problem that to show in UI.
 }
 
 // To differentiate with previous ResourceDetails struct, it is named as NewResourceDetails.
