@@ -1,3 +1,8 @@
+/*
+ * Copyright FMR LLC <opensource@fidelity.com>
+ *
+ * SPDX-License-Identifier: Apache
+ */
 import { Component, OnInit } from '@angular/core';
 import { faExclamationTriangle, faLightbulb, faTimes, faThumbsUp,
   faClipboard, faShareAlt, faCopy, faDownload, faBookReader, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
