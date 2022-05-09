@@ -46,4 +46,4 @@ jobs:
           context: .
           file: ./build/Dockerfile
           push: ${{ github.event_name == 'push' }}
-          tags: ${{ env.VERSION }}
+          tags: ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
