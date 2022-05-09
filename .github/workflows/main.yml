@@ -1,7 +1,7 @@
 name: CI
 
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
+  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [github-actions]
     paths-ignore: ["**.md"]
@@ -9,6 +9,10 @@ on:
     branches: [main]
     paths-ignore: ["**.md"]
   workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
@@ -23,18 +27,19 @@ jobs:
           [ "${{ github.event_name }}" == "pull_request" ] && export VERSION=${BUILD_VERSION}-dev || export VERSION=${BUILD_VERSION}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "REPO=theliv" >> $GITHUB_ENV
-          echo "using $VERSION as the release version"
-      # - name: Setup Go environment
-      #   uses: actions/setup-go@v2
-      #   with:
-      #     go-version: 1.17
+          echo "using ${{ env.VERSION }} as the release version"
       - name: Login to GitHub Container Registry
         if: github.event_name == 'push'
-        uses: docker/login-action@v1
-        # with:
-          # username: ${{ secrets.DOCKER_USER }}
-          # password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build Docker Image
-        if: github.event_name == 'push'
-        # run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
-        run: echo "docker build image"
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./build/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
