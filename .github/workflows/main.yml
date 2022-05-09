@@ -44,6 +44,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: /build/Dockerfile
+          file: ./build/Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: ${{ env.VERSION }}
