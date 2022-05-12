@@ -67,7 +67,7 @@ func DetectAlerts(ctx context.Context) ([]*problem.NewProblem, error) {
 	// TODO: register investigator func map
 	// TODO: check investigator func or default
 	for _, problem := range problems {
-		investigators.DetaultInvestigator(ctx, problem, input)
+		investigators.CommonInvestigator(ctx, problem, input)
 	}
 	return problems, nil
 }
