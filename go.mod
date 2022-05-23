@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v0.12.0
-	github.com/DataDog/datadog-api-client-go v1.7.0
+	github.com/DataDog/datadog-api-client-go v1.14.0
 	github.com/aws/aws-sdk-go-v2 v1.13.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.12.0
