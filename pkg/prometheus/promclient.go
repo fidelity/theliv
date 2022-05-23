@@ -34,6 +34,7 @@ var TLSRoundTripper http.RoundTripper = &http.Transport{
 
 func GetAlerts(input *problem.DetectorCreationInput) (v1.AlertsResult, error) {
 	client, err := api.NewClient(api.Config{
+		// TODO: load from DB
 		Address: "https://tochange.prometheus.host:8443",
 		RoundTripper: promconfig.NewAuthorizationCredentialsRoundTripper("Bearer",
 			promconfig.Secret(input.Kubeconfig.BearerToken),
@@ -50,8 +51,6 @@ func GetAlerts(input *problem.DetectorCreationInput) (v1.AlertsResult, error) {
 	if err != nil {
 		golog.Printf("ERROR - Got error when getting Prometheus alerts, error is %s", err)
 	}
-
-	// TODO: filter by namespace
 
 	return result, err
 }

@@ -20,8 +20,9 @@ type ReportCardIssue struct {
 	Solutions   []string   `json:"solutions,omitempty"`
 	CreatedTime string     `json:"createdTime,omitempty"`
 	Tags        []string   `json:"tags,omitempty"`
-	DomainName  DomainName `json:"domainName"`
+	DomainName  DomainName `json:"domainName,omitempty"`
 	Documents   []string   `json:"documents,omitempty"`
+	CauseLevel  int        `json:"causelevel,omitempty"`
 }
 
 type ReportCardResource struct {

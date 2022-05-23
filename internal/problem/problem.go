@@ -341,15 +341,16 @@ type NewProblem struct {
 	Name              string
 	Description       string
 	Tags              map[string]string
-	Details           []*string             // output field after detetor. It contains solutions details to show in UI.
-	AffectedResources []*NewResourceDetails // output field after detetor. It contains the resources affected by this problem that to show in UI.
+	Level             ProblemLevel
+	CauseLevel        int
+	SolutionDetails   []*string          // output field after detetor. It contains solutions details to show in UI.
+	AffectedResources NewResourceDetails // output field after detetor. It contains the resources affected by this problem that to show in UI.
 }
 
 // To differentiate with previous ResourceDetails struct, it is named as NewResourceDetails.
 // TODO: This is a temporary name, and will be renamed after old code cleanup.
 type NewResourceDetails struct {
-	Object     runtime.Object
-	ObjectKind string
-	OwnerKind  string
-	Owner      runtime.Object
+	ResourceKind string
+	ResourceName string
+	Resource     runtime.Object
 }
