@@ -43,8 +43,15 @@ export class KubernetesService {
     );
   }
 
+  // public getDetects(cluster: string, namespace: string): Observable<any> {
+  //   const url = `${this.kubeEndpoint}/detector/${cluster}/${namespace}/detect`;
+  //   return this.httpClient.get(url, this.headers).pipe(
+  //     catchError(this.handleError)
+  //   );
+  // }
+
   public getDetects(cluster: string, namespace: string): Observable<any> {
-    const url = `${this.kubeEndpoint}/detector/${cluster}/${namespace}/detect`;
+    const url = `${this.kubeEndpoint}/detector/${cluster}/${namespace}/prometheus`;
     return this.httpClient.get(url, this.headers).pipe(
       catchError(this.handleError)
     );
