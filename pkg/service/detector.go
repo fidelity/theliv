@@ -13,6 +13,7 @@ import (
 	"github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/internal/problem"
 	"github.com/fidelity/theliv/internal/problemdetectors"
+	"github.com/fidelity/theliv/pkg/config"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	"github.com/fidelity/theliv/pkg/prometheus"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -69,6 +70,8 @@ var alertInvestigatorMap = map[string][]investigatorFunc{
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
+	thelivcfg := config.GetThelivConfig()
+	managednamespaces := thelivcfg.ProblemLevel.ManagedNamespaces
 	input := GetDetectorInput(ctx)
 	alerts, _ := prometheus.GetAlerts(input)
 
@@ -88,15 +91,11 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 		}
 
 		// build problem level
-		if problem.Tags["resourcetype"] == "node" {
-			// TODO: what are cluster level problem??
+		if problem.Tags["resourcetype"] == "node" || contains(managednamespaces, problem.Tags["namespace"]) {
+			// node & managednamespaces are cluster level problem
 			problem.Level = prob.Cluster
 		} else if problem.Tags["namespace"] == input.Namespace {
 			problem.Level = prob.UserNamespace
-		} else if problem.Tags["namespace"] == "managednamespaces" {
-			// TODO: load from DB
-			// TODO: what are managed namespace??
-			problem.Level = prob.ManagedNamespace
 		} else {
 			// filter out other problems that not related to user namespace
 			continue
@@ -333,4 +332,13 @@ func PodNotRunningSolutionsInvestigator(ctx context.Context, problem *problem.Ne
 	// Generate solutions
 	detail := "do something to provide solutions"
 	problem.SolutionDetails = append(problem.SolutionDetails, &detail)
+}
+
+func contains(list []string, str string) bool {
+	for _, l := range list {
+		if str == l {
+			return true
+		}
+	}
+	return false
 }

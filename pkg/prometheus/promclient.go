@@ -15,6 +15,7 @@ import (
 	golog "log"
 
 	"github.com/fidelity/theliv/internal/problem"
+	"github.com/fidelity/theliv/pkg/config"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	promconfig "github.com/prometheus/common/config"
@@ -33,9 +34,9 @@ var TLSRoundTripper http.RoundTripper = &http.Transport{
 }
 
 func GetAlerts(input *problem.DetectorCreationInput) (v1.AlertsResult, error) {
+	thelivcfg := config.GetThelivConfig()
 	client, err := api.NewClient(api.Config{
-		// TODO: load from DB
-		Address: "https://tochange.prometheus.host:8443",
+		Address: thelivcfg.Prometheus.Address,
 		RoundTripper: promconfig.NewAuthorizationCredentialsRoundTripper("Bearer",
 			promconfig.Secret(input.Kubeconfig.BearerToken),
 			TLSRoundTripper),

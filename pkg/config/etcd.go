@@ -35,6 +35,14 @@ func (ecl *EtcdConfigLoader) LoadConfigs() {
 	if err := ecl.loadAuthConfig(); err != nil {
 		log.Printf("Failed to load auth config, error is %v\n", err)
 	}
+
+	if err := ecl.loadPrometheusConfig(); err != nil {
+		log.Printf("Failed to load prometheus config, error is %v\n", err)
+	}
+
+	if err := ecl.loadThelivLevelConfig(); err != nil {
+		log.Printf("Failed to load theliv level config, error is %v\n", err)
+	}
 }
 
 func (ecl *EtcdConfigLoader) GetKubernetesConfig(name string) *KubernetesCluster {
@@ -123,6 +131,28 @@ func (ecl *EtcdConfigLoader) loadAuthConfig() error {
 	}
 	thelivConfig.Auth = conf
 	log.Printf("Successfully load auth config %v\n", conf.ToMaskString())
+	return nil
+}
+
+func (ecl *EtcdConfigLoader) loadPrometheusConfig() error {
+	conf := &PrometheusConfig{}
+	err := driver.GetObjectWithSub(driver.PROMETHEUS_CONFIG_KEY, conf)
+	if err != nil {
+		return err
+	}
+	thelivConfig.Prometheus = conf
+	log.Println("Successfully load prometheus config")
+	return nil
+}
+
+func (ecl *EtcdConfigLoader) loadThelivLevelConfig() error {
+	conf := &ProblemLevelConfig{}
+	err := driver.GetObjectWithSub(driver.THELIV_LEVEL_CONFIG_KEY, conf)
+	if err != nil {
+		return err
+	}
+	thelivConfig.ProblemLevel = conf
+	log.Println("Successfully load theliv level config")
 	return nil
 }
 
