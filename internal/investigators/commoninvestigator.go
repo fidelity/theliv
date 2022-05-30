@@ -10,7 +10,6 @@ import (
 	golog "log"
 
 	"github.com/fidelity/theliv/internal/problem"
-	prob "github.com/fidelity/theliv/internal/problem"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -18,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func CommonInvestigator(ctx context.Context, problem *problem.NewProblem, input *prob.DetectorCreationInput) {
+func CommonInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
 	switch problem.Tags["resourcetype"] {
 	case "pod":
 		loadPodDetails(problem)
@@ -49,7 +48,7 @@ func CommonInvestigator(ctx context.Context, problem *problem.NewProblem, input 
 	}
 }
 
-func loadPodDetails(problem *prob.NewProblem) {
+func loadPodDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	pod := *ro.(*v1.Pod)
 	golog.Printf("INFO - Checking status with pod %s", pod.Name)
@@ -60,7 +59,7 @@ func loadPodDetails(problem *prob.NewProblem) {
 	problem.SolutionDetails = append(problem.SolutionDetails, &detail)
 }
 
-func loadContainerDetails(problem *prob.NewProblem) {
+func loadContainerDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	pod := *ro.(*v1.Pod)
 	containername := problem.Tags["container"]
@@ -95,7 +94,7 @@ func loadContainerDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadDeploymentDetails(problem *prob.NewProblem) {
+func loadDeploymentDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	deployment := *ro.(*appsv1.Deployment)
 	golog.Printf("INFO - Checking status with deployment %s", deployment.Name)
@@ -108,7 +107,7 @@ func loadDeploymentDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadReplicaSetDetails(problem *prob.NewProblem) {
+func loadReplicaSetDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	rs := *ro.(*appsv1.ReplicaSet)
 	golog.Printf("INFO - Checking status with replicaset %s", rs.Name)
@@ -121,7 +120,7 @@ func loadReplicaSetDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadStatefulSetDetails(problem *prob.NewProblem) {
+func loadStatefulSetDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	ss := *ro.(*appsv1.StatefulSet)
 	golog.Printf("INFO - Checking status with statefulset %s", ss.Name)
@@ -134,7 +133,7 @@ func loadStatefulSetDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadDaemonSetDetails(problem *prob.NewProblem) {
+func loadDaemonSetDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	ds := *ro.(*appsv1.DaemonSet)
 	golog.Printf("INFO - Checking status with daemonset %s", ds.Name)
@@ -147,7 +146,7 @@ func loadDaemonSetDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadNodeDetails(problem *prob.NewProblem) {
+func loadNodeDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	node := *ro.(*v1.Node)
 	golog.Printf("INFO - Checking status with node %s", node.Name)
@@ -160,7 +159,7 @@ func loadNodeDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadJobDetails(problem *prob.NewProblem) {
+func loadJobDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	job := *ro.(*batchv1.Job)
 	golog.Printf("INFO - Checking status with job %s", job.Name)
@@ -173,7 +172,7 @@ func loadJobDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadCronJobDetails(problem *prob.NewProblem) {
+func loadCronJobDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	job := *ro.(*batchv1.CronJob)
 	golog.Printf("INFO - Checking status with cron job %s", job.Name)
@@ -185,7 +184,7 @@ func loadCronJobDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadServiceDetails(problem *prob.NewProblem) {
+func loadServiceDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	service := *ro.(*v1.Service)
 	golog.Printf("INFO - Checking status with service %s", service.Name)
@@ -198,7 +197,7 @@ func loadServiceDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadIngressDetails(problem *prob.NewProblem) {
+func loadIngressDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	ingress := *ro.(*networkv1.Ingress)
 	golog.Printf("INFO - Checking status with ingress %s", ingress.Name)
@@ -212,7 +211,7 @@ func loadIngressDetails(problem *prob.NewProblem) {
 	}
 }
 
-func loadEndpointsDetails(problem *prob.NewProblem) {
+func loadEndpointsDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	endpoints := *ro.(*v1.Endpoints)
 	golog.Printf("INFO - Checking status with endpoints %s", endpoints.Name)

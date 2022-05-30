@@ -44,7 +44,7 @@ export class KubernetesService {
   }
 
   public getDetects(cluster: string, namespace: string): Observable<any> {
-    const url = `${this.kubeEndpoint}/detector/${cluster}/${namespace}/prometheus`;
+    const url = `${this.kubeEndpoint}/detector/${cluster}/${namespace}/detect`;
     return this.httpClient.get(url, this.headers).pipe(
       catchError(this.handleError)
     );
