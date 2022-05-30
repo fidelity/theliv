@@ -18,14 +18,9 @@ type TimeSpan struct {
 }
 
 type DetectorCreationInput struct {
-	// LogRetriever           observability.LogRetriever
-	// EventRetriever         observability.EventRetriever
-	// LogDeeplinkRetriever   observability.LogDeeplinkRetriever
-	// EventDeeplinkRetriever observability.EventDeeplinkRetriever
-	Kubeconfig  *rest.Config
-	Namespace   string
-	ClusterName string
-	// Platform               SupportedPlatform
+	Kubeconfig    *rest.Config
+	Namespace     string
+	ClusterName   string
 	EventTimespan TimeSpan
 	LogTimespan   TimeSpan
 	AwsConfig     aws.Config
