@@ -31,7 +31,9 @@ type investigatorFunc func(ctx context.Context, problem *problem.Problem, input 
 // modify this map when adding new investigator func for alert
 // for each alert, you can define one or more func to call to build details or solutions
 var alertInvestigatorMap = map[string][]investigatorFunc{
-	"AlertNameForCustomizedInvestigator": {PodNotRunningInvestigator, PodNotRunningSolutionsInvestigator},
+	"PodNotRunning":                          {investigators.PodNotRunningInvestigator, investigators.PodNotRunningSolutionsInvestigator},
+	"ContainerWaitingAsImagePullBackOff":     {investigators.ContainerImagePullBackoffInvestigator},
+	"InitContainerWaitingAsImagePullBackOff": {investigators.InitContainerImagePullBackoffInvestigator},
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
@@ -323,19 +325,6 @@ func buildAffectedResource(problem *problem.Problem, resourceName string, resour
 	problem.AffectedResources.ResourceName = resourceName
 	problem.AffectedResources.ResourceKind = resourceKind
 	problem.AffectedResources.Resource = object
-}
-
-// create a seperate go file in ./internal/investigators for each investigator
-func PodNotRunningInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	// Load kubenetes resource details
-	detail := "do something to kubeneter get details"
-	problem.SolutionDetails = append(problem.SolutionDetails, &detail)
-}
-
-func PodNotRunningSolutionsInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	// Generate solutions
-	detail := "do something to provide solutions"
-	problem.SolutionDetails = append(problem.SolutionDetails, &detail)
 }
 
 func contains(list []string, str string) bool {

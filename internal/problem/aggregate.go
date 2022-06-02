@@ -174,7 +174,7 @@ func getControlOwner(mo metav1.Object) *metav1.OwnerReference {
 func getReportCardResource(p Problem, resource ResourceDetails) *ReportCardResource {
 	cr := createReportCardResource(p, resource.Resource.(metav1.Object), resource.Resource.GetObjectKind().GroupVersionKind().Kind)
 	for _, s := range p.SolutionDetails {
-		cr.Issue.Solutions = append(cr.Issue.Solutions, *s)
+		cr.Issue.Solutions = append(cr.Issue.Solutions, s)
 	}
 	// cr.Issue.Documents = urlToStr(p.Docs)
 	// if resource.Deeplink != nil {

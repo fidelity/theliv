@@ -56,7 +56,7 @@ type Problem struct {
 	Tags              map[string]string
 	Level             ProblemLevel
 	CauseLevel        int
-	SolutionDetails   []*string       // output field after detetor. It contains solutions details to show in UI.
+	SolutionDetails   []string        // output field after detetor. It contains solutions details to show in UI.
 	AffectedResources ResourceDetails // output field after detetor. It contains the resources affected by this problem that to show in UI.
 }
 
