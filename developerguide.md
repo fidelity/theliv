@@ -1,4 +1,5 @@
 # Developer Guide
+This guide includes 2 parts: How to customize your own alerts and how to register investigator for the alert.
 ## Customize Alerts
 The alerting rules are defined in the config map of prometheus server. You can see all the configurations with the following command.
 ``` cmd
