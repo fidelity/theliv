@@ -31,9 +31,9 @@ type investigatorFunc func(ctx context.Context, problem *problem.Problem, input 
 // modify this map when adding new investigator func for alert
 // for each alert, you can define one or more func to call to build details or solutions
 var alertInvestigatorMap = map[string][]investigatorFunc{
-	"PodNotRunning":                      {investigators.PodNotRunningInvestigator, investigators.PodNotRunningSolutionsInvestigator},
-	"ContainerWaitingAsImagePullBackOff": {investigators.ContainerImagePullBackoffInvestigator},
-	// "InitContainerWaitingAsImagePullBackOff": {investigators.InitContainerImagePullBackoffInvestigator},
+	"PodNotRunning":                          {investigators.PodNotRunningInvestigator, investigators.PodNotRunningSolutionsInvestigator},
+	"ContainerWaitingAsImagePullBackOff":     {investigators.ContainerImagePullBackoffInvestigator},
+	"InitContainerWaitingAsImagePullBackOff": {investigators.InitContainerImagePullBackoffInvestigator},
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
@@ -111,6 +111,9 @@ func buildProblemAffectedResource(ctx context.Context, problems []*problem.Probl
 			loadPodResource(client, ctx, problem, input)
 			problem.CauseLevel = 1
 		case "container":
+			loadContainerResource(client, ctx, problem, input)
+			problem.CauseLevel = 1
+		case "initcontainer":
 			loadContainerResource(client, ctx, problem, input)
 			problem.CauseLevel = 1
 		case "deployment":
