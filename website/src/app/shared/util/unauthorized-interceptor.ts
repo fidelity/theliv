@@ -1,3 +1,8 @@
+/*
+ * Copyright FMR LLC <opensource@fidelity.com>
+ *
+ * SPDX-License-Identifier: Apache
+ */
 import { Injectable, Inject } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';

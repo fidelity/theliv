@@ -1,3 +1,8 @@
+/*
+ * Copyright FMR LLC <opensource@fidelity.com>
+ *
+ * SPDX-License-Identifier: Apache
+ */
 import { EventEmitter, Input, Output } from '@angular/core';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 import { Component, OnInit } from '@angular/core';
