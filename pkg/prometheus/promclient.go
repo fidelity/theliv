@@ -15,11 +15,10 @@ import (
 	golog "log"
 
 	"github.com/fidelity/theliv/internal/problem"
-	"github.com/fidelity/theliv/pkg/service"
+	"github.com/fidelity/theliv/pkg/config"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	promconfig "github.com/prometheus/common/config"
-	"github.com/prometheus/common/model"
 )
 
 var TLSRoundTripper http.RoundTripper = &http.Transport{
@@ -34,10 +33,10 @@ var TLSRoundTripper http.RoundTripper = &http.Transport{
 	}),
 }
 
-func DetectAlerts(ctx context.Context) ([]problem.NewProblem, error) {
-	input := service.GetDetectorInput(ctx)
+func GetAlerts(input *problem.DetectorCreationInput) (v1.AlertsResult, error) {
+	thelivcfg := config.GetThelivConfig()
 	client, err := api.NewClient(api.Config{
-		Address: "https://tochange.prometheus.host:8443",
+		Address: thelivcfg.Prometheus.Address,
 		RoundTripper: promconfig.NewAuthorizationCredentialsRoundTripper("Bearer",
 			promconfig.Secret(input.Kubeconfig.BearerToken),
 			TLSRoundTripper),
@@ -54,19 +53,5 @@ func DetectAlerts(ctx context.Context) ([]problem.NewProblem, error) {
 		golog.Printf("ERROR - Got error when getting Prometheus alerts, error is %s", err)
 	}
 
-	// TODO: filter by namespace
-
-	// build problems from  alerts, problem is detector input
-	problems := make([]problem.NewProblem, 0)
-	for _, alert := range result.Alerts {
-		p := problem.NewProblem{}
-		p.Name = string(alert.Labels[model.LabelName("alertname")])
-		p.Description = string(alert.Annotations[model.LabelName("description")])
-		p.Tags = make(map[string]string)
-		for ln, lv := range alert.Labels {
-			p.Tags[string(ln)] = string(lv)
-		}
-		problems = append(problems, p)
-	}
-	return problems, err
+	return result, err
 }

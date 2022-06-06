@@ -52,13 +52,15 @@ type ThelivConfig struct {
 	Port     int `json:"port"`
 	LogLevel int `json:"loglevel"`
 	// Only for file configs
-	ClusterDir          string         `json:"clusterDir,omitempty"`
-	Datadog             *DatadogConfig `json:"datadog,omitempty"`
-	Auth                *AuthConfig    `json:"auth,omitempty"`
-	LogDriver           LogDriverType  `json:"logDriver,omitempty"`
-	EventDriver         LogDriverType  `json:"eventDriver,omitempty"`
-	LogDeeplinkDriver   LogDriverType  `json:"logDeeplinkDriver,omitempty"`
-	EventDeeplinkDriver LogDriverType  `json:"eventDeeplinkDriver,omitempty"`
+	ClusterDir          string              `json:"clusterDir,omitempty"`
+	Datadog             *DatadogConfig      `json:"datadog,omitempty"`
+	Auth                *AuthConfig         `json:"auth,omitempty"`
+	Prometheus          *PrometheusConfig   `json:"prometheus,omitempty"`
+	ProblemLevel        *ProblemLevelConfig `json:"problemlevel,omitempty"`
+	LogDriver           LogDriverType       `json:"logDriver,omitempty"`
+	EventDriver         LogDriverType       `json:"eventDriver,omitempty"`
+	LogDeeplinkDriver   LogDriverType       `json:"logDeeplinkDriver,omitempty"`
+	EventDeeplinkDriver LogDriverType       `json:"eventDeeplinkDriver,omitempty"`
 }
 
 func (c *ThelivConfig) ToMaskString() string {
@@ -116,6 +118,14 @@ func (c *AuthConfig) ToMaskString() string {
 	WhitelistPath: %v
 	`, c.CertPath, len(c.Cert), len(c.ClientID), len(c.ClientSecret), c.KeyPath, len(c.Key), c.IDPMetadataPath,
 		len(c.IDPMetadata), c.IDPMetadataURL, c.MetadataURL, c.AcrURL, c.SloURL, c.EntityID, c.WhitelistPath)
+}
+
+type PrometheusConfig struct {
+	Address string `json:"address"`
+}
+
+type ProblemLevelConfig struct {
+	ManagedNamespaces []string `json:"managednamespaces"`
 }
 
 type KubernetesCluster struct {

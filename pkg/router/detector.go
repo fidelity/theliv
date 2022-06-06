@@ -18,8 +18,8 @@ import (
 )
 
 func Detector(r chi.Router) {
-	// r.Get("/{cluster}/{namespace}/detect", detect)
-	r.Get("/{cluster}/{namespace}/prometheus", detectPrometheusAlerts)
+	r.Get("/{cluster}/{namespace}/detect", detectPrometheusAlerts)
+	// r.Get("/{cluster}/{namespace}/prometheus", detectPrometheusAlerts)
 }
 
 func detectPrometheusAlerts(w http.ResponseWriter, r *http.Request) {
@@ -30,15 +30,6 @@ func detectPrometheusAlerts(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, con)
 	}
 }
-
-// func detect(w http.ResponseWriter, r *http.Request) {
-// 	con, err := service.Detect(createDetectorInputWithContext(r))
-// 	if err != nil {
-// 		processError(w, r, err)
-// 	} else {
-// 		render.JSON(w, r, con)
-// 	}
-// }
 
 func createDetectorInputWithContext(r *http.Request) context.Context {
 	ctx := r.Context()
@@ -58,26 +49,12 @@ func createDetectorInputWithContext(r *http.Request) context.Context {
 	if awsconfig != nil {
 		ac = *awsconfig
 	}
-	// thelivcfg := config.GetThelivConfig()
-
-	// The kubeclient will be used for k8s logs/events driver.
-	// client, err := kubeclient.NewKubeClient(k8sconfig)
-	// if err != nil {
-	// 	golog.Printf("ERROR - Got error when getting deployment client with kubeclient, error is %s", err)
-	// }
-
-	// eventClient, logClient := getLogDriver(thelivcfg, client)
-	// eventDeeplinkClient, logDeeplinkClient := getDeeplinkDrivers(thelivcfg)
 
 	input := &problem.DetectorCreationInput{
 		Kubeconfig:  k8sconfig,
 		ClusterName: cluster,
 		Namespace:   namespace,
-		// EventRetriever:         eventClient,
-		// LogRetriever:           logClient,
-		// EventDeeplinkRetriever: eventDeeplinkClient,
-		// LogDeeplinkRetriever:   logDeeplinkClient,
-		AwsConfig: ac,
+		AwsConfig:   ac,
 	}
 
 	return service.SetDetectorInput(ctx, input)
