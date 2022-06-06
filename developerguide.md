@@ -43,9 +43,9 @@ kubectl edit cm prometheus-server
 #### Reload Configuration
 Reload prometheus configuration.
 #### References
-[kube_state_metrics docs](https://github.com/kubernetes/kube-state-metrics/tree/master/docs)
-[PromQL Cheetsheet](https://promlabs.com/promql-cheat-sheet/)
-[Alerts Examples](https://github.com/kubernetes-monitoring/kubernetes-mixin/blob/c76b9378b86d28bd617d94a57c72b4770efed510/alerts/apps_alerts.libsonnet)
+[kube_state_metrics docs](https://github.com/kubernetes/kube-state-metrics/tree/master/docs)   
+[PromQL Cheetsheet](https://promlabs.com/promql-cheat-sheet/)   
+[Alerts Examples](https://github.com/kubernetes-monitoring/kubernetes-mixin/blob/c76b9378b86d28bd617d94a57c72b4770efed510/alerts/apps_alerts.libsonnet)   
 
 ## Provide Investigator
 Investigators are mainly responsible to triage the problem that built from a fired alert and provide responding solutions and enough details for users to understand the next steps to solve the problem.
@@ -75,14 +75,14 @@ And we need to provide the responding investigator:
 [
   {
     "name": "problem name",
-    "rootCause": {...},
+    "rootCause": { ... },
     "resources": [
       {
         "name": "pod-name-with-error",
         "type": "Pod",
-        "labels": {...},
-        "annotations": {...},
-        "metadata": {...},
+        "labels": { ... },
+        "annotations": { ... },
+        "metadata": { ... },
         "issue": {
           "name": "InitContainerWaitingAsImagePullBackOff",
           "description": "Description of the alert",
@@ -95,7 +95,7 @@ And we need to provide the responding investigator:
             "5. < You can also provide cmd to troubleshoot >"
           ]
         },
-        "tags": {...},
+        "tags": { ... },
         "causelevel": 1
       }
     ]
