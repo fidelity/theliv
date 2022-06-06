@@ -15,11 +15,11 @@ require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.1
 	github.com/microsoft/kiota/authentication/go/azure v0.0.0-20211221082943-f98d671bb86d
-	github.com/microsoftgraph/msgraph-sdk-go v0.3.2
+	github.com/microsoftgraph/msgraph-sdk-go v0.25.0
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/common v0.33.0
 	github.com/rajarajanpsj/terraform v0.15.3-dagpkg
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/wangli1030/saml v0.4.7
 	go.etcd.io/etcd/client/v3 v3.5.1
 	go.uber.org/zap v1.21.0
@@ -54,6 +54,7 @@ require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cjlapao/common-go v0.0.20 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/crewjam/httperr v0.2.0 // indirect
@@ -75,10 +76,12 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	github.com/microsoft/kiota-abstractions-go v0.8.0 // indirect
+	github.com/microsoft/kiota-http-go v0.5.0 // indirect
+	github.com/microsoft/kiota-serialization-json-go v0.5.1 // indirect
+	github.com/microsoft/kiota-serialization-text-go v0.4.0 // indirect
 	github.com/microsoft/kiota/abstractions/go v0.0.0-20211202082735-099f3c37853a // indirect
-	github.com/microsoft/kiota/http/go/nethttp v0.0.0-20211203130928-8449c9e67101 // indirect
-	github.com/microsoft/kiota/serialization/go/json v0.0.0-20211112084539-17ac73ffdc7c // indirect
-	github.com/microsoftgraph/msgraph-sdk-go-core v0.0.5 // indirect
+	github.com/microsoftgraph/msgraph-sdk-go-core v0.26.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -90,7 +93,7 @@ require (
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/russellhaering/goxmldsig v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yosida95/uritemplate/v3 v3.0.1 // indirect
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	github.com/zclconf/go-cty v1.8.3 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.1 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.1 // indirect
