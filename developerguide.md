@@ -19,7 +19,7 @@ data:
 ### Define Alert
 Theliv mainly uses **kube-state-metrics** to define prometheus alerts, which is a simple service that listens to the Kubernetes API server and **generates metrics about the state of the objects such as deployments, nodes, and pods.** The metrics are focused on orchestration metadata: deployment, pod, replica status, etc. It is important to note that [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) is just a metrics endpoint. Other entities need to scrape it and provide long term storage (e.g., the Prometheus server).
 #### Create Alert
-Check the valid [metrics provided by kube_state_metrics](https://github.com/kubernetes/kube-state-metrics/tree/master/docs) before defining your own alerts expressions. And specify the label *job='kube-state-metrics'* in the metric.
+Check the valid [metrics provided by kube_state_metrics](https://github.com/kubernetes/kube-state-metrics/tree/master/docs) before defining your own alerts expressions. And specify the label *job='kube-state-metrics'* in the metric.  
 [Prometheus alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) allow you to define alert conditions based on Prometheus expression language expressions and to send notifications about firing alerts to an external service.
 **Alert Example:**
 ``` cmd
@@ -48,7 +48,7 @@ Reload prometheus configuration.
 [Alerts Examples](https://github.com/kubernetes-monitoring/kubernetes-mixin/blob/c76b9378b86d28bd617d94a57c72b4770efed510/alerts/apps_alerts.libsonnet)   
 
 ## Provide Investigator
-Investigators are mainly responsible to triage the problem that built from a fired alert and provide responding solutions and enough details for users to understand the next steps to solve the problem.
+Investigators are mainly responsible to triage the problem that built from a fired alert and provide responding solutions and enough details for users to understand the next steps to solve the problem.  
 In this example, we have an alert to monitor the init container's ImagePullBackoff error.
 ``` cmd
       - alert: InitContainerWaitingAsImagePullBackOff
