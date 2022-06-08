@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"time"
 
-	golog "log"
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/fidelity/theliv/internal/problem"
 	"github.com/fidelity/theliv/pkg/config"
@@ -42,7 +42,7 @@ func GetAlerts(input *problem.DetectorCreationInput) (v1.AlertsResult, error) {
 			TLSRoundTripper),
 	})
 	if err != nil {
-		golog.Printf("ERROR - Got error when creating Prometheus client, error is %s", err)
+		log.S().Errorf("Got error when creating Prometheus client, error is %s", err)
 	}
 
 	v1api := v1.NewAPI(client)
@@ -50,7 +50,7 @@ func GetAlerts(input *problem.DetectorCreationInput) (v1.AlertsResult, error) {
 	defer cancel()
 	result, err := v1api.Alerts(ctx)
 	if err != nil {
-		golog.Printf("ERROR - Got error when getting Prometheus alerts, error is %s", err)
+		log.S().Errorf("Got error when getting Prometheus alerts, error is %s", err)
 	}
 
 	return result, err

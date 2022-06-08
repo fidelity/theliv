@@ -8,7 +8,7 @@ package service
 import (
 	"context"
 
-	golog "log"
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/internal/problem"
@@ -103,219 +103,69 @@ func filterProblems(ctx context.Context, problems []*problem.Problem, input *pro
 func buildProblemAffectedResource(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) []*problem.Problem {
 	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
 	if err != nil {
-		golog.Printf("ERROR - Got error when initiating kubeclient to load affected resource, error is %s", err)
+		log.S().Errorf("Got error when initiating kubeclient to load affected resource, error is %s", err)
 	}
 	for _, problem := range problems {
 		switch problem.Tags["resourcetype"] {
 		case "pod":
-			loadPodResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, "pod", "")
 			problem.CauseLevel = 1
 		case "container":
-			loadContainerResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, "pod", "container")
 			problem.CauseLevel = 1
 		case "deployment":
-			loadDeploymentResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &appsv1.Deployment{}, "deployment", "")
 			problem.CauseLevel = 3
 		case "replicaset":
-			loadReplicaSetResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &appsv1.ReplicaSet{}, "replicaset", "")
 			problem.CauseLevel = 2
 		case "statefulset":
-			loadStatefulSetResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &appsv1.StatefulSet{}, "statefulset", "")
 			problem.CauseLevel = 2
 		case "daemonset":
-			loadDaemonSetResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &appsv1.DaemonSet{}, "daemonset", "")
 			problem.CauseLevel = 2
 		case "node":
-			loadNodeResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &corev1.Node{}, "node", "")
 			problem.CauseLevel = 0
 		case "job":
-			loadJobResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &batchv1.Job{}, "job", "")
 			problem.CauseLevel = 4
 		case "cronjob":
-			loadCronJobResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &batchv1.CronJob{}, "cronjob", "")
 			problem.CauseLevel = 4
 		case "service":
-			loadServiceResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &corev1.Service{}, "service", "")
 			problem.CauseLevel = 5
 		case "ingress":
-			loadIngressResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &networkv1.Ingress{}, "ingress", "")
 			problem.CauseLevel = 6
 		case "endpoint":
-			loadEndpointsResource(client, ctx, problem, input)
+			loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, "endpoint", "")
 			problem.CauseLevel = 5
 		default:
-			golog.Printf("WARN - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
+			log.S().Warnf("WARN - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
 		}
 	}
 	return problems
 }
 
-func loadPodResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
+func loadNamespacedResource(client *kubeclient.KubeClient, ctx context.Context,
+	problem *problem.Problem, obj runtime.Object, resourceType string, subType string) {
 	namespace := kubeclient.NamespacedName{
 		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["pod"],
+		Name:      problem.Tags[resourceType],
 	}
-	pod := &corev1.Pod{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, pod, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "pod", pod)
+	buildName := namespace.Name
+	buildType := resourceType
+	if subType != "" {
+		buildName = problem.Tags[subType]
+		buildType = subType
+	}
+	if client.Get(ctx, obj, namespace, metav1.GetOptions{}) == nil {
+		buildAffectedResource(problem, buildName, buildType, obj)
 	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadContainerResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["pod"],
-	}
-	containername := problem.Tags["container"]
-	pod := &corev1.Pod{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, pod, namespace, getOptions) == nil {
-		buildAffectedResource(problem, containername, "container", pod)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadDeploymentResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["deployment"],
-	}
-	deployment := &appsv1.Deployment{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, deployment, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "deployment", deployment)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadReplicaSetResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["replicaset"],
-	}
-	rs := &appsv1.ReplicaSet{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, rs, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "replicaset", rs)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadStatefulSetResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["statefulset"],
-	}
-	ss := &appsv1.StatefulSet{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, ss, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "statefulset", ss)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadDaemonSetResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["daemonset"],
-	}
-	ds := &appsv1.DaemonSet{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, ds, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "daemonset", ds)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadNodeResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["node"],
-	}
-	node := &corev1.Node{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, node, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "node", node)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadJobResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["job"],
-	}
-	job := &batchv1.Job{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, job, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "job", job)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadCronJobResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["cronjob"],
-	}
-	cronjob := &batchv1.CronJob{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, cronjob, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "cronjob", cronjob)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadServiceResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["service"],
-	}
-	service := &corev1.Service{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, service, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "service", service)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadIngressResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["ingress"],
-	}
-	ingress := &networkv1.Ingress{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, ingress, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "ingress", ingress)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
-	}
-}
-
-func loadEndpointsResource(client *kubeclient.KubeClient, ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
-		Name:      problem.Tags["endpoint"],
-	}
-	endpoints := &corev1.Endpoints{}
-	getOptions := metav1.GetOptions{}
-	if client.Get(ctx, endpoints, namespace, getOptions) == nil {
-		buildAffectedResource(problem, namespace.Name, "endpoint", endpoints)
-	} else {
-		golog.Printf("ERROR - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
+		log.S().Errorf("Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
 	}
 }
 

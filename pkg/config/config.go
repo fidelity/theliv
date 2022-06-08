@@ -8,7 +8,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -147,7 +148,7 @@ type ClusterBasicInfo struct {
 func (conf *KubernetesCluster) GetKubeConfig() *restclient.Config {
 	client, err := clientcmd.RESTConfigFromKubeConfig(conf.KubeConf)
 	if err != nil {
-		log.Printf("Failed to load kubernetes config, for cluster %v, error is %v\n", conf.Basic.Name, err)
+		log.S().Errorf("Failed to load kubernetes config, for cluster %v, error is %v\n", conf.Basic.Name, err)
 		return nil
 	}
 	return client
@@ -157,7 +158,7 @@ func (conf *KubernetesCluster) GetAwsConfig() *aws.Config {
 	awsconf := &AwsConfig{}
 	err := json.Unmarshal(conf.AwsConf, awsconf)
 	if err != nil {
-		log.Printf("Failed to load awsconfig for cluster %v, error is %v\n", conf.Basic.Name, err)
+		log.S().Errorf("Failed to load awsconfig for cluster %v, error is %v\n", conf.Basic.Name, err)
 		return nil
 	}
 
