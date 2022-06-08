@@ -8,12 +8,12 @@ package service
 import (
 	"context"
 
-	log "github.com/fidelity/theliv/pkg/log"
-
 	"github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/internal/problem"
+	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
 	"github.com/fidelity/theliv/pkg/kubeclient"
+	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/prometheus"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
@@ -38,12 +38,18 @@ var alertInvestigatorMap = map[string][]investigatorFunc{
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
 	input := GetDetectorInput(ctx)
-	alerts, _ := prometheus.GetAlerts(input)
+
+	alerts, err := prometheus.GetAlerts(input)
+	if err != nil {
+		return nil, err
+	}
 
 	// build problems from  alerts, problem is investigator input
 	problems := buildProblemsFromAlerts(alerts.Alerts)
 	problems = filterProblems(ctx, problems, input)
-	buildProblemAffectedResource(ctx, problems, input)
+	if err = buildProblemAffectedResource(ctx, problems, input); err != nil {
+		return nil, err
+	}
 
 	problemresults := make([]problem.Problem, 0)
 	for _, p := range problems {
@@ -86,10 +92,10 @@ func filterProblems(ctx context.Context, problems []*problem.Problem, input *pro
 	managednamespaces := thelivcfg.ProblemLevel.ManagedNamespaces
 	results := make([]*problem.Problem, 0)
 	for _, p := range problems {
-		if p.Tags["resourcetype"] == "node" || contains(managednamespaces, p.Tags["namespace"]) {
+		if p.Tags[com.Resourcetype] == com.Node || contains(managednamespaces, p.Tags[com.Namespace]) {
 			// node & managednamespaces are cluster level problem
 			p.Level = problem.Cluster
-		} else if p.Tags["namespace"] == input.Namespace {
+		} else if p.Tags[com.Namespace] == input.Namespace {
 			p.Level = problem.UserNamespace
 		} else {
 			// filter out other problems that not related to user namespace
@@ -100,54 +106,55 @@ func filterProblems(ctx context.Context, problems []*problem.Problem, input *pro
 	return results
 }
 
-func buildProblemAffectedResource(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) []*problem.Problem {
+func buildProblemAffectedResource(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) error {
 	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
 	if err != nil {
 		log.S().Errorf("Got error when initiating kubeclient to load affected resource, error is %s", err)
+		return err
 	}
 	for _, problem := range problems {
-		switch problem.Tags["resourcetype"] {
-		case "pod":
-			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, "pod", "")
+		switch problem.Tags[com.Resourcetype] {
+		case com.Pod:
+			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, "")
 			problem.CauseLevel = 1
-		case "container":
-			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, "pod", "container")
+		case com.Container:
+			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Container)
 			problem.CauseLevel = 1
-		case "deployment":
-			loadNamespacedResource(client, ctx, problem, &appsv1.Deployment{}, "deployment", "")
+		case com.Deployment:
+			loadNamespacedResource(client, ctx, problem, &appsv1.Deployment{}, com.Deployment, "")
 			problem.CauseLevel = 3
-		case "replicaset":
-			loadNamespacedResource(client, ctx, problem, &appsv1.ReplicaSet{}, "replicaset", "")
+		case com.Replicaset:
+			loadNamespacedResource(client, ctx, problem, &appsv1.ReplicaSet{}, com.Replicaset, "")
 			problem.CauseLevel = 2
-		case "statefulset":
-			loadNamespacedResource(client, ctx, problem, &appsv1.StatefulSet{}, "statefulset", "")
+		case com.Statefulset:
+			loadNamespacedResource(client, ctx, problem, &appsv1.StatefulSet{}, com.Statefulset, "")
 			problem.CauseLevel = 2
-		case "daemonset":
-			loadNamespacedResource(client, ctx, problem, &appsv1.DaemonSet{}, "daemonset", "")
+		case com.Daemonset:
+			loadNamespacedResource(client, ctx, problem, &appsv1.DaemonSet{}, com.Daemonset, "")
 			problem.CauseLevel = 2
-		case "node":
-			loadNamespacedResource(client, ctx, problem, &corev1.Node{}, "node", "")
+		case com.Node:
+			loadNamespacedResource(client, ctx, problem, &corev1.Node{}, com.Node, "")
 			problem.CauseLevel = 0
-		case "job":
-			loadNamespacedResource(client, ctx, problem, &batchv1.Job{}, "job", "")
+		case com.Job:
+			loadNamespacedResource(client, ctx, problem, &batchv1.Job{}, com.Job, "")
 			problem.CauseLevel = 4
-		case "cronjob":
-			loadNamespacedResource(client, ctx, problem, &batchv1.CronJob{}, "cronjob", "")
+		case com.Cronjob:
+			loadNamespacedResource(client, ctx, problem, &batchv1.CronJob{}, com.Cronjob, "")
 			problem.CauseLevel = 4
-		case "service":
-			loadNamespacedResource(client, ctx, problem, &corev1.Service{}, "service", "")
+		case com.Service:
+			loadNamespacedResource(client, ctx, problem, &corev1.Service{}, com.Service, "")
 			problem.CauseLevel = 5
-		case "ingress":
-			loadNamespacedResource(client, ctx, problem, &networkv1.Ingress{}, "ingress", "")
+		case com.Ingress:
+			loadNamespacedResource(client, ctx, problem, &networkv1.Ingress{}, com.Ingress, "")
 			problem.CauseLevel = 6
-		case "endpoint":
-			loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, "endpoint", "")
+		case com.Endpoint:
+			loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, com.Endpoint, "")
 			problem.CauseLevel = 5
 		default:
-			log.S().Warnf("WARN - Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
+			log.S().Warnf("WARN - Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
 		}
 	}
-	return problems
+	return nil
 }
 
 func loadNamespacedResource(client *kubeclient.KubeClient, ctx context.Context,
@@ -165,7 +172,7 @@ func loadNamespacedResource(client *kubeclient.KubeClient, ctx context.Context,
 	if client.Get(ctx, obj, namespace, metav1.GetOptions{}) == nil {
 		buildAffectedResource(problem, buildName, buildType, obj)
 	} else {
-		log.S().Errorf("Not found affected resource for resource type %s: ", problem.Tags["resourcetype"])
+		log.S().Errorf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
 	}
 }
 

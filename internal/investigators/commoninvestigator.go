@@ -11,6 +11,7 @@ import (
 	"strings"
 	"text/template"
 
+	com "github.com/fidelity/theliv/pkg/common"
 	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/fidelity/theliv/internal/problem"
@@ -22,40 +23,40 @@ import (
 )
 
 func CommonInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	switch problem.Tags["resourcetype"] {
-	case "pod":
+	switch problem.Tags[com.Resourcetype] {
+	case com.Pod:
 		loadPodDetails(problem)
-	case "container":
+	case com.Container:
 		loadContainerDetails(problem)
-	case "deployment":
+	case com.Deployment:
 		loadDeploymentDetails(problem)
-	case "replicaset":
+	case com.Replicaset:
 		loadReplicaSetDetails(problem)
-	case "statefulset":
+	case com.Statefulset:
 		loadStatefulSetDetails(problem)
-	case "daemonset":
+	case com.Daemonset:
 		loadDaemonSetDetails(problem)
-	case "node":
+	case com.Node:
 		loadNodeDetails(problem)
-	case "job":
+	case com.Job:
 		loadJobDetails(problem)
-	case "cronjob":
+	case com.Cronjob:
 		loadCronJobDetails(problem)
-	case "service":
+	case com.Service:
 		loadServiceDetails(problem)
-	case "ingress":
+	case com.Ingress:
 		loadIngressDetails(problem)
-	case "endpoint":
+	case com.Endpoint:
 		loadEndpointsDetails(problem)
 	default:
-		log.S().Warnf("Not found investigator function for resource type %s", problem.Tags["resourcetype"])
+		log.S().Warnf("Not found investigator function for resource type %s", problem.Tags[com.Resourcetype])
 	}
 }
 
 func loadPodDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	pod := *ro.(*v1.Pod)
-	logChecking("pod " + pod.Name)
+	logChecking(com.Pod + com.Blank + pod.Name)
 	for _, condition := range pod.Status.Conditions {
 		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
 			condition.Message, condition.Reason)
@@ -65,8 +66,8 @@ func loadPodDetails(problem *problem.Problem) {
 func loadContainerDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	pod := *ro.(*v1.Pod)
-	containername := problem.Tags["container"]
-	logChecking("init container with pod " + pod.Name)
+	containername := problem.Tags[com.Container]
+	logChecking("init container with " + com.Pod + com.Blank + pod.Name)
 	for _, status := range pod.Status.InitContainerStatuses {
 		if status.Name == containername {
 			if status.State.Terminated != nil {
@@ -81,7 +82,7 @@ func loadContainerDetails(problem *problem.Problem) {
 		}
 	}
 
-	logChecking("container with pod " + pod.Name)
+	logChecking("container with " + com.Pod + com.Blank + pod.Name)
 	for _, status := range pod.Status.ContainerStatuses {
 		if status.Name == containername {
 			if status.State.Terminated != nil {
@@ -100,7 +101,7 @@ func loadContainerDetails(problem *problem.Problem) {
 func loadDeploymentDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	deployment := *ro.(*appsv1.Deployment)
-	logChecking("deployment " + deployment.Name)
+	logChecking(com.Deployment + com.Blank + deployment.Name)
 	for _, condition := range deployment.Status.Conditions {
 		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
 			condition.Message, condition.Reason)
@@ -110,7 +111,7 @@ func loadDeploymentDetails(problem *problem.Problem) {
 func loadReplicaSetDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	rs := *ro.(*appsv1.ReplicaSet)
-	logChecking("replicaset " + rs.Name)
+	logChecking(com.Replicaset + com.Blank + rs.Name)
 	for _, condition := range rs.Status.Conditions {
 		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
 			condition.Message, condition.Reason)
@@ -120,7 +121,7 @@ func loadReplicaSetDetails(problem *problem.Problem) {
 func loadStatefulSetDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	ss := *ro.(*appsv1.StatefulSet)
-	logChecking("statefulset " + ss.Name)
+	logChecking(com.Statefulset + com.Blank + ss.Name)
 	for _, condition := range ss.Status.Conditions {
 		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
 			condition.Message, condition.Reason)
@@ -130,7 +131,7 @@ func loadStatefulSetDetails(problem *problem.Problem) {
 func loadDaemonSetDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	ds := *ro.(*appsv1.DaemonSet)
-	logChecking("daemonset " + ds.Name)
+	logChecking(com.Daemonset + com.Blank + ds.Name)
 	for _, condition := range ds.Status.Conditions {
 		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
 			condition.Message, condition.Reason)
@@ -140,7 +141,7 @@ func loadDaemonSetDetails(problem *problem.Problem) {
 func loadNodeDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	node := *ro.(*v1.Node)
-	logChecking("node " + node.Name)
+	logChecking(com.Node + com.Blank + node.Name)
 	for _, condition := range node.Status.Conditions {
 		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
 			condition.Message, condition.Reason)
@@ -150,7 +151,7 @@ func loadNodeDetails(problem *problem.Problem) {
 func loadJobDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	job := *ro.(*batchv1.Job)
-	logChecking("job " + job.Name)
+	logChecking(com.Job + com.Blank + job.Name)
 	for _, condition := range job.Status.Conditions {
 		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
 			condition.Message, condition.Reason)
@@ -160,7 +161,7 @@ func loadJobDetails(problem *problem.Problem) {
 func loadCronJobDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	job := *ro.(*batchv1.CronJob)
-	logChecking("cron job " + job.Name)
+	logChecking(com.Cronjob + com.Blank + job.Name)
 	for _, job := range job.Status.Active {
 		if job.Name != "" && job.Namespace != "" {
 			detail := job.Name + "in " + job.Namespace + "is active."
@@ -172,7 +173,7 @@ func loadCronJobDetails(problem *problem.Problem) {
 func loadServiceDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	service := *ro.(*v1.Service)
-	logChecking("service " + service.Name)
+	logChecking(com.Service + com.Blank + service.Name)
 	for _, condition := range service.Status.Conditions {
 		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
 			condition.Message, condition.Reason)
@@ -182,7 +183,7 @@ func loadServiceDetails(problem *problem.Problem) {
 func loadIngressDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	ingress := *ro.(*networkv1.Ingress)
-	logChecking("ingress " + ingress.Name)
+	logChecking(com.Ingress + com.Blank + ingress.Name)
 	for _, ingress := range ingress.Status.LoadBalancer.Ingress {
 		for _, port := range ingress.Ports {
 			if port.Error != nil {
@@ -196,7 +197,7 @@ func loadIngressDetails(problem *problem.Problem) {
 func loadEndpointsDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	endpoints := *ro.(*v1.Endpoints)
-	logChecking("endpoints " + endpoints.Name)
+	logChecking(com.Endpoint + com.Blank + endpoints.Name)
 	for _, sub := range endpoints.Subsets {
 		if sub.NotReadyAddresses != nil {
 			for _, addr := range sub.NotReadyAddresses {
