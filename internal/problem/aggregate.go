@@ -215,16 +215,16 @@ func rootCause(res []*ReportCardResource) *ReportCardIssue {
 		}
 	}
 
-	for _, r := range res {
-		dm := DefaultProblemMgr().Domain(r.Issue.DomainName)
-		for _, cd := range dm.correlationDeps {
-			// if dependency domain has related Problem, mark it as root for temp
-			// could be overrided, use last one as root cause
-			if depd, ok := m[cd.Name]; ok {
-				root = depd.Issue
-			}
-		}
-	}
+	// for _, r := range res {
+	// 	dm := DefaultProblemMgr().Domain(r.Issue.DomainName)
+	// 	for _, cd := range dm.correlationDeps {
+	// 		// if dependency domain has related Problem, mark it as root for temp
+	// 		// could be overrided, use last one as root cause
+	// 		if depd, ok := m[cd.Name]; ok {
+	// 			root = depd.Issue
+	// 		}
+	// 	}
+	// }
 	return root
 }
 
