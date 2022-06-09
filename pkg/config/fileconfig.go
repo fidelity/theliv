@@ -8,8 +8,9 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"path"
+
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"sigs.k8s.io/yaml"
 )
@@ -34,11 +35,11 @@ func NewFileConfigLoader(configfile string) *FileConfigLoader {
 
 func (l *FileConfigLoader) LoadConfigs() {
 	if err := l.loadThelivConfig(); err != nil {
-		log.Fatalf("Failed to load theliv config, %v", err)
+		log.S().Fatalf("Failed to load theliv config, %v", err)
 	}
 
 	if err := l.loadKubernetesConfig(); err != nil {
-		log.Fatalf("Failed to load kubernetes configs, %v", err)
+		log.S().Fatalf("Failed to load kubernetes configs, %v", err)
 	}
 }
 

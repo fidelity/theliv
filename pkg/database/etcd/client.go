@@ -11,10 +11,11 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"reflect"
 	"strings"
 	"time"
+
+	log "github.com/fidelity/theliv/pkg/log"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
@@ -38,12 +39,12 @@ const (
 func InitClientConfig(ca string, cert string, key string, endpoints []string) {
 	c, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
-		log.Panicf("Failed to load cert pair for etcd cluster, %v", err)
+		log.S().Panicf("Failed to load cert pair for etcd cluster, %v", err)
 	}
 
 	caData, err := ioutil.ReadFile(ca)
 	if err != nil {
-		log.Panicf("Failed to load ca cert for etcd cluster, %v", err)
+		log.S().Panicf("Failed to load ca cert for etcd cluster, %v", err)
 	}
 
 	pool := x509.NewCertPool()
@@ -64,11 +65,11 @@ func InitClientConfig(ca string, cert string, key string, endpoints []string) {
 
 func newClient() *clientv3.Client {
 	if config == nil {
-		log.Panicf("Etcd client config is not initialized yet!")
+		log.S().Panicf("Etcd client config is not initialized yet!")
 	}
 	client, err := clientv3.New(*config)
 	if err != nil {
-		log.Panicf("Failed to init etcd client, error : %v", client)
+		log.S().Panicf("Failed to init etcd client, error : %v", client)
 	}
 	return client
 }
@@ -79,7 +80,7 @@ func PutStr(key, value string) error {
 	// defer client.Close()
 
 	_, err := client.Put(context.TODO(), key, value)
-	log.Printf("Failed to put %v to etcd\n", key)
+	log.S().Errorf("Failed to put %v to etcd\n", key)
 	return err
 }
 
@@ -87,7 +88,7 @@ func PutStr(key, value string) error {
 func Put(key string, value interface{}) error {
 	c, err := json.Marshal(value)
 	if err != nil {
-		log.Printf("Failed to marshall %v\n", value)
+		log.S().Errorf("Failed to marshall %v\n", value)
 		return err
 	}
 	return PutStr(key, string(c))
@@ -100,12 +101,12 @@ func GetKeys(prefix string) ([]string, error) {
 
 	res, err := client.Get(context.TODO(), prefix, clientv3.WithPrefix(), clientv3.WithKeysOnly())
 	if err != nil {
-		log.Printf("Failed to get %v with keys only and prefix, error is %v\n", prefix, err)
+		log.S().Errorf("Failed to get %v with keys only and prefix, error is %v\n", prefix, err)
 		return nil, err
 	}
 	keys := make([]string, 0)
 	if res.Kvs == nil {
-		log.Printf("No keys found for prefix %v\n", prefix)
+		log.S().Infof("No keys found for prefix %v\n", prefix)
 		return keys, nil
 	}
 	for _, k := range res.Kvs {
@@ -121,17 +122,17 @@ func GetObject(key string, value interface{}) error {
 	// defer client.Close()
 	res, err := client.Get(context.TODO(), key)
 	if err != nil {
-		log.Printf("Failed to get %v, error is %v\n", key, err)
+		log.S().Errorf("Failed to get %v, error is %v\n", key, err)
 		return err
 	}
 	if l := len(res.Kvs); l != 1 {
-		log.Printf("Get %v keys from etcd\n", l)
+		log.S().Infof("Get %v keys from etcd\n", l)
 		return err
 	}
 	//assume all the value should be in json format
 	err = json.Unmarshal(res.Kvs[0].Value, value)
 	if err != nil {
-		log.Printf("Failed to unmarshall value to %v\n", value)
+		log.S().Errorf("Failed to unmarshall value to %v\n", value)
 	}
 	return err
 }
@@ -142,11 +143,11 @@ func Get(key string) ([]byte, error) {
 	// defer client.Close()
 	res, err := client.Get(context.TODO(), key)
 	if err != nil {
-		log.Printf("Failed to get %v, error is %v\n", key, err)
+		log.S().Errorf("Failed to get %v, error is %v\n", key, err)
 		return nil, err
 	}
 	if l := len(res.Kvs); l != 1 {
-		log.Printf("Get %v keys from etcd\n", l)
+		log.S().Infof("Get %v keys from etcd\n", l)
 		return nil, err
 	}
 	return res.Kvs[0].Value, nil
@@ -159,7 +160,7 @@ func GetObjectWithSub(key string, obj interface{}) error {
 	// defer client.Close()
 	res, err := client.Get(context.TODO(), key, clientv3.WithPrefix())
 	if err != nil {
-		log.Printf("Failed to get prefix %v, error is %v\n", key, err)
+		log.S().Errorf("Failed to get prefix %v, error is %v\n", key, err)
 		return err
 	}
 	firstkey := key + "/"
@@ -169,7 +170,7 @@ func GetObjectWithSub(key string, obj interface{}) error {
 
 			err := json.Unmarshal(value.Value, obj)
 			if err != nil {
-				log.Printf("Failed to unmarshall value to obj, the etcd key is: %v\n", firstkey)
+				log.S().Errorf("Failed to unmarshall value to obj, the etcd key is: %v\n", firstkey)
 			}
 		} else {
 			k := string(value.Key)
@@ -189,7 +190,7 @@ func setStructFieldValue(field *reflect.Value, value []byte) {
 		v := reflect.New(field.Type()).Elem()
 		err := json.Unmarshal(value, v.Addr().Interface())
 		if err != nil {
-			log.Printf("Failed to unmarshall value to field %v \n", field.Type().Name())
+			log.S().Errorf("Failed to unmarshall value to field %v \n", field.Type().Name())
 		}
 		field.Set(v)
 	case reflect.Slice:
@@ -205,7 +206,7 @@ func GetWithPrefix(pre string) (map[string][]byte, error) {
 	// defer client.Close()
 	res, err := client.Get(context.TODO(), pre, clientv3.WithPrefix())
 	if err != nil {
-		log.Printf("Failed to call GetWithPrefix, prefix %v, error is %v\n", pre, err)
+		log.S().Errorf("Failed to call GetWithPrefix, prefix %v, error is %v\n", pre, err)
 		return result, err
 	}
 	for _, kv := range res.Kvs {

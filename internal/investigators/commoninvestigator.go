@@ -8,9 +8,11 @@ package investigators
 import (
 	"bytes"
 	"context"
-	golog "log"
 	"strings"
 	"text/template"
+
+	com "github.com/fidelity/theliv/pkg/common"
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/fidelity/theliv/internal/problem"
 	appsv1 "k8s.io/api/apps/v1"
@@ -21,80 +23,77 @@ import (
 )
 
 func CommonInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	switch problem.Tags["resourcetype"] {
-	case "pod":
+	switch problem.Tags[com.Resourcetype] {
+	case com.Pod:
 		loadPodDetails(problem)
-	case "container":
+	case com.Container:
 		loadContainerDetails(problem)
-	case "initcontainer":
+	case com.Initcontainer:
 		loadContainerDetails(problem)
-	case "deployment":
+	case com.Deployment:
 		loadDeploymentDetails(problem)
-	case "replicaset":
+	case com.Replicaset:
 		loadReplicaSetDetails(problem)
-	case "statefulset":
+	case com.Statefulset:
 		loadStatefulSetDetails(problem)
-	case "daemonset":
+	case com.Daemonset:
 		loadDaemonSetDetails(problem)
-	case "node":
+	case com.Node:
 		loadNodeDetails(problem)
-	case "job":
+	case com.Job:
 		loadJobDetails(problem)
-	case "cronjob":
+	case com.Cronjob:
 		loadCronJobDetails(problem)
-	case "service":
+	case com.Service:
 		loadServiceDetails(problem)
-	case "ingress":
+	case com.Ingress:
 		loadIngressDetails(problem)
-	case "endpoint":
+	case com.Endpoint:
 		loadEndpointsDetails(problem)
 	default:
-		golog.Printf("WARN - Not found investigator function for resource type %s", problem.Tags["resourcetype"])
+		log.S().Warnf("Not found investigator function for resource type %s", problem.Tags[com.Resourcetype])
 	}
 }
 
 func loadPodDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	pod := *ro.(*v1.Pod)
-	golog.Printf("INFO - Checking status with pod %s", pod.Name)
+	logChecking(com.Pod + com.Blank + pod.Name)
 	for _, condition := range pod.Status.Conditions {
-		detail := string(condition.Type) + "=" + string(condition.Status) + ". "
-		if condition.Message != "" || condition.Reason != "" {
-			detail = detail + buildReasonMsg(condition.Reason, condition.Message)
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
-		}
+		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
+			condition.Message, condition.Reason)
 	}
 }
 
 func loadContainerDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	pod := *ro.(*v1.Pod)
-	containername := problem.Tags["container"]
-	golog.Printf("INFO - Checking init container with pod %s", pod.Name)
+	containername := problem.Tags[com.Container]
+	logChecking("init container with " + com.Pod + com.Blank + pod.Name)
 	for _, status := range pod.Status.InitContainerStatuses {
 		if status.Name == containername {
 			if status.State.Terminated != nil {
-				detail := buildReasonMsg(status.State.Terminated.Reason, status.State.Terminated.Message)
-				problem.SolutionDetails = append(problem.SolutionDetails, detail)
+				appendDetail(problem, "", status.State.Terminated.Message,
+					status.State.Terminated.Reason)
 			}
 			if status.State.Waiting != nil {
-				detail := buildReasonMsg(status.State.Waiting.Reason, status.State.Waiting.Message)
-				problem.SolutionDetails = append(problem.SolutionDetails, detail)
+				appendDetail(problem, "", status.State.Waiting.Message,
+					status.State.Waiting.Reason)
 			}
 			break
 		}
 	}
 
-	golog.Printf("INFO - Checking container with pod %s", pod.Name)
+	logChecking("container with " + com.Pod + com.Blank + pod.Name)
 	for _, status := range pod.Status.ContainerStatuses {
 		if status.Name == containername {
 			if status.State.Terminated != nil {
-				detail := buildReasonMsg(status.State.Terminated.Reason, status.State.Terminated.Message)
-				problem.SolutionDetails = append(problem.SolutionDetails, detail)
+				appendDetail(problem, "", status.State.Terminated.Message,
+					status.State.Terminated.Reason)
 			}
 			if status.State.Waiting != nil {
-				detail := buildReasonMsg(status.State.Waiting.Reason, status.State.Waiting.Message)
-				problem.SolutionDetails = append(problem.SolutionDetails, detail)
+				appendDetail(problem, "", status.State.Waiting.Message,
+					status.State.Waiting.Reason)
 			}
 			break
 		}
@@ -104,85 +103,67 @@ func loadContainerDetails(problem *problem.Problem) {
 func loadDeploymentDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	deployment := *ro.(*appsv1.Deployment)
-	golog.Printf("INFO - Checking status with deployment %s", deployment.Name)
+	logChecking(com.Deployment + com.Blank + deployment.Name)
 	for _, condition := range deployment.Status.Conditions {
-		detail := string(condition.Type) + "=" + string(condition.Status) + ". "
-		if condition.Message != "" || condition.Reason != "" {
-			detail = detail + buildReasonMsg(condition.Reason, condition.Message)
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
-		}
+		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
+			condition.Message, condition.Reason)
 	}
 }
 
 func loadReplicaSetDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	rs := *ro.(*appsv1.ReplicaSet)
-	golog.Printf("INFO - Checking status with replicaset %s", rs.Name)
+	logChecking(com.Replicaset + com.Blank + rs.Name)
 	for _, condition := range rs.Status.Conditions {
-		detail := string(condition.Type) + "=" + string(condition.Status) + ". "
-		if condition.Message != "" || condition.Reason != "" {
-			detail = detail + buildReasonMsg(condition.Reason, condition.Message)
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
-		}
+		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
+			condition.Message, condition.Reason)
 	}
 }
 
 func loadStatefulSetDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	ss := *ro.(*appsv1.StatefulSet)
-	golog.Printf("INFO - Checking status with statefulset %s", ss.Name)
+	logChecking(com.Statefulset + com.Blank + ss.Name)
 	for _, condition := range ss.Status.Conditions {
-		detail := string(condition.Type) + "=" + string(condition.Status) + ". "
-		if condition.Message != "" || condition.Reason != "" {
-			detail = detail + buildReasonMsg(condition.Reason, condition.Message)
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
-		}
+		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
+			condition.Message, condition.Reason)
 	}
 }
 
 func loadDaemonSetDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	ds := *ro.(*appsv1.DaemonSet)
-	golog.Printf("INFO - Checking status with daemonset %s", ds.Name)
+	logChecking(com.Daemonset + com.Blank + ds.Name)
 	for _, condition := range ds.Status.Conditions {
-		detail := string(condition.Type) + "=" + string(condition.Status) + ". "
-		if condition.Message != "" || condition.Reason != "" {
-			detail = detail + buildReasonMsg(condition.Reason, condition.Message)
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
-		}
+		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
+			condition.Message, condition.Reason)
 	}
 }
 
 func loadNodeDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	node := *ro.(*v1.Node)
-	golog.Printf("INFO - Checking status with node %s", node.Name)
+	logChecking(com.Node + com.Blank + node.Name)
 	for _, condition := range node.Status.Conditions {
-		detail := string(condition.Type) + "=" + string(condition.Status) + ". "
-		if condition.Message != "" || condition.Reason != "" {
-			detail = detail + buildReasonMsg(condition.Reason, condition.Message)
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
-		}
+		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
+			condition.Message, condition.Reason)
 	}
 }
 
 func loadJobDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	job := *ro.(*batchv1.Job)
-	golog.Printf("INFO - Checking status with job %s", job.Name)
+	logChecking(com.Job + com.Blank + job.Name)
 	for _, condition := range job.Status.Conditions {
-		detail := string(condition.Type) + "=" + string(condition.Status) + ". "
-		if condition.Message != "" || condition.Reason != "" {
-			detail = detail + buildReasonMsg(condition.Reason, condition.Message)
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
-		}
+		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
+			condition.Message, condition.Reason)
 	}
 }
 
 func loadCronJobDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	job := *ro.(*batchv1.CronJob)
-	golog.Printf("INFO - Checking status with cron job %s", job.Name)
+	logChecking(com.Cronjob + com.Blank + job.Name)
 	for _, job := range job.Status.Active {
 		if job.Name != "" && job.Namespace != "" {
 			detail := job.Name + "in " + job.Namespace + "is active."
@@ -194,20 +175,17 @@ func loadCronJobDetails(problem *problem.Problem) {
 func loadServiceDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	service := *ro.(*v1.Service)
-	golog.Printf("INFO - Checking status with service %s", service.Name)
+	logChecking(com.Service + com.Blank + service.Name)
 	for _, condition := range service.Status.Conditions {
-		detail := string(condition.Type) + "=" + string(condition.Status) + ". "
-		if condition.Message != "" || condition.Reason != "" {
-			detail = detail + buildReasonMsg(condition.Reason, condition.Message)
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
-		}
+		appendNonEmptyDetail(problem, string(condition.Type), string(condition.Status),
+			condition.Message, condition.Reason)
 	}
 }
 
 func loadIngressDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	ingress := *ro.(*networkv1.Ingress)
-	golog.Printf("INFO - Checking status with ingress %s", ingress.Name)
+	logChecking(com.Ingress + com.Blank + ingress.Name)
 	for _, ingress := range ingress.Status.LoadBalancer.Ingress {
 		for _, port := range ingress.Ports {
 			if port.Error != nil {
@@ -221,7 +199,7 @@ func loadIngressDetails(problem *problem.Problem) {
 func loadEndpointsDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	endpoints := *ro.(*v1.Endpoints)
-	golog.Printf("INFO - Checking status with endpoints %s", endpoints.Name)
+	logChecking(com.Endpoint + com.Blank + endpoints.Name)
 	for _, sub := range endpoints.Subsets {
 		if sub.NotReadyAddresses != nil {
 			for _, addr := range sub.NotReadyAddresses {
@@ -269,4 +247,22 @@ func GetSolutionsByTemplate(template string, object interface{}, splitIt bool) (
 		solution = append(solution, s1)
 	}
 	return
+}
+
+func appendDetail(problem *problem.Problem, detail string,
+	msg string, reason string) {
+	detail = detail + buildReasonMsg(reason, msg)
+	problem.SolutionDetails = append(problem.SolutionDetails, detail)
+}
+
+func appendNonEmptyDetail(problem *problem.Problem, conType string,
+	conMsg, msg string, reason string) {
+	if msg != "" || reason != "" {
+		detail := conType + "=" + conMsg + ". "
+		appendDetail(problem, detail, msg, reason)
+	}
+}
+
+func logChecking(res string) {
+	log.S().Infof("Checking status with %s", res)
 }
