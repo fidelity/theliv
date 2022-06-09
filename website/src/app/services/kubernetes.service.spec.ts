@@ -1,3 +1,8 @@
+/*
+ * Copyright FMR LLC <opensource@fidelity.com>
+ *
+ * SPDX-License-Identifier: Apache
+ */
 import { KubernetesService } from './kubernetes.service';
 import { HttpClient } from '@angular/common/http';
 import { of, throwError, BehaviorSubject } from 'rxjs';

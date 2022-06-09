@@ -1,3 +1,8 @@
+/*
+ * Copyright FMR LLC <opensource@fidelity.com>
+ *
+ * SPDX-License-Identifier: Apache
+ */
 import { Component, Inject } from '@angular/core';
 import { OnInit } from '@angular/core';
 import { WindowToken } from './shared/util/window';
