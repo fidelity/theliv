@@ -19,7 +19,6 @@ import (
 
 func Detector(r chi.Router) {
 	r.Get("/{cluster}/{namespace}/detect", detectPrometheusAlerts)
-	// r.Get("/{cluster}/{namespace}/prometheus", detectPrometheusAlerts)
 }
 
 func detectPrometheusAlerts(w http.ResponseWriter, r *http.Request) {
