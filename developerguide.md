@@ -102,4 +102,4 @@ And we need to provide the responding investigator:
   }
 ]
 ```
-[Example Investigator](https://github.com/fidelity/theliv/blob/sample-investigator/internal/investigators/initcontainerinvestigator.go)
+[Example Investigator PR](https://github.com/fidelity/theliv/pull/99)
