@@ -137,7 +137,7 @@ func (ecl *EtcdConfigLoader) loadAuthConfig() error {
 
 func (ecl *EtcdConfigLoader) loadPrometheusConfig() error {
 	conf := &PrometheusConfig{}
-	err := driver.GetObjectWithSub(driver.PROMETHEUS_CONFIG_KEY, conf)
+	err := driver.GetObjectWithSub(driver.PROMETHEUS_GLOBAL_CONFIG_KEY, conf)
 	if err != nil {
 		return err
 	}

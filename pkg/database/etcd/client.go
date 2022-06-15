@@ -27,12 +27,12 @@ var (
 )
 
 const (
-	THELIV_CONFIG_KEY       string = "/theliv/config"
-	DATADOG_CONFIG_KEY      string = "/theliv/config/datadog"
-	THELIV_AUTH_KEY         string = "/theliv/config/authconf"
-	EKS_CLUSTERS_KEY        string = "/theliv/clusters/eks"
-	PROMETHEUS_CONFIG_KEY   string = "/theliv/config/prometheus"
-	THELIV_LEVEL_CONFIG_KEY string = "/theliv/config/levelconf"
+	THELIV_CONFIG_KEY            string = "/theliv/config"
+	DATADOG_CONFIG_KEY           string = "/theliv/config/datadog"
+	THELIV_AUTH_KEY              string = "/theliv/config/authconf"
+	EKS_CLUSTERS_KEY             string = "/theliv/clusters/eks"
+	PROMETHEUS_GLOBAL_CONFIG_KEY string = "/theliv/config/prometheus/global"
+	THELIV_LEVEL_CONFIG_KEY      string = "/theliv/config/levelconf"
 )
 
 // Init client config, could be called only once, before any other functions

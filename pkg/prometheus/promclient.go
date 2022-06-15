@@ -36,10 +36,13 @@ var TLSRoundTripper http.RoundTripper = &http.Transport{
 func GetAlerts(input *problem.DetectorCreationInput) (result v1.AlertsResult, err error) {
 
 	result = v1.AlertsResult{}
-
+	address := input.Kubeconfig.Host + "/api/v1/namespaces/" + input.Namespace + "/services/https:prometheus-server:8443/proxy"
 	thelivcfg := config.GetThelivConfig()
+	if thelivcfg.Prometheus.Address != "" {
+		address = thelivcfg.Prometheus.Address
+	}
 	client, err := api.NewClient(api.Config{
-		Address: thelivcfg.Prometheus.Address,
+		Address: address,
 		RoundTripper: promconfig.NewAuthorizationCredentialsRoundTripper("Bearer",
 			promconfig.Secret(input.Kubeconfig.BearerToken),
 			TLSRoundTripper),
