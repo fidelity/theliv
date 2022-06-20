@@ -1,6 +1,9 @@
 # Developer Guide
-This guide includes 2 parts: How to customize your own alerts and how to register investigator for the alert.
+This guide includes two parts: 
+ - How to customize your own alerts 
+ - and how to register investigator for the alert.
 ## Customize Alerts
+There are some [Prometheus alerts provided by Theliv](https://github.com/fidelity/theliv/blob/readme-for-contribution-guide/alerting_rules.md) by default, while you can customize your own alerts.
 The alerting rules are defined in the config map of prometheus server. You can see all the configurations with the following command.
 ``` cmd
 kubectl get cm prometheus-server -o yaml
