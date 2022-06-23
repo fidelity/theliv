@@ -28,6 +28,8 @@ func CommonInvestigator(ctx context.Context, problem *problem.Problem, input *pr
 		loadPodDetails(problem)
 	case com.Container:
 		loadContainerDetails(problem)
+	case com.Initcontainer:
+		loadContainerDetails(problem)
 	case com.Deployment:
 		loadDeploymentDetails(problem)
 	case com.Replicaset:
