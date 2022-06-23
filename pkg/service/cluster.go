@@ -7,7 +7,8 @@ package service
 
 import (
 	"context"
-	"log"
+
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/fidelity/theliv/pkg/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,12 +23,12 @@ func ListNs(clusterName string) []string {
 	kconf := conf.GetKubeConfig()
 	clientset, err := kubernetes.NewForConfig(kconf)
 	if err != nil {
-		log.Println("Failed to init kubeconfig for cluster", clusterName, "error is", err)
+		log.S().Errorf("Failed to init kubeconfig for cluster", clusterName, "error is", err)
 		return nil
 	}
 	nsList, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		log.Println("Failed to list namespaces for cluster", clusterName, "error is", err)
+		log.S().Errorf("Failed to list namespaces for cluster", clusterName, "error is", err)
 		return nil
 	}
 	var names []string

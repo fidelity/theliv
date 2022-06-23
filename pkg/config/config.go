@@ -8,7 +8,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -52,13 +53,15 @@ type ThelivConfig struct {
 	Port     int `json:"port"`
 	LogLevel int `json:"loglevel"`
 	// Only for file configs
-	ClusterDir          string         `json:"clusterDir,omitempty"`
-	Datadog             *DatadogConfig `json:"datadog,omitempty"`
-	Auth                *AuthConfig    `json:"auth,omitempty"`
-	LogDriver           LogDriverType  `json:"logDriver,omitempty"`
-	EventDriver         LogDriverType  `json:"eventDriver,omitempty"`
-	LogDeeplinkDriver   LogDriverType  `json:"logDeeplinkDriver,omitempty"`
-	EventDeeplinkDriver LogDriverType  `json:"eventDeeplinkDriver,omitempty"`
+	ClusterDir          string              `json:"clusterDir,omitempty"`
+	Datadog             *DatadogConfig      `json:"datadog,omitempty"`
+	Auth                *AuthConfig         `json:"auth,omitempty"`
+	Prometheus          *PrometheusConfig   `json:"prometheus,omitempty"`
+	ProblemLevel        *ProblemLevelConfig `json:"problemlevel,omitempty"`
+	LogDriver           LogDriverType       `json:"logDriver,omitempty"`
+	EventDriver         LogDriverType       `json:"eventDriver,omitempty"`
+	LogDeeplinkDriver   LogDriverType       `json:"logDeeplinkDriver,omitempty"`
+	EventDeeplinkDriver LogDriverType       `json:"eventDeeplinkDriver,omitempty"`
 }
 
 func (c *ThelivConfig) ToMaskString() string {
@@ -118,6 +121,14 @@ func (c *AuthConfig) ToMaskString() string {
 		len(c.IDPMetadata), c.IDPMetadataURL, c.MetadataURL, c.AcrURL, c.SloURL, c.EntityID, c.WhitelistPath)
 }
 
+type PrometheusConfig struct {
+	Address string `json:"address"`
+}
+
+type ProblemLevelConfig struct {
+	ManagedNamespaces []string `json:"managednamespaces"`
+}
+
 type KubernetesCluster struct {
 	Basic    ClusterBasicInfo `json:"basic"`
 	KubeConf []byte           `json:"kubeconf"`
@@ -137,7 +148,7 @@ type ClusterBasicInfo struct {
 func (conf *KubernetesCluster) GetKubeConfig() *restclient.Config {
 	client, err := clientcmd.RESTConfigFromKubeConfig(conf.KubeConf)
 	if err != nil {
-		log.Printf("Failed to load kubernetes config, for cluster %v, error is %v\n", conf.Basic.Name, err)
+		log.S().Errorf("Failed to load kubernetes config, for cluster %v, error is %v\n", conf.Basic.Name, err)
 		return nil
 	}
 	return client
@@ -147,7 +158,7 @@ func (conf *KubernetesCluster) GetAwsConfig() *aws.Config {
 	awsconf := &AwsConfig{}
 	err := json.Unmarshal(conf.AwsConf, awsconf)
 	if err != nil {
-		log.Printf("Failed to load awsconfig for cluster %v, error is %v\n", conf.Basic.Name, err)
+		log.S().Errorf("Failed to load awsconfig for cluster %v, error is %v\n", conf.Basic.Name, err)
 		return nil
 	}
 
