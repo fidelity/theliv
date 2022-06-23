@@ -12,14 +12,13 @@ import (
 	"net/http"
 	"time"
 
-	golog "log"
+	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/fidelity/theliv/internal/problem"
-	"github.com/fidelity/theliv/pkg/service"
+	"github.com/fidelity/theliv/pkg/config"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	promconfig "github.com/prometheus/common/config"
-	"github.com/prometheus/common/model"
 )
 
 var TLSRoundTripper http.RoundTripper = &http.Transport{
@@ -34,39 +33,31 @@ var TLSRoundTripper http.RoundTripper = &http.Transport{
 	}),
 }
 
-func DetectAlerts(ctx context.Context) ([]problem.NewProblem, error) {
-	input := service.GetDetectorInput(ctx)
+func GetAlerts(input *problem.DetectorCreationInput) (result v1.AlertsResult, err error) {
+
+	result = v1.AlertsResult{}
+	address := input.Kubeconfig.Host + "/api/v1/namespaces/" + input.Namespace + "/services/https:prometheus-server:8443/proxy"
+	thelivcfg := config.GetThelivConfig()
+	if thelivcfg.Prometheus.Address != "" {
+		address = thelivcfg.Prometheus.Address
+	}
 	client, err := api.NewClient(api.Config{
-		Address: "https://tochange.prometheus.host:8443",
+		Address: address,
 		RoundTripper: promconfig.NewAuthorizationCredentialsRoundTripper("Bearer",
 			promconfig.Secret(input.Kubeconfig.BearerToken),
 			TLSRoundTripper),
 	})
 	if err != nil {
-		golog.Printf("ERROR - Got error when creating Prometheus client, error is %s", err)
+		log.S().Errorf("Got error when creating Prometheus client, error is %s", err)
+		return
 	}
 
 	v1api := v1.NewAPI(client)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	result, err := v1api.Alerts(ctx)
+	result, err = v1api.Alerts(ctx)
 	if err != nil {
-		golog.Printf("ERROR - Got error when getting Prometheus alerts, error is %s", err)
+		log.S().Errorf("Got error when getting Prometheus alerts, error is %s", err)
 	}
-
-	// TODO: filter by namespace
-
-	// build problems from  alerts, problem is detector input
-	problems := make([]problem.NewProblem, 0)
-	for _, alert := range result.Alerts {
-		p := problem.NewProblem{}
-		p.Name = string(alert.Labels[model.LabelName("alertname")])
-		p.Description = string(alert.Annotations[model.LabelName("description")])
-		p.Tags = make(map[string]string)
-		for ln, lv := range alert.Labels {
-			p.Tags[string(ln)] = string(lv)
-		}
-		problems = append(problems, p)
-	}
-	return problems, err
+	return
 }

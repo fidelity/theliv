@@ -8,7 +8,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+
 	"net/http"
 	"strings"
 
@@ -16,7 +16,7 @@ import (
 	"github.com/fidelity/theliv/pkg/auth/samlmethod"
 	"github.com/fidelity/theliv/pkg/config"
 	err "github.com/fidelity/theliv/pkg/err"
-	logger "github.com/fidelity/theliv/pkg/log"
+	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/router"
 
 	"github.com/go-chi/chi/v5"
@@ -43,7 +43,7 @@ func main() {
 		conf = config.NewFileConfigLoader(thelivConfig)
 	} else {
 		conf = config.NewEtcdConfigLoader(etcdca, etcdcert, etcdkey, strings.Split(etcdendpoints, ",")...)
-		log.Printf("Will load config from etcd, %v\n", conf)
+		log.S().Infof("Will load config from etcd, %v\n", conf)
 	}
 
 	conf.LoadConfigs()
@@ -83,11 +83,11 @@ func main() {
 
 	theliv := config.GetThelivConfig()
 	// init default Zap logger
-	Logger := logger.NewDefaultLogger(logger.DefaultLogConfig(theliv.LogLevel))
+	Logger := log.NewDefaultLogger(log.DefaultLogConfig(theliv.LogLevel))
 	defer Logger.Sync()
 
 	err := http.ListenAndServe(fmt.Sprintf(":%v", theliv.Port), r)
 	if err != nil {
-		logger.S().Fatalf("Failed to start server, %v", err)
+		log.S().Fatalf("Failed to start server, %v", err)
 	}
 }

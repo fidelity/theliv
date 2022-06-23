@@ -15,13 +15,14 @@ type ReportCard struct {
 }
 
 type ReportCardIssue struct {
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Solutions   []string   `json:"solutions,omitempty"`
-	CreatedTime string     `json:"createdTime,omitempty"`
-	Tags        []string   `json:"tags,omitempty"`
-	DomainName  DomainName `json:"domainName"`
-	Documents   []string   `json:"documents,omitempty"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Solutions   []string          `json:"solutions,omitempty"`
+	CreatedTime string            `json:"createdTime,omitempty"`
+	Tags        map[string]string `json:"tags,omitempty"`
+	DomainName  DomainName        `json:"domainName,omitempty"`
+	// Documents   []string   `json:"documents,omitempty"`
+	CauseLevel int `json:"causelevel,omitempty"`
 }
 
 type ReportCardResource struct {
