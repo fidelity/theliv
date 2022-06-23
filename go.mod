@@ -11,13 +11,13 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/microsoft/kiota/authentication/go/azure v0.0.0-20211221082943-f98d671bb86d
 	github.com/microsoftgraph/msgraph-sdk-go v0.3.2
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/prometheus/common v0.34.0
 	github.com/stretchr/testify v1.7.0
 	github.com/wangli1030/saml v0.4.7
 	go.etcd.io/etcd/client/v3 v3.5.1
 	go.uber.org/zap v1.21.0
-	k8s.io/api v0.24.0 // indirect
+	k8s.io/api v0.24.0
 	k8s.io/apimachinery v0.24.0
 	k8s.io/client-go v0.24.0
 	sigs.k8s.io/controller-runtime v0.11.0
