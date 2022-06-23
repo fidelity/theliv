@@ -11,7 +11,7 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/microsoft/kiota/authentication/go/azure v0.0.0-20211221082943-f98d671bb86d
 	github.com/microsoftgraph/msgraph-sdk-go v0.3.2
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/prometheus/common v0.33.0
 	github.com/stretchr/testify v1.7.0
 	github.com/wangli1030/saml v0.4.7
