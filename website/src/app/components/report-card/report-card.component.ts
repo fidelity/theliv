@@ -15,7 +15,7 @@ const yaml = require('js-yaml');
   styleUrls: ['./report-card.component.scss']
 })
 export class ReportCardComponent implements OnInit {
-
+  public objectKeys = Object.keys;
   resourceGroup: any;
   cat: any;
   count: any;
