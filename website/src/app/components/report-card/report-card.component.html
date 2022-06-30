@@ -55,7 +55,7 @@
                     </div>
                     <div class="resource-detail-buttons">
                         <button class="search-buttons detail-button"
-                            *ngFor="let tag of resource.rootCause.tags">{{tag}}</button>
+                            *ngFor="let tag of objectKeys(resource.rootCause.tags)">{{tag}}: {{resource.rootCause.tags[tag]}}</button>
                     </div>
                     <!-- <div class="resource-card-buttons"> -->
                         <!-- <button class="search-buttons card-buttons" (click)="showPopupItem(index)">Yaml Resource</button> -->
