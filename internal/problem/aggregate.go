@@ -13,6 +13,7 @@ import (
 	"sort"
 
 	"github.com/fidelity/theliv/pkg/kubeclient"
+	log "github.com/fidelity/theliv/pkg/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -173,9 +174,8 @@ func getControlOwner(mo metav1.Object) *metav1.OwnerReference {
 
 func getReportCardResource(p Problem, resource ResourceDetails) *ReportCardResource {
 	cr := createReportCardResource(p, resource.Resource.(metav1.Object), resource.Resource.GetObjectKind().GroupVersionKind().Kind)
-	for _, s := range p.SolutionDetails {
-		cr.Issue.Solutions = append(cr.Issue.Solutions, s)
-	}
+	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails...)
+
 	// cr.Issue.Documents = urlToStr(p.Docs)
 	// if resource.Deeplink != nil {
 	// 	links := make(map[string]string)
@@ -217,12 +217,12 @@ func hashcode(s string) string {
 func convertMetadata(obj metav1.Object) map[string]interface{} {
 	b, err := json.Marshal(obj)
 	if err != nil {
-		// TODO log
+		log.S().Errorf("Marshal json error: %s", err)
 	}
 	m := make(map[string]interface{})
 	err = json.Unmarshal(b, &m)
 	if err != nil {
-		// TODO
+		log.S().Errorf("Unmarshal json error: %s", err)
 	}
 	return cleanFieldNotRequired(m)
 }

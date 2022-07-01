@@ -6,6 +6,7 @@
 package common
 
 const (
+	Name          = "name"
 	Namespace     = "namespace"
 	Pod           = "pod"
 	Container     = "container"
