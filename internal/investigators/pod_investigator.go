@@ -7,7 +7,6 @@ package investigators
 
 import (
 	"context"
-	"strings"
 
 	"github.com/fidelity/theliv/internal/problem"
 	v1 "k8s.io/api/core/v1"
@@ -19,7 +18,8 @@ const (
 	PendingNodeAffinity       = "node(s) didn't match pod affinity"
 	PendingNodeTaint          = "the pod didn't tolerate."
 	PendingNodeUnschedulable  = "node(s) were unschedulable"
-	PendingPVCNotFound        = "error getting PVC"
+	PendingPVCGetErr          = "error getting PVC"
+	PendingPVCNotFound        = "persistentvolumeclaim .* not found"
 	PendingUnboundPVC         = "pod has unbound immediate PersistentVolumeClaims"
 	PendingPVCProvisionFailed = "Failed to bind volumes"
 	PendingInsufficient       = "Insufficient"
@@ -66,7 +66,7 @@ const (
 `
 	PendingInsufficientSolution = `
 1. Failed Schedule Pod {{ .ObjectMeta.Name }}: available node(s) has insufficient resources.
-2. Please check the resources that the pod requests or limits, try to modify them to apllicable quota.
+2. Please check the resources that the pod requests or limits, try to modify them to applicable quota.
 3. Reference link: https://kubernetes.io/docs/concepts/architecture/nodes/
 4. Cmd to check Pod: kubectl get pod {{ .ObjectMeta.Name }} -n {{ .ObjectMeta.Namespace }} -o yaml
 5. Cmd to check Node allocatable: kubectl get nodes -o custom-columns=NAME:.metadata.name,ALLOCATABLE:.status.allocatable --no-headers
@@ -87,13 +87,19 @@ const (
 5. Cmd to check Node Labels: kubectl get nodes --show-labels
 6. Cmd to check Node Taints: kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints --no-headers
 `
+	PendingUnknownSolution = `
+1. Failed Schedule Pod {{ .ObjectMeta.Name }}.
+2. Cmd to check Pod: kubectl get pod {{ .ObjectMeta.Name }} -n {{ .ObjectMeta.Namespace }} -o yaml
+3. Reference link: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+`
 )
 
-var PendingPodsSolutions = map[string]func(pod *v1.Pod, msg *string) []string{
+var PendingPodsSolutions = map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string{
 	PendingContainer:          getPendingPodCommonSolution(PendingContainerSolution),
 	PendingNodeSelector:       getPendingPodCommonSolution(PendingNodeSelectorSolution),
 	PendingNodeTaint:          getPendingPodCommonSolution(PendingNodeTaintSolution),
 	PendingNodeUnschedulable:  getPendingPodCommonSolution(PendingNodeUnschedulableSolution),
+	PendingPVCGetErr:          getPendingPodCommonSolution(PVCNotFoundSolution),
 	PendingPVCNotFound:        getPendingPodCommonSolution(PVCNotFoundSolution),
 	PendingUnboundPVC:         getPendingPodCommonSolution(PVCUnboundSolution),
 	PendingPVCProvisionFailed: getPendingPodCommonSolution(PVCUnboundSolution),
@@ -103,21 +109,15 @@ var PendingPodsSolutions = map[string]func(pod *v1.Pod, msg *string) []string{
 }
 
 func PodNotRunningInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
+
 	pod := *problem.AffectedResources.Resource.(*v1.Pod)
-	var detail string
-	var solutions []string
-	for _, condition := range pod.Status.Conditions {
-		if condition.Reason != "" && condition.Message != "" {
-			detail = string(condition.Type) + "=" + string(condition.Status) + ". " + condition.Reason + ": " + condition.Message
-			for msg := range PendingPodsSolutions {
-				if strings.Contains(strings.ToLower(condition.Message), strings.ToLower(msg)) {
-					solutions = PendingPodsSolutions[msg](&pod, &msg)
-				}
-			}
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
-		}
+	container := &v1.ContainerStatus{}
+
+	if getPodSolutionFromEvents(ctx, problem, input, &pod, container, PendingPodsSolutions) == "" {
+		solution := getPendingPodCommonSolution(PendingUnknownSolution)(&pod, container)
+		appendSolution(problem, solution)
 	}
-	problem.SolutionDetails = append(problem.SolutionDetails, solutions...)
+
 }
 
 func PodNotRunningSolutionsInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
@@ -126,8 +126,8 @@ func PodNotRunningSolutionsInvestigator(ctx context.Context, problem *problem.Pr
 	// problem.SolutionDetails = append(problem.SolutionDetails, detail)
 }
 
-func getPendingPodCommonSolution(solution string) func(pod *v1.Pod, msg *string) []string {
-	return func(pod *v1.Pod, msg *string) []string {
+func getPendingPodCommonSolution(solution string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
+	return func(pod *v1.Pod, status *v1.ContainerStatus) []string {
 		return GetSolutionsByTemplate(solution, pod, true)
 	}
 }

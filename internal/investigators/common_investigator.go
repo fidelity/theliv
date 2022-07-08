@@ -6,10 +6,7 @@
 package investigators
 
 import (
-	"bytes"
 	"context"
-	"strings"
-	"text/template"
 
 	com "github.com/fidelity/theliv/pkg/common"
 	log "github.com/fidelity/theliv/pkg/log"
@@ -27,6 +24,8 @@ func CommonInvestigator(ctx context.Context, problem *problem.Problem, input *pr
 	case com.Pod:
 		loadPodDetails(problem)
 	case com.Container:
+		loadContainerDetails(problem)
+	case com.Initcontainer:
 		loadContainerDetails(problem)
 	case com.Deployment:
 		loadDeploymentDetails(problem)
@@ -66,10 +65,10 @@ func loadPodDetails(problem *problem.Problem) {
 func loadContainerDetails(problem *problem.Problem) {
 	var ro runtime.Object = problem.AffectedResources.Resource
 	pod := *ro.(*v1.Pod)
-	containername := problem.Tags[com.Container]
+	containerName := problem.Tags[com.Container]
 	logChecking("init container with " + com.Pod + com.Blank + pod.Name)
 	for _, status := range pod.Status.InitContainerStatuses {
-		if status.Name == containername {
+		if status.Name == containerName {
 			if status.State.Terminated != nil {
 				appendDetail(problem, "", status.State.Terminated.Message,
 					status.State.Terminated.Reason)
@@ -84,7 +83,7 @@ func loadContainerDetails(problem *problem.Problem) {
 
 	logChecking("container with " + com.Pod + com.Blank + pod.Name)
 	for _, status := range pod.Status.ContainerStatuses {
-		if status.Name == containername {
+		if status.Name == containerName {
 			if status.State.Terminated != nil {
 				appendDetail(problem, "", status.State.Terminated.Message,
 					status.State.Terminated.Reason)
@@ -188,7 +187,7 @@ func loadIngressDetails(problem *problem.Problem) {
 		for _, port := range ingress.Ports {
 			if port.Error != nil {
 				detail := *port.Error
-				problem.SolutionDetails = append(problem.SolutionDetails, detail)
+				appendSolution(problem, detail)
 			}
 		}
 	}
@@ -202,7 +201,7 @@ func loadEndpointsDetails(problem *problem.Problem) {
 		if sub.NotReadyAddresses != nil {
 			for _, addr := range sub.NotReadyAddresses {
 				detail := addr.IP + "not ready. Target object is " + addr.TargetRef.Name
-				problem.SolutionDetails = append(problem.SolutionDetails, detail)
+				appendSolution(problem, detail)
 			}
 		}
 	}
@@ -220,37 +219,10 @@ func buildReasonMsg(reason string, message string) string {
 	return detail
 }
 
-// A general template instance.
-var solutionTemp = template.New("solutionTemp")
-
-// A general function used to parse go template.
-// Go template passed in string type, parsed results returned in []string type.
-// Parameter splitIt, if true, parsed results will be split by \n.
-func GetSolutionsByTemplate(template string, object interface{}, splitIt bool) (solution []string) {
-	solution = []string{}
-	t, err := solutionTemp.Parse(template)
-	if err != nil {
-		return
-	}
-	var tpl bytes.Buffer
-	err = t.Execute(&tpl, object)
-	if err != nil {
-		return
-	}
-	s := tpl.String()
-	s1 := strings.TrimPrefix(strings.TrimSuffix(s, "\n"), "\n")
-	if splitIt {
-		solution = strings.Split(s1, "\n")
-	} else {
-		solution = append(solution, s1)
-	}
-	return
-}
-
 func appendDetail(problem *problem.Problem, detail string,
 	msg string, reason string) {
 	detail = detail + buildReasonMsg(reason, msg)
-	problem.SolutionDetails = append(problem.SolutionDetails, detail)
+	appendSolution(problem, detail)
 }
 
 func appendNonEmptyDetail(problem *problem.Problem, conType string,
@@ -259,8 +231,4 @@ func appendNonEmptyDetail(problem *problem.Problem, conType string,
 		detail := conType + "=" + conMsg + ". "
 		appendDetail(problem, detail, msg, reason)
 	}
-}
-
-func logChecking(res string) {
-	log.S().Infof("Checking status with %s", res)
 }

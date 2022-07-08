@@ -9,11 +9,13 @@ import (
 	"context"
 
 	"github.com/fidelity/theliv/internal/investigators"
+	in "github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/internal/problem"
 	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	log "github.com/fidelity/theliv/pkg/log"
+	"github.com/fidelity/theliv/pkg/observability/k8s"
 	"github.com/fidelity/theliv/pkg/prometheus"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
@@ -31,13 +33,36 @@ type investigatorFunc func(ctx context.Context, problem *problem.Problem, input 
 // modify this map when adding new investigator func for alert
 // for each alert, you can define one or more func to call to build details or solutions
 var alertInvestigatorMap = map[string][]investigatorFunc{
-	"PodNotRunning":                      {investigators.PodNotRunningInvestigator, investigators.PodNotRunningSolutionsInvestigator},
-	"ContainerWaitingAsImagePullBackOff": {investigators.ContainerImagePullBackoffInvestigator},
-	// "InitContainerWaitingAsImagePullBackOff": {investigators.InitContainerImagePullBackoffInvestigator},
+	"PodNotRunning": {in.PodNotRunningInvestigator, in.PodNotRunningSolutionsInvestigator},
+
+	"ContainerWaitingAsImagePullBackOff":     {in.ContainerImagePullBackoffInvestigator},
+	"ContainerWaitingAsCrashLoopBackoff":     {in.ContainerCrashLoopBackoffInvestigator},
+	"InitContainerWaitingAsImagePullBackOff": {in.InitContainerImagePullBackoffInvestigator},
+
+	"NodeNotReady":           {in.NodeNotReadyInvestigator},
+	"NodeDiskPressure":       {in.NodeDiskPressureInvestigator},
+	"NodeMemoryPressure":     {in.NodeMemoryPressureInvestigator},
+	"NodePIDPressure":        {in.NodePIDPressureInvestigator},
+	"NodeNetworkUnavailable": {in.NodeNetworkUnavailableInvestigator},
+
+	"EndpointAddressNotAvailable": {in.EndpointAddressNotAvailableInvestigator},
+
+	"DeploymentNotAvailable":       {in.DeploymentNotAvailableInvestigator},
+	"DeploymentGenerationMismatch": {in.DeploymentGenerationMismatchInvestigator},
+	"DeploymentReplicasMismatch":   {in.DeploymentReplicasMismatchInvestigator},
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
 	input := GetDetectorInput(ctx)
+
+	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
+	if err != nil {
+		return nil, err
+	}
+	input.KubeClient = client
+
+	eventRetriever := k8s.NewK8sEventRetriever(client)
+	input.EventRetriever = eventRetriever
 
 	alerts, err := prometheus.GetAlerts(input)
 	if err != nil {
@@ -65,10 +90,6 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	}
 
 	// Aggregator
-	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
-	if err != nil {
-		return nil, err
-	}
 	return problem.Aggregate(ctx, problemresults, client)
 }
 
@@ -107,11 +128,7 @@ func filterProblems(ctx context.Context, problems []*problem.Problem, input *pro
 }
 
 func buildProblemAffectedResource(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) error {
-	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
-	if err != nil {
-		log.S().Errorf("Got error when initiating kubeclient to load affected resource, error is %s", err)
-		return err
-	}
+	client := input.KubeClient
 	for _, problem := range problems {
 		switch problem.Tags[com.Resourcetype] {
 		case com.Pod:
@@ -119,6 +136,9 @@ func buildProblemAffectedResource(ctx context.Context, problems []*problem.Probl
 			problem.CauseLevel = 1
 		case com.Container:
 			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Container)
+			problem.CauseLevel = 1
+		case com.Initcontainer:
+			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Initcontainer)
 			problem.CauseLevel = 1
 		case com.Deployment:
 			loadNamespacedResource(client, ctx, problem, &appsv1.Deployment{}, com.Deployment, "")
@@ -151,7 +171,7 @@ func buildProblemAffectedResource(ctx context.Context, problems []*problem.Probl
 			loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, com.Endpoint, "")
 			problem.CauseLevel = 5
 		default:
-			log.S().Warnf("WARN - Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
+			log.S().Warnf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
 		}
 	}
 	return nil
@@ -160,7 +180,7 @@ func buildProblemAffectedResource(ctx context.Context, problems []*problem.Probl
 func loadNamespacedResource(client *kubeclient.KubeClient, ctx context.Context,
 	problem *problem.Problem, obj runtime.Object, resourceType string, subType string) {
 	namespace := kubeclient.NamespacedName{
-		Namespace: problem.Tags["namespace"],
+		Namespace: problem.Tags[com.Namespace],
 		Name:      problem.Tags[resourceType],
 	}
 	buildName := namespace.Name
