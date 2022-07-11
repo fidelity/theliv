@@ -4,8 +4,8 @@ go 1.17
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v0.12.0
-	github.com/aws/aws-sdk-go-v2 v1.16.6
-	github.com/aws/aws-sdk-go-v2/credentials v1.12.7
+	github.com/aws/aws-sdk-go-v2 v1.16.7
+	github.com/aws/aws-sdk-go-v2/credentials v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.13.7
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.1
@@ -39,8 +39,8 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v0.20.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v0.8.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.13 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.7 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.14 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.8 // indirect
 	github.com/aws/smithy-go v1.12.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
