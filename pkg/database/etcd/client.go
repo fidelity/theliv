@@ -30,7 +30,7 @@ const (
 	THELIV_CONFIG_KEY            string = "/theliv/config"
 	DATADOG_CONFIG_KEY           string = "/theliv/config/datadog"
 	THELIV_AUTH_KEY              string = "/theliv/config/authconf"
-	EKS_CLUSTERS_KEY             string = "/theliv/clusters/eks"
+	CLUSTERS_KEY                 string = "/theliv/clusters"
 	PROMETHEUS_GLOBAL_CONFIG_KEY string = "/theliv/config/prometheus/global"
 	THELIV_LEVEL_CONFIG_KEY      string = "/theliv/config/levelconf"
 )
