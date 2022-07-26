@@ -47,7 +47,8 @@ func (ecl *EtcdConfigLoader) LoadConfigs() {
 }
 
 func (ecl *EtcdConfigLoader) GetKubernetesConfig(name string) *KubernetesCluster {
-	key := fmt.Sprintf("%v/%v", driver.EKS_CLUSTERS_KEY, name)
+	env := getK8SEnv(name)
+	key := fmt.Sprintf("%v/%v/%v", driver.CLUSTERS_KEY, env, name)
 	conf := &KubernetesCluster{}
 	err := driver.GetObjectWithSub(key, conf)
 	if err != nil {
@@ -61,16 +62,16 @@ func (ecl *EtcdConfigLoader) GetKubernetesConfig(name string) *KubernetesCluster
 }
 
 func (ecl *EtcdConfigLoader) GetK8SClusterNames() []string {
-	keys, err := driver.GetKeys(driver.EKS_CLUSTERS_KEY)
+	keys, err := driver.GetKeys(driver.CLUSTERS_KEY)
 	if err != nil {
-		log.S().Error("Failed to load eks cluster keys")
+		log.S().Error("Failed to load cluster keys")
 		return keys
 	}
 	tmp := make(map[string]string)
 	result := make([]string, 0)
 	// Only get the cluster name from keys
 	// key looks like /theliv/clusters/eks/cluster-name-with-dash-and-1/kubeconf
-	re := regexp.MustCompile(fmt.Sprintf("%v/([0-9a-z-]+)", driver.EKS_CLUSTERS_KEY))
+	re := regexp.MustCompile(fmt.Sprintf("%v/[era]ks/([0-9a-z-]+)", driver.CLUSTERS_KEY))
 	for _, key := range keys {
 		m := re.FindAllStringSubmatch(key, -1)
 		for _, name := range m {
@@ -99,6 +100,13 @@ func NewEtcdConfigLoader(ca, cert, key string, endpoints ...string) *EtcdConfigL
 	}
 	configLoader = loader
 	return loader
+}
+
+func getK8SEnv(cluster string) string {
+	re := regexp.MustCompile("[era]ks")
+	m := re.FindAllStringSubmatch(cluster, -1)
+	env := m[0][0]
+	return env
 }
 
 func (ecl *EtcdConfigLoader) loadThelivConfig() error {
