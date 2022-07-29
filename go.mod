@@ -6,13 +6,13 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v0.12.0
 	github.com/aws/aws-sdk-go-v2 v1.16.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.9
-	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.13.7
+	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.13.9
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.1
 	github.com/microsoft/kiota/authentication/go/azure v0.0.0-20211221082943-f98d671bb86d
 	github.com/microsoftgraph/msgraph-sdk-go v0.3.2
 	github.com/prometheus/client_golang v1.12.2
-	github.com/prometheus/common v0.35.0
+	github.com/prometheus/common v0.37.0
 	github.com/stretchr/testify v1.8.0
 	github.com/wangli1030/saml v0.4.7
 	go.etcd.io/etcd/client/v3 v3.5.4
