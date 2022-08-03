@@ -6,13 +6,13 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v0.12.0
 	github.com/aws/aws-sdk-go-v2 v1.16.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.9
-	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.13.7
+	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.13.9
 	github.com/go-chi/chi/v5 v5.0.7
-	github.com/go-chi/render v1.0.1
+	github.com/go-chi/render v1.0.2
 	github.com/microsoft/kiota/authentication/go/azure v0.0.0-20211221082943-f98d671bb86d
 	github.com/microsoftgraph/msgraph-sdk-go v0.3.2
 	github.com/prometheus/client_golang v1.12.2
-	github.com/prometheus/common v0.35.0
+	github.com/prometheus/common v0.37.0
 	github.com/stretchr/testify v1.8.0
 	github.com/wangli1030/saml v0.4.7
 	go.etcd.io/etcd/client/v3 v3.5.4
@@ -20,7 +20,7 @@ require (
 	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2
 	k8s.io/client-go v0.24.2
-	sigs.k8s.io/controller-runtime v0.12.2
+	sigs.k8s.io/controller-runtime v0.12.3
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -39,6 +39,7 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v0.20.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v0.8.2 // indirect
+	github.com/ajg/form v1.5.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.14 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.8 // indirect
 	github.com/aws/smithy-go v1.12.0 // indirect
