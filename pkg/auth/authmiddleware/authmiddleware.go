@@ -8,10 +8,12 @@ package authmiddleware
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/fidelity/theliv/internal/rbac"
 	"github.com/fidelity/theliv/pkg/auth/localmethod"
 	"github.com/fidelity/theliv/pkg/auth/samlmethod"
+	"github.com/fidelity/theliv/pkg/config"
 	"github.com/wangli1030/saml/samlsp"
 )
 
@@ -21,7 +23,8 @@ var authMethod rbac.RBACInfo
 func StartAuth(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//whitelist path
-		if r.URL.Path == "/theliv-api/v1/health" || r.URL.Path == "/auth/saml/acr" || r.URL.Path == "/auth/saml/metadata" {
+		auth := config.GetThelivConfig().Auth
+		if r.URL.Path == "/theliv-api/v1/health" || r.URL.Path == getUrlPath(auth.AcrURL) || r.URL.Path == auth.MetadataURL {
 			handler.ServeHTTP(w, r)
 			return
 		}
@@ -73,4 +76,11 @@ func GetUser(r *http.Request) (*rbac.User, error) {
 
 func GetADgroups(r *http.Request) ([]string, error) {
 	return authMethod.GetADgroups(r)
+}
+
+func getUrlPath(p string) string {
+	if u, err := url.Parse(p); err == nil {
+		return u.Path
+	}
+	return ""
 }
