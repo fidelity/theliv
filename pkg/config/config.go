@@ -124,6 +124,8 @@ func (c *AuthConfig) ToMaskString() string {
 type PrometheusConfig struct {
 	Address   string `json:"address"`
 	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+	Port      string `json:"port"`
 }
 
 type ProblemLevelConfig struct {
