@@ -10,7 +10,6 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	log "github.com/fidelity/theliv/pkg/log"
@@ -37,11 +36,9 @@ var TLSRoundTripper http.RoundTripper = &http.Transport{
 func GetAlerts(input *problem.DetectorCreationInput) (result v1.AlertsResult, err error) {
 
 	result = v1.AlertsResult{}
-	address := input.Kubeconfig.Host + "/api/v1/namespaces/" + getPrometheusNS() + "/services/https:prometheus-server:8443/proxy"
-	thelivcfg := config.GetThelivConfig()
-	if thelivcfg.Prometheus.Address != "" {
-		address = thelivcfg.Prometheus.Address
-	}
+	promcfg := config.GetThelivConfig().Prometheus
+	address := input.Kubeconfig.Host + "/api/v1/namespaces/" + promcfg.Namespace + "/services/https:" + promcfg.Name + ":" + promcfg.Port + "/proxy"
+
 	client, err := api.NewClient(api.Config{
 		Address: address,
 		RoundTripper: promconfig.NewAuthorizationCredentialsRoundTripper("Bearer",
@@ -61,10 +58,4 @@ func GetAlerts(input *problem.DetectorCreationInput) (result v1.AlertsResult, er
 		log.S().Errorf("Got error when getting Prometheus alerts, error is %s", err)
 	}
 	return
-}
-
-func getPrometheusNS() string {
-
-	host := config.GetThelivConfig().Prometheus.Address
-	return strings.Split(strings.Split(host, "namespaces/")[1], "/")[0]
 }
