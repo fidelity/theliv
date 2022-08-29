@@ -65,7 +65,7 @@ func getDeploySolution(deploy v1.Deployment) []string {
 	} else {
 		return GetSolutionsByTemplate(NotAvailableSolution, deploy, true)
 	}
-	return nil
+	return GetSolutionsByTemplate(NotAvailableSolution, deploy, true)
 }
 
 func containsCdt(conditions []v1.DeploymentCondition, cType string) (bool, *v1.DeploymentCondition) {
