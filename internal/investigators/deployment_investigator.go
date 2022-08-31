@@ -62,8 +62,6 @@ func getDeploySolution(deploy v1.Deployment) []string {
 		if cd.Status == "False" {
 			return GetSolutionsByTemplate(NotAvailableSolution, deploy, true)
 		}
-	} else {
-		return GetSolutionsByTemplate(NotAvailableSolution, deploy, true)
 	}
 	return GetSolutionsByTemplate(NotAvailableSolution, deploy, true)
 }
