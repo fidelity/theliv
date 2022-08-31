@@ -214,7 +214,18 @@
                 }
             }
         }
+        .other-container {
+            .resource-detail-content {
+                margin: 0;
+                padding: 1.2em 0.6em;
+                border-bottom: 1.5px solid var(--border-color);
+                &:last-child {
+                    border-bottom: none;
+                }
+            }
+        }
         .block {
+            border-radius: 8px;
             .resource-detail-content {
                 margin: 0;
                 padding: 1.2em 0.6em;
