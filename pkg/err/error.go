@@ -22,6 +22,7 @@ const (
 	LOGSERVER
 	KUBERNETES
 	CLOUD
+	PROMETHEUS
 )
 
 // Customised Error, with Kind
@@ -36,7 +37,7 @@ func (c CommonError) Error() string {
 
 // New CommonError function, will log error message and stacktrace.
 func NewCommonError(kind ErrorType, msg string) error {
-	err := CommonError{Kind: kind, Message: msg}
+	err := CommonError{Kind: kind, Message: kind.String() + ": " + msg}
 	log.S().Error(err.ErrorMsg())
 	return err
 }
@@ -59,6 +60,8 @@ func (s ErrorType) String() string {
 		return "KUBERNETES"
 	case CLOUD:
 		return "CLOUD"
+	case PROMETHEUS:
+		return "PROMETHEUS"
 	default:
 		return "UNKNOWN"
 	}

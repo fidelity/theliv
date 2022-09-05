@@ -7,7 +7,6 @@ package observability
 
 import (
 	"context"
-	"net/url"
 	"time"
 )
 
@@ -16,10 +15,9 @@ type EventRecord struct {
 	EventId        string
 	Title          string
 	Message        string
-	Metadata       map[string]string
+	Reason         string
 	InvolvedObject map[string]string
 	Source         map[string]string
-	DeepLink       url.URL
 	DateHappened   time.Time
 }
 

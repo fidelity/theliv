@@ -62,8 +62,8 @@ func (dataRef K8sEventDataRef) GetEvents(ctx context.Context) ([]observability.E
 					EventId:        string(event.ObjectMeta.UID),
 					Title:          event.ObjectMeta.Name,
 					Message:        event.Message,
+					Reason:         event.Reason,
 					DateHappened:   event.ObjectMeta.CreationTimestamp.Time,
-					Metadata:       getMetadata(event),
 					InvolvedObject: getInvolvedObject(event.InvolvedObject),
 					Source:         getSource(event.Source),
 				})
@@ -77,7 +77,6 @@ func (dataRef K8sEventDataRef) GetEvents(ctx context.Context) ([]observability.E
 func getSource(source v1.EventSource) map[string]string {
 	data := initMap()
 	data["Component"] = source.Component
-	data["Host"] = source.Host
 	return data
 }
 
@@ -89,17 +88,6 @@ func getInvolvedObject(obj v1.ObjectReference) map[string]string {
 	data["Kind"] = obj.Kind
 	data["UID"] = string(obj.UID)
 	data["APIVersion"] = obj.APIVersion
-	return data
-}
-
-// Get Info from event.ObjectMeta, returns map[string]string.
-func getMetadata(event v1.Event) map[string]string {
-	data := initMap()
-	data[com.Name] = event.ObjectMeta.Name
-	data[com.Namespace] = event.ObjectMeta.Namespace
-	data["SelfLink"] = event.ObjectMeta.SelfLink
-	data["UID"] = string(event.ObjectMeta.UID)
-	data["Reason"] = event.Reason
 	return data
 }
 
