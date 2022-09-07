@@ -9,7 +9,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/fidelity/theliv/internal/problem"
 	"github.com/fidelity/theliv/pkg/config"
 	"github.com/fidelity/theliv/pkg/service"
@@ -19,6 +18,7 @@ import (
 
 func Detector(r chi.Router) {
 	r.Get("/{cluster}/{namespace}/detect", detectPrometheusAlerts)
+	r.Get("/{cluster}/{namespace}/event", getK8sNsEvents)
 }
 
 func detectPrometheusAlerts(w http.ResponseWriter, r *http.Request) {
@@ -27,6 +27,15 @@ func detectPrometheusAlerts(w http.ResponseWriter, r *http.Request) {
 		processError(w, r, err)
 	} else {
 		render.JSON(w, r, con)
+	}
+}
+
+func getK8sNsEvents(w http.ResponseWriter, r *http.Request) {
+	res, err := service.GetEvents(createDetectorInputWithContext(r))
+	if err != nil {
+		processError(w, r, err)
+	} else {
+		render.JSON(w, r, res)
 	}
 }
 
@@ -43,17 +52,17 @@ func createDetectorInputWithContext(r *http.Request) context.Context {
 	}
 
 	k8sconfig := conf.GetKubeConfig()
-	awsconfig := conf.GetAwsConfig()
-	var ac aws.Config
-	if awsconfig != nil {
-		ac = *awsconfig
-	}
+	// awsconfig := conf.GetAwsConfig()
+	// var ac aws.Config
+	// if awsconfig != nil {
+	// 	ac = *awsconfig
+	// }
 
 	input := &problem.DetectorCreationInput{
 		Kubeconfig:  k8sconfig,
 		ClusterName: cluster,
 		Namespace:   namespace,
-		AwsConfig:   ac,
+		// AwsConfig:   ac,
 	}
 
 	return service.SetDetectorInput(ctx, input)

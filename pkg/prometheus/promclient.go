@@ -12,10 +12,10 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/fidelity/theliv/pkg/log"
-
 	"github.com/fidelity/theliv/internal/problem"
 	"github.com/fidelity/theliv/pkg/config"
+	errors "github.com/fidelity/theliv/pkg/err"
+	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	promconfig "github.com/prometheus/common/config"
@@ -55,6 +55,7 @@ func GetAlerts(input *problem.DetectorCreationInput) (result v1.AlertsResult, er
 	defer cancel()
 	result, err = v1api.Alerts(ctx)
 	if err != nil {
+		err = errors.NewCommonError(6, err.Error())
 		log.S().Errorf("Got error when getting Prometheus alerts, error is %s", err)
 	}
 	return

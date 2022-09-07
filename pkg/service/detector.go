@@ -7,6 +7,7 @@ package service
 
 import (
 	"context"
+	"sync"
 
 	"github.com/fidelity/theliv/internal/investigators"
 	in "github.com/fidelity/theliv/internal/investigators"
@@ -29,6 +30,8 @@ import (
 )
 
 type investigatorFunc func(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput)
+
+var wg sync.WaitGroup
 
 // modify this map when adding new investigator func for alert
 // for each alert, you can define one or more func to call to build details or solutions
@@ -129,50 +132,58 @@ func filterProblems(ctx context.Context, problems []*problem.Problem, input *pro
 
 func buildProblemAffectedResource(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) error {
 	client := input.KubeClient
+	wg.Add(len(problems))
 	for _, problem := range problems {
-		switch problem.Tags[com.Resourcetype] {
-		case com.Pod:
-			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, "")
-			problem.CauseLevel = 1
-		case com.Container:
-			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Container)
-			problem.CauseLevel = 1
-		case com.Initcontainer:
-			loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Initcontainer)
-			problem.CauseLevel = 1
-		case com.Deployment:
-			loadNamespacedResource(client, ctx, problem, &appsv1.Deployment{}, com.Deployment, "")
-			problem.CauseLevel = 3
-		case com.Replicaset:
-			loadNamespacedResource(client, ctx, problem, &appsv1.ReplicaSet{}, com.Replicaset, "")
-			problem.CauseLevel = 2
-		case com.Statefulset:
-			loadNamespacedResource(client, ctx, problem, &appsv1.StatefulSet{}, com.Statefulset, "")
-			problem.CauseLevel = 2
-		case com.Daemonset:
-			loadNamespacedResource(client, ctx, problem, &appsv1.DaemonSet{}, com.Daemonset, "")
-			problem.CauseLevel = 2
-		case com.Node:
-			loadNamespacedResource(client, ctx, problem, &corev1.Node{}, com.Node, "")
-			problem.CauseLevel = 0
-		case com.Job:
-			loadNamespacedResource(client, ctx, problem, &batchv1.Job{}, com.Job, "")
-			problem.CauseLevel = 4
-		case com.Cronjob:
-			loadNamespacedResource(client, ctx, problem, &batchv1.CronJob{}, com.Cronjob, "")
-			problem.CauseLevel = 4
-		case com.Service:
-			loadNamespacedResource(client, ctx, problem, &corev1.Service{}, com.Service, "")
-			problem.CauseLevel = 5
-		case com.Ingress:
-			loadNamespacedResource(client, ctx, problem, &networkv1.Ingress{}, com.Ingress, "")
-			problem.CauseLevel = 6
-		case com.Endpoint:
-			loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, com.Endpoint, "")
-			problem.CauseLevel = 5
-		default:
-			log.S().Warnf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
-		}
+		go loadResourceByType(ctx, client, problem)
+	}
+	wg.Wait()
+	return nil
+}
+
+func loadResourceByType(ctx context.Context, client *kubeclient.KubeClient, problem *problem.Problem) error {
+	defer wg.Done()
+	switch problem.Tags[com.Resourcetype] {
+	case com.Pod:
+		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, "")
+		problem.CauseLevel = 1
+	case com.Container:
+		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Container)
+		problem.CauseLevel = 1
+	case com.Initcontainer:
+		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Initcontainer)
+		problem.CauseLevel = 1
+	case com.Deployment:
+		loadNamespacedResource(client, ctx, problem, &appsv1.Deployment{}, com.Deployment, "")
+		problem.CauseLevel = 3
+	case com.Replicaset:
+		loadNamespacedResource(client, ctx, problem, &appsv1.ReplicaSet{}, com.Replicaset, "")
+		problem.CauseLevel = 2
+	case com.Statefulset:
+		loadNamespacedResource(client, ctx, problem, &appsv1.StatefulSet{}, com.Statefulset, "")
+		problem.CauseLevel = 2
+	case com.Daemonset:
+		loadNamespacedResource(client, ctx, problem, &appsv1.DaemonSet{}, com.Daemonset, "")
+		problem.CauseLevel = 2
+	case com.Node:
+		loadNamespacedResource(client, ctx, problem, &corev1.Node{}, com.Node, "")
+		problem.CauseLevel = 0
+	case com.Job:
+		loadNamespacedResource(client, ctx, problem, &batchv1.Job{}, com.Job, "")
+		problem.CauseLevel = 4
+	case com.Cronjob:
+		loadNamespacedResource(client, ctx, problem, &batchv1.CronJob{}, com.Cronjob, "")
+		problem.CauseLevel = 4
+	case com.Service:
+		loadNamespacedResource(client, ctx, problem, &corev1.Service{}, com.Service, "")
+		problem.CauseLevel = 5
+	case com.Ingress:
+		loadNamespacedResource(client, ctx, problem, &networkv1.Ingress{}, com.Ingress, "")
+		problem.CauseLevel = 6
+	case com.Endpoint:
+		loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, com.Endpoint, "")
+		problem.CauseLevel = 5
+	default:
+		log.S().Warnf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
 	}
 	return nil
 }

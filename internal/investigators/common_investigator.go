@@ -212,9 +212,9 @@ func buildReasonMsg(reason string, message string) string {
 	if reason != "" && message != "" {
 		detail = reason + ":" + message
 	} else if message != "" {
-		detail = message
+		detail = "message: " + message
 	} else if reason != "" {
-		detail = reason
+		detail = "reason: " + reason
 	}
 	return detail
 }
