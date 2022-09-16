@@ -72,6 +72,13 @@ export class KubernetesService {
     );
   }
 
+  public getKubeEvents(cluster: string, namespace: string): Observable<any> {
+    const url = `${this.kubeEndpoint}/detector/${cluster}/${namespace}/event`;
+    return this.httpClient.get(url, this.headers).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   private handleError(response: HttpResponse<any> | any): any {
     return throwError(response || 'Service error');
   }
