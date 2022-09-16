@@ -135,30 +135,6 @@ $primary-color: #003c71;
         flex-direction: column;
         height: 100%;
         flex-shrink: 0;
-        .alert {
-            background-color: var(--alert-bg-color);
-            padding: 24px 18px;
-            border-radius: 8px;
-        }
-        .alert-title {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 8px;
-            // color: var(--alter);
-            color: #f8b627;
-        }
-        .alert-subtitle {
-            font-size: 13px;
-            color: var(--subtitle-color);
-            line-height: 1.6em;
-        }
-        .alert-feedback {
-            font-size: 14px;
-            color: var(--subtitle-color);
-            line-height: 1.6em;
-            margin-top: 8px;
-            font-weight: 500;
-        }
         .alert input {
             width: 100%;
             padding: 10px;
@@ -263,23 +239,6 @@ $primary-color: #003c71;
             align-items: center;
             justify-content: space-between;
             animation: fadeInTop 0.5s both;
-            .alert {
-                background-color: var(--alert-bg-color);
-                padding: 12px 9px;
-                border-radius: 8px;
-            }
-            .alert-title {
-                font-size: 12px;
-                font-weight: 500;
-                margin-bottom: 4px;
-                // color: var(--alter);
-                color: #f8b627;
-            }
-            .alert-subtitle {
-                font-size: 10px;
-                color: var(--subtitle-color);
-                line-height: 1.6em;
-            }
         }
         &-cluster {
             margin-right: 20px;
