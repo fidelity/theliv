@@ -59,10 +59,16 @@ export class UnauthorizedInterceptor implements HttpInterceptor {
                                 message: 'Please contact development team for support.'
                             }
                             break;
+                        case 503:       //service unavalable
+                            this.dialogdata={
+                                status: '503 Service Unavailable',
+                                message: 'Please contact development team for support.'
+                            }
+                            break;
                         default:
                             this.dialogdata={
                                 status: `${err.status}`,
-                                message: `${err.statusText}`,
+                                message: `${err.error.message || err.statusText}`,
                             }
                             break;
                         }
