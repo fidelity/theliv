@@ -13,7 +13,7 @@ export interface FeedbackData {
 }
 
 @Component({
-  selector: 'app-feedback',
+  selector: 'user-feedback',
   templateUrl: './user-feedback.component.html',
   styleUrls: ['./user-feedback.component.scss']
 })

@@ -19,6 +19,7 @@ type EventRecord struct {
 	InvolvedObject map[string]string
 	Source         map[string]string
 	DateHappened   time.Time
+	Type           string
 }
 
 type EventFilterCriteria struct {

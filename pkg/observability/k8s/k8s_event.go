@@ -66,6 +66,7 @@ func (dataRef K8sEventDataRef) GetEvents(ctx context.Context) ([]observability.E
 					DateHappened:   event.ObjectMeta.CreationTimestamp.Time,
 					InvolvedObject: getInvolvedObject(event.InvolvedObject),
 					Source:         getSource(event.Source),
+					Type:           event.Type,
 				})
 		}
 	}

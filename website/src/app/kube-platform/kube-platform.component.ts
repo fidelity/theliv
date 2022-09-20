@@ -6,7 +6,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { faSearch, faTimes, faSpinner, faBell, faCheck, faPencilAlt} from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTimes, faSpinner, faBell, faCheck, faPencilAlt, faAngleDown, faAngleUp} from '@fortawesome/free-solid-svg-icons';
 import { KubernetesService } from '../services/kubernetes.service';
 import { debounceTime, delay, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
@@ -30,6 +30,8 @@ export class KubePlatformComponent implements OnInit {
   faBell = faBell;
   faCheck = faCheck;
   faPencialAlt = faPencilAlt;
+  faAngleDown = faAngleDown;
+  faAngleUp = faAngleUp;
   loading = false;
   public resourceTypes: any;
   public proDomains: any;
@@ -53,7 +55,12 @@ export class KubePlatformComponent implements OnInit {
   namespaces: NamespaceOption[] = []
   clusterInputing = false
 
+  events: any;
+  sortedData: any;
+  isAsc=false;
+  active='time';
   feedback = '';
+  gridToggle = false;
 
   constructor(
     private kubeService: KubernetesService,
@@ -96,6 +103,7 @@ export class KubePlatformComponent implements OnInit {
       this.getNamespaces()
       if (this.selectedClusters && this.selectedNs) {
         this.getKubeResourceInfo();
+        this.getEvents();
       }
     });
   }
@@ -234,6 +242,7 @@ export class KubePlatformComponent implements OnInit {
       this.resourceGroups = []
       this.resourceTypes = []
       this.proDomains = []
+      this.events = []
     }
   }
 
@@ -288,4 +297,49 @@ export class KubePlatformComponent implements OnInit {
     });
   }
 
+  getEvents(): void {
+    this.kubeService.getKubeEvents(this.selectedClusters, this.selectedNs).subscribe((res: any) => {
+      if (res) {
+        this.events = res;
+        this.events.sort((a:any, b:any) => {
+          return compare(a.DateHappened, b.DateHappened, false);
+        });
+      }
+    }, (err: any) => {
+      console.log('Get Kube Events Error: ', err);
+    });
+  }
+
+  showEvents(): void {
+    this.gridToggle=true;
+  }
+
+  close(): void {
+    this.gridToggle = false;
+  }
+
+  sortData(header: string) {
+    this.events.sort((a:any, b:any) => {
+      var isAsc = this.isAsc;
+      switch (header) {
+        case 'type':
+          return compare(a.Type, b.Type, isAsc);
+        case 'resource':
+          return compare(a.InvolvedObject.name, b.InvolvedObject.name, isAsc);
+        case 'kind':
+          return compare(a.InvolvedObject.Kind, b.InvolvedObject.Kind, isAsc);
+        case 'reason':
+          return compare(a.Reason, b.Reason, isAsc);
+        case 'time':
+          return compare(a.DateHappened, b.DateHappened, isAsc);
+        default:
+          return 0;
+      }
+    });
+  }
+
+}
+
+function compare(a: number | string, b: number | string, isAsc: boolean) {
+  return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
 }
