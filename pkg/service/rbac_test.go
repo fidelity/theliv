@@ -23,3 +23,15 @@ func TestGetUpdatedElement(t *testing.T) {
 	updated2 := getUpdatedElement(oldE2, newE2)
 	assert.EqualValues(t, "e1,e2", strings.Join(updated2, SEPARATOR))
 }
+
+func TestGetRemovedElement(t *testing.T) {
+	oriEle := []string{"e1", "e2", "e3"}
+	rmvEle := []string{"e2", "e3"}
+	result := getRemovedElement(oriEle, rmvEle)
+	assert.EqualValues(t, "e1", strings.Join(result, SEPARATOR))
+
+	oriEle = []string{"e1", "e2", "e3", "e4"}
+	rmvEle = []string{"e1", "e3"}
+	result = getRemovedElement(oriEle, rmvEle)
+	assert.EqualValues(t, "e2,e4", strings.Join(result, SEPARATOR))
+}
