@@ -6,7 +6,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { faSearch, faTimes, faSpinner, faBell, faCheck, faPencilAlt, faAngleDown, faAngleUp} from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTimes, faSpinner, faBell, faCheck, faPencilAlt, faAngleDown, faAngleUp, faVideo} from '@fortawesome/free-solid-svg-icons';
 import { KubernetesService } from '../services/kubernetes.service';
 import { debounceTime, delay, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
@@ -32,6 +32,7 @@ export class KubePlatformComponent implements OnInit {
   faPencialAlt = faPencilAlt;
   faAngleDown = faAngleDown;
   faAngleUp = faAngleUp;
+  faVideo = faVideo;
   loading = false;
   public resourceTypes: any;
   public proDomains: any;
@@ -56,6 +57,7 @@ export class KubePlatformComponent implements OnInit {
   clusterInputing = false
 
   events: any;
+  hasFailedEvents=false;
   sortedData: any;
   isAsc=false;
   active='time';
@@ -298,12 +300,16 @@ export class KubePlatformComponent implements OnInit {
   }
 
   getEvents(): void {
+    this.hasFailedEvents=false;
     this.kubeService.getKubeEvents(this.selectedClusters, this.selectedNs).subscribe((res: any) => {
       if (res) {
         this.events = res;
         this.events.sort((a:any, b:any) => {
           return compare(a.DateHappened, b.DateHappened, false);
         });
+        if (this.events.find((e: any) => e.Type!=="Normal")) {
+          this.hasFailedEvents = true;
+        }
       }
     }, (err: any) => {
       console.log('Get Kube Events Error: ', err);

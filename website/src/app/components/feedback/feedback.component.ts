@@ -5,7 +5,8 @@
  */
 import { Component, OnInit } from '@angular/core';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { faEnvelope, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faTimes, faCodeBranch, faCommentAlt } from '@fortawesome/free-solid-svg-icons';
+import { KubernetesService } from 'src/app/services/kubernetes.service';
 
 @Component({
   selector: 'app-feedback',
@@ -15,11 +16,21 @@ import { faEnvelope, faTimes } from '@fortawesome/free-solid-svg-icons';
 export class FeedbackComponent implements OnInit {
   faEnvelope = faEnvelope as IconProp;
   faClose = faTimes as IconProp;
+  faCodeBranch = faCodeBranch as IconProp;
+  faCommentAlt = faCommentAlt as IconProp;
   isShowFeedback = false;
+  configInfo: any;
 
-  constructor() { }
+  constructor(private kubeService: KubernetesService) { }
 
   ngOnInit(): void {
+    this.kubeService.getConfigInfo().subscribe((res: any) => {
+      if (res) {
+        this.configInfo = res;
+      }
+    }, (err: any) => {
+      console.log('Get Config Information Error: ', err);
+    });
   }
 
   showFeedback() :void {

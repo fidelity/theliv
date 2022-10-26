@@ -62,6 +62,9 @@ type ThelivConfig struct {
 	EventDriver         LogDriverType       `json:"eventDriver,omitempty"`
 	LogDeeplinkDriver   LogDriverType       `json:"logDeeplinkDriver,omitempty"`
 	EventDeeplinkDriver LogDriverType       `json:"eventDeeplinkDriver,omitempty"`
+	// Only for UI usage
+	EmailAddr       string `json:"emailAddr,omitempty"`
+	DevelopedByTeam string `json:"developedByTeam,omitempty"`
 }
 
 func (c *ThelivConfig) ToMaskString() string {

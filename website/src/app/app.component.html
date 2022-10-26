@@ -9,5 +9,8 @@
   <div class="wrapper">
     <router-outlet></router-outlet>
   </div>
+  <div class="footer">
+    <p *ngIf="configInfo && configInfo.developedByTeam">Made with <span style="font-size: 18px;">&#10084;&#65039;</span> from {{configInfo.developedByTeam}}</p>
+  </div>
   <app-feedback></app-feedback>
 </div>

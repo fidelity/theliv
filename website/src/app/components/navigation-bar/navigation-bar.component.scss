@@ -7,13 +7,13 @@
   display: flex;
   align-items: center;
   font-weight: 700;
-  font-size: 28px;
+  font-size: 42px;
   cursor: pointer;
   &::after{
     content: "";
-    border-right: 12px solid var(--active-color);
-    width: 6px;
-    height: 20px;
+    border-right: 18px solid var(--active-color);
+    width: 9px;
+    height: 32px;
     margin-left: -0.12em;
   }
   .logo-icon {
@@ -30,34 +30,36 @@
   padding: 0 40px;
   white-space: nowrap;
   background-color: var(--header-bg-color);
-  height: 60px;
+  height: 65px;
   width: 100%;
   font-size: 14px;
   justify-content: space-between;
-  &-menu a {
-    text-decoration: none;
-    color: var(--body-color);
-    font-weight: 500;
-  }
-  &-menu a:hover {
-    color: var(--active-color);
-  }
-  &-menu a:not(:first-child) {
-    margin-left: 30px;
-  }
-  &-menu a.active {
-    color: var(--active-color);
-  }
+  // &-menu a {
+  //   text-decoration: none;
+  //   color: var(--body-color);
+  //   font-weight: 500;
+  // }
+  // &-menu a:hover {
+  //   color: var(--active-color);
+  // }
+  // &-menu a:not(:first-child) {
+  //   margin-left: 30px;
+  // }
+  // &-menu a.active {
+  //   color: var(--active-color);
+  // }
 }
 
 .user-settings {
   display: flex;
   align-items: center;
   font-weight: 500;
+  font-size: 18px;
   svg {
-    width: 20px;
+    width: 22px;
     color: #94949f;
     margin-top: 6px;
+    margin-left: 6px;
   }
   // fa-icon {
   //   width: 20px;
@@ -94,6 +96,18 @@
     object-fit: cover;
     margin-right: 10px;
     margin-left: 10px;
+  }
+  .video {
+    width: 20px;
+    border-radius: 50%;
+    -o-object-fit: cover;
+    object-fit: cover;
+    margin-right: 10px;
+    margin-left: 10px;
+    color: var(--body-color);
+    &:hover {
+      border-bottom: none;
+    }
   }
 }
 

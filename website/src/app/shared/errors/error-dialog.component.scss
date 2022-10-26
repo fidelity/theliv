@@ -12,7 +12,6 @@
     max-height: 100%;
     height: 100%;
     z-index: 5;
-    // background: rgba(255,255,255,0.5);
     background: rgba(0, 0, 0, 0.7);
     .dialog {
         margin: 20px auto;
@@ -20,14 +19,11 @@
         background: var(--header-bg-color);
         border-radius: 5px;
         width: 30%;
-        height: 20%;
-        // height: calc(100vh - 40px);
-        // position: relative;
+        height: fit-content;
         position: fixed;
         top: 20%;
         left: 35%;
         right: 35%;
-        // transition: all 5s ease-in-out;
     }
   
     .dialog h2 {
@@ -65,7 +61,9 @@
         color: var(--active-color);
     }
     .dialog .content {
-        height: calc(100vh - 150px);
-        overflow: auto;
+        font-size: 15px;
+        height: fit-content;
+        margin-bottom: 20px;
+        // color: var(--subtitle-color);
     }
   }

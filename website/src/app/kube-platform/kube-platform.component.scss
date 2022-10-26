@@ -144,21 +144,32 @@ $primary-color: #003c71;
             border: none;
             font-size: 13px;
         }
-        button {
-            border: none;
-            display: inline-block;
-            color: var(--active-color);
-            background-color: var(--active-light-color);
-            padding: 8px 10px;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: 600;
+        .video-container {
             height: 50px;
-            cursor: pointer;
-            margin-bottom: 10px;
+            border-radius: 30px;
+            background-color: var(--active-light-color);
+            width: 100%;
+            display: flex;
+            justify-content: center;
             box-shadow: 4px 6px 10px 2px var(--search-border-color);
+            margin-bottom: 10px;
             &:hover{
                 transform: scale(1.06);
+                cursor: pointer;
+            }
+            a {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                &:hover {
+                    border-bottom: none;
+                }
+            }
+            .video-msg {
+                font-size: 16px;
+                font-weight: 600;
+                margin-left:10px;
             }
         }
     }

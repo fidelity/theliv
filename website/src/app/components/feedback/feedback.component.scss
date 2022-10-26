@@ -78,6 +78,15 @@ button.btn-feedback {
             color: var(--subtitle-color);
             line-height: 1.6em;
             margin-bottom: 10px;
+            a {
+                color: var(--subtitle-color);
+            }
+            fa-icon {
+                margin-right: 6px;
+            }
+            .feedback-email {
+                margin-bottom: 5px;
+            }
         }
     }
 }

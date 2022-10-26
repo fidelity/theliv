@@ -35,41 +35,49 @@ export class UnauthorizedInterceptor implements HttpInterceptor {
                                 this.window.location.href = redirectUrl;
                             }
                             break;
-                        case 403:     //forbidden
+                        case 403:     //403 Forbidden
                             this.dialogdata={
-                                status: '403 Forbidden',
-                                message: 'Please make sure you have the right access.',
+                                status: 'Access Denied',
+                                message: 'It appears that you do not have adequate permissions on the cluster. Ensure that you are first onboarded to the EKS/RKS cluster with proper permissions.',
                             }
                             break;
-                        case 404:       //invalid url
+                        case 404:       //invalid url 404 Not Found
                             this.dialogdata={
-                                status: '404 Not Found',
-                                message: 'Please make sure your url is valid.'
+                                status: 'Url Not Found',
+                                message: 'It seems the url is invalid. Please make sure your url is valid.'
                             }
                             break;
-                        case 500:       //server error
+                        case 500:       //500 Internal Server Error
                             this.dialogdata={
-                                status: '500 Internal Server Error',
-                                message: 'Please contact development team for support.'
+                                status: 'Internal Server Error',
+                                message: 'Woops! There is an internal server error. Please contact development team for support.'
                             }
                             break;
-                        case 502:       //bad gateway
+                        case 502:       //502 Bad Gateway
                             this.dialogdata={
-                                status: '502 Bad Gateway',
-                                message: 'Please contact development team for support.'
+                                status: 'Bad Gateway',
+                                message: 'We have a bad gateway. Please contact development team for support.'
                             }
                             break;
-                        case 503:       //service unavalable
+                        case 503:       //503 Service Unavailable
                             this.dialogdata={
-                                status: '503 Service Unavailable',
-                                message: 'Please contact development team for support.'
+                                status: 'Service Unavailable',
+                                message: 'The service is now unavailable. Please contact development team for support.'
                             }
                             break;
                         default:
-                            this.dialogdata={
-                                status: `${err.status}`,
-                                message: `${err.error.message || err.statusText}`,
+                            if (err && err.status && (err.error.message || err.statusText)){
+                                this.dialogdata={
+                                    status: `${err.status}`,
+                                    message: `${err.error.message || err.statusText}`,
+                                }
+                            } else {
+                                this.dialogdata={
+                                    status: 'Error',
+                                    message: 'Woops! There is an error ocurred. Please contact development team for support.'
+                                }
                             }
+                            
                             break;
                         }
                         if ( this.dialogdata!=null ) {

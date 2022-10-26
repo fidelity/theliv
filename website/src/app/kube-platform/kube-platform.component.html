@@ -22,7 +22,7 @@
     <div class="search-cluster">
         <img class="search-icon" src="assets/images/kube/cluster.svg" />
         <mat-form-field class="fit-width">
-            <input type="text" matInput [formControl]="clusterFormControl" [matAutocomplete]="auto" (input)="checkClusterBlank()" [(ngModel)]="selectedClusters" placeholder="Cluster">
+            <input type="text" matInput [formControl]="clusterFormControl" [matAutocomplete]="auto" (input)="checkClusterBlank()" [(ngModel)]="selectedClusters" placeholder="Select a Cluster">
             <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" (optionSelected)="getNSByCluster()">
                 <mat-option *ngFor="let option of clusterOptions | async" [value]="option">
                     {{option}}
@@ -35,7 +35,7 @@
         <img class="search-icon" src="assets/images/kube/ns.png" />
         <fa-icon class="fa-spin" *ngIf="selectedClusters && !clusterInputing && namespaces && namespaces.length === 0" [icon]="faSpinner"></fa-icon>
         <mat-form-field class="fit-width">
-            <mat-label>Namespace</mat-label>
+            <mat-label>Select a Namespace</mat-label>
             <mat-select [(value)]="selectedNs" (selectionChange)="getSelectedQuery($event)">
                 <mat-option *ngFor="let namespace of namespaces" [value]="namespace.value">
                     {{namespace.text}}
@@ -50,6 +50,12 @@
 <div class="main-container">
     <div class="search-type">
         <!-- <button (click)="openFeedbackDialog()"><fa-icon [icon]="faPencialAlt" style="margin: 0 5px;"></fa-icon>Feedback</button> -->
+        <div class="video-container">
+            <a target="_blank" href="https://fidvid.fmr.com/watch?id=esc_program:482062">
+                <fa-icon  [icon]="faVideo" title="Click here for a 1 min introduction on Theliv"></fa-icon>
+                <div class="video-msg">1 min introduction</div>
+            </a>
+        </div>
         <div class="resource-filter" *ngIf="resourceTypes">
             <div class="resource-filter-title">Type of resource</div>
             <div class="resource-wrapper">
@@ -82,7 +88,7 @@
         <div class="searched-bar">
             <div class="searched-show">
                 <div class="searched-cluster">Cluster: {{selectedClusters}}</div> <div class="searched-namespace">Namespace: {{selectedNs}}</div></div>
-            <div><button class="events-button" *ngIf="events && events.length>0" (click)="showEvents()">Show <span class="events-alert">{{events.length}}</span> Events</button></div>
+            <div><button class="events-button" *ngIf="events && hasFailedEvents && events.length>0" (click)="showEvents()">Show <span class="events-alert">{{events.length}}</span> Events</button></div>
         </div>
         <div *ngIf="selectedClusters && selectedNs && !loading" class="searched-content">
             <ul class="process">
@@ -97,7 +103,7 @@
     <div *ngIf="resourceGroups && resourceGroups.length >0 && !loading" class="searched-resources">
         <div class="searched-bar">
             <div class="searched-show">Cluster: {{selectedClusters}} | Namespace: {{selectedNs}}</div>
-            <div><button class="events-button" *ngIf="events && events.length>0" (click)="showEvents()">Show <span class="events-alert">{{events.length}}</span> Events</button></div>
+            <div><button class="events-button" *ngIf="events && hasFailedEvents && events.length>0" (click)="showEvents()">Show <span class="events-alert">{{events.length}}</span> Events</button></div>
         </div>
         <div class="searched-content">
             <ul class="process">

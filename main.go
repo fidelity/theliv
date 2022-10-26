@@ -61,6 +61,9 @@ func main() {
 	// Add panic handling middleware
 	r.Use(err.PanicHandler)
 
+	// config for UI
+	r.Route("/theliv-api/v1/configinfo", router.ConfigInfo)
+
 	r.Route("/theliv-api/v1/health", router.HealthCheck)
 
 	// List cluster and namespaces

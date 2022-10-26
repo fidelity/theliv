@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache
  */
 import { EventEmitter, Input, Output } from '@angular/core';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faVideo } from '@fortawesome/free-solid-svg-icons';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { KubernetesService } from '../../services/kubernetes.service';
@@ -21,6 +21,7 @@ export class NavigationBarComponent implements OnInit {
   @Output()
   themeChange: EventEmitter<boolean> = new EventEmitter<boolean>();
 
+  faVideo = faVideo;
   faUser = faUser;
   user: any;
 
@@ -44,7 +45,7 @@ export class NavigationBarComponent implements OnInit {
     this.themeChange.emit(this.isDarkModule);
   }
   cleanData(): void {
-    this.router.navigate(['kubernetes']).then(() => {
+    this.router.navigate(['home']).then(() => {
       window.location.reload();
     });
   }

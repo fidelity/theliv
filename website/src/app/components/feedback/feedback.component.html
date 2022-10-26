@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache
  */ -->
 <button *ngIf="!isShowFeedback" class="btn-feedback" (click)="showFeedback()">
-    <fa-icon class="feedback-icon" [icon]="faEnvelope"></fa-icon>
+    <fa-icon class="feedback-icon" [icon]="faCommentAlt"></fa-icon>
 </button>
 
 <button *ngIf="isShowFeedback" class="btn-feedback" (click)="showFeedback()">
@@ -16,7 +16,12 @@
     <div class="alert">
         <div class="alert-title">We'd like to know your thoughts</div>
         <div class="alert-subtitle">
-            <fa-icon [icon]="faEnvelope"></fa-icon>GoBrew@fmr.com
+            <div class="feedback-email" *ngIf="configInfo && configInfo.emailAddr">
+                <fa-icon [icon]="faEnvelope"></fa-icon>{{configInfo.emailAddr}}
+            </div>
+            <a href="https://github.com/fidelity/theliv" target="_blank">
+                <fa-icon [icon]="faCodeBranch"></fa-icon>Theliv@GitHub
+            </a> 
         </div>
     </div>
 </div>
