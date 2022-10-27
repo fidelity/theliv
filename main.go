@@ -61,22 +61,8 @@ func main() {
 	// Add panic handling middleware
 	r.Use(err.PanicHandler)
 
-	r.Route("/theliv-api/v1/health", router.HealthCheck)
-
-	// List cluster and namespaces
-	r.Route("/theliv-api/v1/clusters", router.Cluster)
-
-	// detector
-	r.Route("/theliv-api/v1/detector", router.Detector)
-
-	// userinfo
-	r.Route("/theliv-api/v1/userinfo", router.Userinfo)
-
-	// feedback
-	r.Route("/theliv-api/v1/feedbacks", router.SubmitFeedback)
-
-	// rbac
-	r.Route("/theliv-api/v1/rbac", router.Rbac)
+	// api route
+	r.Route("/theliv-api/v1", router.Route)
 
 	// saml route
 	r.Handle("/auth/saml/*", samlmethod.GetSP())

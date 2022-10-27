@@ -109,6 +109,10 @@ func checkPattern(patterns []string, strings []string) (bool, error) {
 // For example, "/foo/bar" matches "/foo/*"
 // Ref: https://github.com/casbin/casbin/blob/master/util/builtin_operators.go
 func KeyMatch(key1 string, key2 string) bool {
+
+	key1 = CleanString(key1)
+	key2 = CleanString(key2)
+
 	i := strings.Index(key2, "*")
 	if i == -1 {
 		return key1 == key2
@@ -118,4 +122,9 @@ func KeyMatch(key1 string, key2 string) bool {
 		return key1[:i] == key2[:i]
 	}
 	return key1 == key2[:i]
+}
+
+// remove blank and line-breaks from string
+func CleanString(s string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(s, "\n", ""), " ", "")
 }
