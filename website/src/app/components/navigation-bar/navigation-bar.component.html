@@ -10,7 +10,7 @@
     </div>
 
     <div class="user-settings">
-        <a  class="video" target="_blank" href="https://fidvid.fmr.com/watch?id=esc_program:482062">
+        <a class="video" target="_blank" *ngIf="configInfo && configInfo.videoLink" [href]="configInfo.videoLink">
             <fa-icon  [icon]="faVideo" title="Click here for a 1 min introduction on Theliv"></fa-icon>
         </a>
         

@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: Apache
  */
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faEnvelope, faTimes, faCodeBranch, faCommentAlt } from '@fortawesome/free-solid-svg-icons';
 import { KubernetesService } from 'src/app/services/kubernetes.service';
@@ -19,18 +19,11 @@ export class FeedbackComponent implements OnInit {
   faCodeBranch = faCodeBranch as IconProp;
   faCommentAlt = faCommentAlt as IconProp;
   isShowFeedback = false;
-  configInfo: any;
+  @Input() configInfo: any;
 
   constructor(private kubeService: KubernetesService) { }
 
   ngOnInit(): void {
-    this.kubeService.getConfigInfo().subscribe((res: any) => {
-      if (res) {
-        this.configInfo = res;
-      }
-    }, (err: any) => {
-      console.log('Get Config Information Error: ', err);
-    });
   }
 
   showFeedback() :void {

@@ -50,8 +50,8 @@
 <div class="main-container">
     <div class="search-type">
         <!-- <button (click)="openFeedbackDialog()"><fa-icon [icon]="faPencialAlt" style="margin: 0 5px;"></fa-icon>Feedback</button> -->
-        <div class="video-container">
-            <a target="_blank" href="https://fidvid.fmr.com/watch?id=esc_program:482062">
+        <div class="video-container" *ngIf="configInfo && configInfo.videoLink" >
+            <a target="_blank"[href]="configInfo.videoLink">
                 <fa-icon  [icon]="faVideo" title="Click here for a 1 min introduction on Theliv"></fa-icon>
                 <div class="video-msg">1 min introduction</div>
             </a>

@@ -63,6 +63,7 @@ export class KubePlatformComponent implements OnInit {
   active='time';
   feedback = '';
   gridToggle = false;
+  configInfo: any;
 
   constructor(
     private kubeService: KubernetesService,
@@ -107,6 +108,14 @@ export class KubePlatformComponent implements OnInit {
         this.getKubeResourceInfo();
         this.getEvents();
       }
+    });
+
+    this.kubeService.getConfigInfo().subscribe((res: any) => {
+      if (res) {
+        this.configInfo = res;
+      }
+    }, (err: any) => {
+      console.log('Get Config Information Error: ', err);
     });
   }
 

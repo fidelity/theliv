@@ -65,6 +65,7 @@ type ThelivConfig struct {
 	// Only for UI usage
 	EmailAddr       string `json:"emailAddr,omitempty"`
 	DevelopedByTeam string `json:"developedByTeam,omitempty"`
+	VideoLink       string `json:"videoLink,omitempty"`
 }
 
 func (c *ThelivConfig) ToMaskString() string {

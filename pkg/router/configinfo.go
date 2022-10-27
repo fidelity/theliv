@@ -27,10 +27,12 @@ func getUIConfig() *ConfigData {
 	return &ConfigData{
 		EmailAddr:       thelivcfg.EmailAddr,
 		DevelopedByTeam: thelivcfg.DevelopedByTeam,
+		VideoLink:       thelivcfg.VideoLink,
 	}
 }
 
 type ConfigData struct {
 	EmailAddr       string `json:"emailAddr,omitempty"`
 	DevelopedByTeam string `json:"developedByTeam,omitempty"`
+	VideoLink       string `json:"videoLink,omitempty"`
 }

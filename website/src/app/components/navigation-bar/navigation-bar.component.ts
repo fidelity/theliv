@@ -24,6 +24,7 @@ export class NavigationBarComponent implements OnInit {
   faVideo = faVideo;
   faUser = faUser;
   user: any;
+  @Input() configInfo: any;
 
   constructor(private kubeService: KubernetesService, private router: Router) {
   }

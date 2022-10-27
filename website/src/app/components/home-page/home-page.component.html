@@ -52,8 +52,8 @@
         </div>
     </div>
     
-    <div class="video-player">
+    <div class="video-player" *ngIf="urlSafe">
         <div class="video-title">Theliv How-to in 1 Min</div>
-        <iframe width="800" height="450" frameborder="0" allowfullscreen src="https://fidvid.fmr.com/embed?id=esc_program:482062"></iframe>
+        <iframe width="800" height="450" frameborder="0" allowfullscreen [src]="urlSafe"></iframe>
     </div>
 </div>
