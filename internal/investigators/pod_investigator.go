@@ -88,9 +88,9 @@ const (
 6. Cmd to check Node Taints: kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints --no-headers
 `
 	PendingUnknownSolution = `
-1. Failed Schedule Pod {{ .ObjectMeta.Name }}.
-2. Cmd to check Pod: kubectl get pod {{ .ObjectMeta.Name }} -n {{ .ObjectMeta.Namespace }} -o yaml
-3. Reference link: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+1. Pod {{ .ObjectMeta.Name }} is not Running.
+2. Either pod not scheduled, or container not ready.
+3. Cmd to describe Pod: kubectl describe pod {{ .ObjectMeta.Name }} -n {{ .ObjectMeta.Namespace }}
 `
 )
 

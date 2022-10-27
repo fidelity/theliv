@@ -80,7 +80,10 @@ func main() {
 
 	// rbac
 	r.Route("/theliv-api/v1/rbac", router.Rbac)
-
+  
+	// api route
+	r.Route("/theliv-api/v1", router.Route)
+  
 	// saml route
 	r.Handle("/auth/saml/*", samlmethod.GetSP())
 
