@@ -1,0 +1,181 @@
+/*
+ * Copyright FMR LLC <opensource@fidelity.com>
+ *
+ * SPDX-License-Identifier: Apache
+ */
+.homepage-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto;
+    background-color: var(--homepage-bg-color);
+}
+
+.intro-container {
+    margin: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .intro-title {
+        font-weight: 800;
+        font-size: 50px; 
+        color: var(--active-color);
+        margin: 10px 0;
+    }
+    .intro-description {
+        font-size: 16px; 
+        margin: 5px 0;
+        margin: 10px 0;
+    }
+    .intro-alert-msg {
+        background-color: var(--highlight-bg-color); 
+        margin: 5px 0;
+        padding: 4px 20px;
+        border-radius: 30px;
+        font-size: 14px; 
+    }
+}
+
+.search-menu {
+    padding: 35px 5px;
+    margin: 50px;
+    height: 60px;
+    white-space: nowrap;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 8px;
+    width: 80%;
+    padding-left: 20px;
+    .close-icon {
+        position: relative;
+        top: 2px;
+        margin-left: 10px;
+    }
+    .search-icon {
+        width: 24px;
+        margin-right: 5px;
+    }
+    div:not(:last-of-type) {
+        border-right: 1px solid var(--search-border-color);
+    }
+    .search-bar {
+        height: 55px;
+        width: 100%;
+        position: relative;
+        fa-icon.search {
+            position: relative;
+            top: calc(50% - 10px);
+            color: var(--active-color);
+        }
+        input {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-color: transparent;
+            border: none;
+        }
+    }
+    .search-cluster,
+    .search-namespace {
+        display: flex;
+        align-items: center;
+        width: 50%;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 0 25px;
+        height: 100%;
+        .select {
+            width: 100%;
+            select {
+                width: 100%;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+        }
+        input {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-color: transparent;
+            border: none;
+        }
+        .fit-width {
+            padding-top: 10px;
+            width: 100%;
+        }
+    }
+    .search-button {
+        background-color: var(--active-color);
+        height: 55px;
+        border: none;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 0 15px;
+        border-radius: 0 8px 8px 0;
+        color: var(--button-color);
+        cursor: pointer;
+        margin-left: auto;
+    }
+    .search-items {
+        display: flex;
+        position: absolute;
+        top: 10px;
+        left: 25px;
+        font-size: 13px;
+        color: var(--active-color);
+        align-items: center;
+        width: 100%;
+    }
+    .search.item {
+        border: 1px solid var(--search-border-color);
+        padding: 8px 10px;
+        border-radius: 8px;
+        display: flex;
+        margin-right: 5px;
+        max-width: 40%;
+        span {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            &:hover {
+                text-overflow: clip;
+                white-space: normal;
+                word-break: break-all;
+            }
+        }
+
+        img {
+            width: 12px;
+            margin-left: 5px;
+        }
+    }
+}
+
+.mat-option {
+    font-size: 13px;
+    height: 35px;
+}
+.mat-option {
+    font-size: 13px !important;
+    height: 35px !important;
+}
+::ng-deep .mat-form-field-underline {
+    display: none;
+}
+
+.video-player {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    margin: 50px;
+    .video-title {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 10px 0;
+    }
+}

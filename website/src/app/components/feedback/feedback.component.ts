@@ -3,9 +3,10 @@
  *
  * SPDX-License-Identifier: Apache
  */
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { faEnvelope, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faTimes, faCodeBranch, faCommentAlt } from '@fortawesome/free-solid-svg-icons';
+import { KubernetesService } from 'src/app/services/kubernetes.service';
 
 @Component({
   selector: 'app-feedback',
@@ -15,9 +16,12 @@ import { faEnvelope, faTimes } from '@fortawesome/free-solid-svg-icons';
 export class FeedbackComponent implements OnInit {
   faEnvelope = faEnvelope as IconProp;
   faClose = faTimes as IconProp;
+  faCodeBranch = faCodeBranch as IconProp;
+  faCommentAlt = faCommentAlt as IconProp;
   isShowFeedback = false;
+  @Input() configInfo: any;
 
-  constructor() { }
+  constructor(private kubeService: KubernetesService) { }
 
   ngOnInit(): void {
   }

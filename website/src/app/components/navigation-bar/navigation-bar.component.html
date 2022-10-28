@@ -6,12 +6,14 @@
 <div class="header">
     <div class="logo" [routerLink]="['/']" [routerLinkActive]="['active']" (click)="cleanData();">
         <!-- <img class="logo-icon" src="assets/images/long-logo.png" /> -->
-        theliv.io
+        theliv
     </div>
-    <div class="header-menu">
-        <a class="none-dec" [routerLink]="['/kubernetes']" [routerLinkActive]="['active']" (click)="cleanData();">Kubernetes</a>
-    </div>
+
     <div class="user-settings">
+        <a class="video" target="_blank" *ngIf="configInfo && configInfo.videoLink" [href]="configInfo.videoLink">
+            <fa-icon  [icon]="faVideo" title="Click here for a 1 min introduction on Theliv"></fa-icon>
+        </a>
+        
         <div class="dark-light" (click)="themeChanged()">
             <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"
                 stroke-linejoin="round">

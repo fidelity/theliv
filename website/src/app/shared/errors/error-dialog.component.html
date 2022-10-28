@@ -5,13 +5,9 @@
  */ -->
 <div class="overlay">
   <div class="dialog">
-    <h2>An error has occured!</h2>
+    <h2 *ngIf="data.status">{{ data.status }}</h2>
+    <h2 *ngIf="!data.status">Error</h2>
     <a class="close" mat-dialog-close>&times;</a>
-    <ng-container *ngIf="data.status">
-      <p>
-        <b>Status Code: </b>{{ data.status }}
-      </p>
-    </ng-container>
     <div class="content">{{ data.message }}</div>
   </div>
 </div>

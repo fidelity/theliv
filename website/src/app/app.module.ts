@@ -26,6 +26,7 @@ import { MatInputModule } from '@angular/material/input'
 import { MatSelectModule } from '@angular/material/select';
 import { UserFeedbackComponent } from './components/user-feedback/user-feedback.component';
 import { FeedbackComponent } from './components/feedback/feedback.component';
+import { HomePageComponent } from './components/home-page/home-page.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { FeedbackComponent } from './components/feedback/feedback.component';
     ReportCardComponent,
     ErrorDialog,
     UserFeedbackComponent,
-    FeedbackComponent
+    FeedbackComponent,
+    HomePageComponent
   ],
   imports: [
     BrowserModule,

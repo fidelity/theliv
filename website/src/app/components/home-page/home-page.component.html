@@ -1,0 +1,59 @@
+<!-- /*
+ * Copyright FMR LLC <opensource@fidelity.com>
+ *
+ * SPDX-License-Identifier: Apache
+ */ -->
+<div class="homepage-container">
+    <div class="intro-container">
+        <div class="intro-title">Automated Kubernetes Troubleshooting</div>
+        <div class="intro-description">With a single click, this tool assists you in troubleshooting Kubernetes platform issues, explains why they exist, and instructs you on how to resolve them!</div>
+        <div class="intro-alert-msg">You need to have proper permissions on EKS or RKS clusters to use this tool.</div>
+    </div>
+    
+    <div class="search-menu">
+        <div class="search-bar">
+            <fa-icon class="search" [icon]="faSearch"></fa-icon>
+            <input type="text" readonly class="search-box" autofocus="">
+            <div class="search-items">
+                <div *ngIf="selectedClusters" class="search item">
+                    <span>{{selectedClusters}}</span>
+                    <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedClusters=''; selectedNs=''; namespaces=[]; resourceGroups=[]; resourceTypes=[]; proDomains=[]"></fa-icon>
+                </div>
+                <div *ngIf="selectedNs" class="search item">
+                    <span>{{selectedNs}}</span>
+                    <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedNs=''"></fa-icon>
+                </div>
+            </div>
+        </div>
+    
+        <div class="search-cluster">
+            <img class="search-icon" src="assets/images/kube/cluster.svg" />
+            <mat-form-field class="fit-width">
+                <input type="text" matInput [formControl]="clusterFormControl" [matAutocomplete]="auto" (input)="checkClusterBlank()" [(ngModel)]="selectedClusters" placeholder="Select a Cluster">
+                <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" (optionSelected)="getNSByCluster()">
+                    <mat-option *ngFor="let option of clusterOptions | async" [value]="option">
+                        {{option}}
+                    </mat-option>
+                </mat-autocomplete>
+            </mat-form-field>
+        </div>
+        
+        <div class="search-namespace">
+            <img class="search-icon" src="assets/images/kube/ns.png" />
+            <fa-icon class="fa-spin" *ngIf="selectedClusters && !clusterInputing && namespaces && namespaces.length === 0" [icon]="faSpinner"></fa-icon>
+            <mat-form-field class="fit-width">
+                <mat-label>Select a Namespace</mat-label>
+                <mat-select [(value)]="selectedNs" (selectionChange)="getSelectedQuery($event)">
+                    <mat-option *ngFor="let namespace of namespaces" [value]="namespace.value">
+                        {{namespace.text}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </div>
+    
+    <div class="video-player" *ngIf="urlSafe">
+        <div class="video-title">Theliv How-to in 1 Min</div>
+        <iframe width="800" height="450" frameborder="0" allowfullscreen [src]="urlSafe"></iframe>
+    </div>
+</div>

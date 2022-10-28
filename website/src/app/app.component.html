@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: Apache
  */ -->
 <div class="resource" [class.dark-mode]="isDarkModule">
-  <app-navigation-bar [isDarkModule]="isDarkModule" (themeChange)="themeChange($event)"></app-navigation-bar>
+  <app-navigation-bar [isDarkModule]="isDarkModule" [configInfo]="configInfo" (themeChange)="themeChange($event)"></app-navigation-bar>
 
   <div class="wrapper">
     <router-outlet></router-outlet>
   </div>
-  <app-feedback></app-feedback>
+  <div class="footer" *ngIf="configInfo && configInfo.developedByTeam">
+    <p>Made with <span style="font-size: 18px;">&#10084;&#65039;</span> from {{configInfo.developedByTeam}}</p>
+  </div>
+  <app-feedback [configInfo]="configInfo"></app-feedback>
 </div>

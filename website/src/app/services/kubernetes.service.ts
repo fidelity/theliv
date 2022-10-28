@@ -62,6 +62,13 @@ export class KubernetesService {
     );
   }
 
+  public getConfigInfo(): Observable<any> {
+    const url = `${this.kubeEndpoint}/configinfo`;
+    return this.httpClient.get(url, this.headers).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   public postUserFeedback(msg: string): Observable<any> {
     const url = `${this.kubeEndpoint}/feedbacks`;
     var body = {

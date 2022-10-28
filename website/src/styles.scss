@@ -12,6 +12,7 @@
 :root {
   --body-bg-color: #e5ecef;
   --theme-bg-color: #fafafb;
+  --homepage-bg-color: #f7f4f7;
   --body-font: "Poppins", sans-serif;
   --body-color: #38405e; // #2f2f33;
   --active-color: #346ee4; //#1bbbef; // #0162ff;
@@ -20,6 +21,7 @@
   --search-border-color: #efefef;
   --border-color: #d8d8d8;
   --alert-bg-color: #e8f2ff;
+  --highlight-bg-color: #ffffe0;
   --subtitle-color: #5d7592; // #83838e;
   --inactive-color: #f0f0f0;
   --placeholder-color: #9b9ba5;
@@ -65,8 +67,10 @@ a {
 .dark-mode {
   --body-bg-color: #1d1d1d;
   --theme-bg-color: #13131a;
+  --homepage-bg-color: #13131a;
   --header-bg-color: #1c1c24;
   --alert-bg-color: #292932;
+  --highlight-bg-color: #292932;
   --body-color: #fff;
   --inactive-color: #292932;
   --error-button: #fff;
@@ -103,6 +107,26 @@ body {
   font-family: var(--body-font);
   font-size: 15px;
   color: var(--body-color);
+}
+
+.resource:has(.homepage-container) {
+  background-color: var(--homepage-bg-color) !important;
+  .header {
+    background-color: transparent;
+  }
+  .footer {
+    background-color: var(--homepage-bg-color);
+  }
+}
+
+.resource:has(.kube-platform) {
+  background-color: var(--theme-bg-color) !important;
+  .header {
+    background-color: transparent;
+  }
+  .footer {
+    background-color: var(--theme-bg-color);
+  }
 }
 
 /* Reset Select */
