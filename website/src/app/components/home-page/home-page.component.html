@@ -52,8 +52,8 @@
         </div>
     </div>
     
-    <div class="video-player" *ngIf="urlSafe">
-        <div class="video-title">Theliv How-to in 1 Min</div>
+    <div class="video-player" *ngIf="configInfo && configInfo.videoLink">
+        <div class="video-title">How to Use Theliv in 1 Minute</div>
         <iframe width="800" height="450" frameborder="0" allowfullscreen [src]="urlSafe"></iframe>
     </div>
 </div>
