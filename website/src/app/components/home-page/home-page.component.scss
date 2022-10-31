@@ -179,3 +179,11 @@
         margin: 10px 0;
     }
 }
+
+.loading {
+    margin: auto;
+    display: flex;
+    .fa-spin{
+        font-size: 50px;
+    }
+}

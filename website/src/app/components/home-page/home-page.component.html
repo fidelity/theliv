@@ -52,8 +52,11 @@
         </div>
     </div>
     
-    <div class="video-player" *ngIf="configInfo && configInfo.videoLink">
+    <div class="video-player">
         <div class="video-title">How to Use Theliv in 1 Minute</div>
-        <iframe width="800" height="450" frameborder="0" allowfullscreen [src]="urlSafe"></iframe>
+        <iframe *ngIf="!loading" width="800" height="450" frameborder="0" allowfullscreen [src]="urlSafe"></iframe>
+        <div *ngIf="loading" class="loading">
+            <fa-icon class="fa-spin" [icon]="faSpinner"></fa-icon>
+        </div>
     </div>
 </div>

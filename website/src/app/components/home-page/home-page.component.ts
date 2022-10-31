@@ -70,6 +70,7 @@ export class HomePageComponent implements OnInit {
 
     ngOnInit(): void {
       this.resourceGroups = null;
+      this.loading = true;
       this.kubeService.getClusters().subscribe((res: any) => {
         if (res) {
           this.clusters = res;
@@ -90,7 +91,8 @@ export class HomePageComponent implements OnInit {
       this.kubeService.getConfigInfo().subscribe((res: any) => {
         if (res) {
           this.configInfo = res;
-          this.urlSafe= this.sanitizer.bypassSecurityTrustResourceUrl(this.configInfo.videoLink);
+          this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.configInfo.videoLink);
+          this.loading = false;
         }
       }, (err: any) => {
         console.log('Get Config Information Error: ', err);
