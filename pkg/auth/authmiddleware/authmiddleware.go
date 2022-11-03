@@ -24,7 +24,7 @@ func StartAuth(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//whitelist path
 		auth := config.GetThelivConfig().Auth
-		if r.URL.Path == "/theliv-api/v1/health" || r.URL.Path == getUrlPath(auth.AcrURL) || r.URL.Path == getUrlPath(auth.MetadataURL) {
+		if r.URL.Path == "/theliv-api/v1/health" || r.URL.Path == "/theliv-api/v1/metrics" || r.URL.Path == getUrlPath(auth.AcrURL) || r.URL.Path == getUrlPath(auth.MetadataURL) {
 			handler.ServeHTTP(w, r)
 			return
 		}
