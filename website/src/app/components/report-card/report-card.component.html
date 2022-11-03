@@ -32,11 +32,11 @@
                 <div *ngIf="resource.resources" [routerLink]="['../issue', resource.id]" [queryParams]="{cluster: cluster, namespace: ns}">
                     <div class="resource-card-header">
                         <img class="kube-icon" src="assets/images/kube/{{resource.topResourceType.toLowerCase()}}.png" />
-                        <div class="resource-action">
+                        <!-- <div class="resource-action"> -->
                             <!-- <fa-icon class="thumbs-icon" [icon]="faThumbsUp" [class.thumbs-up]="resource.thumbs"
                                 (click)="socialUtil.isThumbsUp($event, resource)"></fa-icon> -->
-                            <fa-icon class="shared-icon" [icon]="faShareAlt" (click)="socialUtil.openShared($event, resource)"></fa-icon>
-                        </div>
+                            <!-- <fa-icon class="shared-icon" [icon]="faShareAlt" (click)="socialUtil.openShared($event, resource)"></fa-icon> -->
+                        <!-- </div> -->
                     </div>
                     <div class="resource-card-title">{{resource.name}}<span>{{resource.rootCause.createdTime | date:'MMM d, y'}}</span></div>
                     <div class="resource-card-subtitle">

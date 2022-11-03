@@ -146,8 +146,8 @@ $primary-color: #003c71;
         }
         .video-container {
             height: 50px;
-            border-radius: 30px;
-            background-color: var(--active-light-color);
+            border-radius: 8px;
+            background-color: var(--button-color);
             width: 100%;
             display: flex;
             justify-content: center;
@@ -162,6 +162,7 @@ $primary-color: #003c71;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                color: var(--button-text-color);
                 &:hover {
                     border-bottom: none;
                 }
@@ -234,7 +235,7 @@ $primary-color: #003c71;
                 }
 
                 .resource-style:checked + label + span {
-                    background-color: var(--active-light-color);
+                    background-color: #e1ebfb;
                     color: var(--active-color);
                 }
             }
@@ -292,8 +293,9 @@ $primary-color: #003c71;
                 width: 100%;
                 padding: 0 15px;
                 text-align: center;
-                
-                background: darken(#fff, 5%);
+                border-radius: 8px;
+                // background: darken(#fff, 5%);
+                background: var(--search-border-color);
               
                 &__item {
                   user-select: none;
@@ -301,9 +303,9 @@ $primary-color: #003c71;
                   position: relative;
                   padding: 15px 35px;
                   transition: 0.4s ease-in-out;
-                    
+                  
                   &.issue {
-                    background: darken(#fff, 5%);
+                    // background: darken(#fff, 5%);
                     .process__number {
                         transform: translateY(5px);
                         color: $primary-color;
@@ -327,7 +329,8 @@ $primary-color: #003c71;
                   font-weight: 700;
                   letter-spacing: 1.5px;
                   font-size: 30px;
-                  color: $primary-color;
+                  //   color: $primary-color;
+                  color: var(--button-text-color);
                   text-transform: uppercase;
                   margin-top: 20px;
                   margin-bottom: 20px;
@@ -406,8 +409,8 @@ $primary-color: #003c71;
 .events-button {
     border: none;
     display: inline-block;
-    background-color: var(--active-light-color);
-    color: var(--active-color);
+    background-color: var(--button-color);
+    color: var(--button-text-color);
     padding: 8px 10px;
     border-radius: 6px;
     font-size: 14px;
@@ -415,7 +418,7 @@ $primary-color: #003c71;
     padding: 12px;
     cursor: pointer;
     .events-alert{
-        color: #d53233;
+        color: var(--error-button);
     }
     animation: fadeInTop 0.5s both;
 }

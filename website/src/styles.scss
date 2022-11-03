@@ -27,10 +27,12 @@
   --placeholder-color: #9b9ba5;
   --error-button: #e44c4d;
   --level-button: #5052d5;
-  --button-color: #fff;
+  --button-color: var(--active-light-color);
+  --button-text-color: var(--active-color);
   --alter: #ffd43b;
   --success: #40cc8e;
   --shadow: #e8f2ff8c; // #dde8f0;
+  --light-shadow: #0690f9e0;
 
   --color-summary-1: #FFF6EE;
   --color-summary-1-highlight: #FFC48B;
@@ -44,6 +46,29 @@
 // $gray: #5d7592;
 // $gray2: #476283;
 // $primary: #1bbbef;
+}
+
+.dark-mode {
+  --body-bg-color: #1d1d1d;
+  --theme-bg-color: #13131a;
+  --homepage-bg-color: #13131a;
+  --header-bg-color: #1c1c24;
+  --alert-bg-color: #292932;
+  --highlight-bg-color: #292932;
+  --body-color: #fff;
+  --subtitle-color: #ccc;
+  --inactive-color: #292932;
+  --error-button: #ca3e47;
+  --level-button: #fff;
+  --active-light-color: #346ee4;
+  --border-color: #26262f;
+  --search-border-color: #26262f;
+  --shadow: #424250cc;
+  --light-shadow: #2862bf;
+  --button-color: #293a80;
+  --button-text-color: var(--body-color);
+
+  --color-summary-3: #ca3e4766;
 }
 
 html,
@@ -63,22 +88,6 @@ a {
   &.no-dec:hover {
       border: none;
   }
-}
-.dark-mode {
-  --body-bg-color: #1d1d1d;
-  --theme-bg-color: #13131a;
-  --homepage-bg-color: #13131a;
-  --header-bg-color: #1c1c24;
-  --alert-bg-color: #292932;
-  --highlight-bg-color: #292932;
-  --body-color: #fff;
-  --inactive-color: #292932;
-  --error-button: #fff;
-  --level-button: #fff;
-  --active-light-color: #263d63;
-  --border-color: #26262f;
-  --search-border-color: #26262f;
-  --shadow: #424250cc;
 }
 
 ::-moz-placeholder {
@@ -212,6 +221,34 @@ select::-ms-expand {
   background-color: var(--inactive-color) !important;
   color: var(--subtitle-color) !important;
 }
+
+.dark-mode {
+  .mat-select-value {
+    color: var(--body-color);
+  }
+  .mat-select-arrow, .mat-form-field-label {
+    color: var(--subtitle-color);
+  }
+  .mat-form-field.mat-focused {
+    .mat-select-arrow, .mat-form-field-label{
+      color: white;
+    }
+  }
+}
+
+.dark-mode {
+    .feedback-content .alert {
+      background-color: var(--alert-bg-color) !important;
+    }
+    .btn-feedback {
+      background-color: var(--button-color) !important;
+      &:hover{
+        background: var(--light-shadow) !important;
+        box-shadow: 0 8px 5px -5px var(--light-shadow) !important;
+      }
+    }
+}
+
 
 .search-buttons {
   border: none;
