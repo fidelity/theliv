@@ -12,15 +12,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fidelity/theliv/pkg/auth/authmiddleware"
 	"github.com/fidelity/theliv/pkg/auth/samlmethod"
 	"github.com/fidelity/theliv/pkg/config"
-	err "github.com/fidelity/theliv/pkg/err"
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/router"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
@@ -49,43 +44,7 @@ func main() {
 	conf.LoadConfigs()
 	samlmethod.Init()
 
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.RequestID)
-
-	//set content type as json by default
-	r.Use(middleware.SetHeader("Content-Type", "application/json"))
-
-	r.Use(authmiddleware.StartAuth)
-
-	// Add panic handling middleware
-	r.Use(err.PanicHandler)
-
-	// config for UI
-	r.Route("/theliv-api/v1/configinfo", router.ConfigInfo)
-
-	r.Route("/theliv-api/v1/health", router.HealthCheck)
-
-	// List cluster and namespaces
-	r.Route("/theliv-api/v1/clusters", router.Cluster)
-
-	// detector
-	r.Route("/theliv-api/v1/detector", router.Detector)
-
-	// userinfo
-	r.Route("/theliv-api/v1/userinfo", router.Userinfo)
-
-	// feedback
-	r.Route("/theliv-api/v1/feedbacks", router.SubmitFeedback)
-
-	// rbac
-	r.Route("/theliv-api/v1/rbac", router.Rbac)
-  
-	// api route
-	r.Route("/theliv-api/v1", router.Route)
-  
-	// saml route
-	r.Handle("/auth/saml/*", samlmethod.GetSP())
+	r := router.NewRouter()
 
 	theliv := config.GetThelivConfig()
 	// init default Zap logger
