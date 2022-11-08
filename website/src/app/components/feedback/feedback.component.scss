@@ -27,14 +27,14 @@ button.btn-feedback {
     outline: none;
     z-index: 2;
     cursor: pointer;
-    box-shadow: 0 10px 6px -10px #0690f9e0;
+    box-shadow: 0 10px 6px -10px var(--light-shadow);
     &:hover {
-        background: #0690f9e0;
-        box-shadow: 0 8px 5px -5px #0690f9e0;
+        background: var(--light-shadow);
+        box-shadow: 0 8px 5px -5px var(--light-shadow);
     }
     &:active {
-        background: #0690f9e0;
-        box-shadow: 0 10px 6px -10px #0690f9e0;
+        background: var(--light-shadow);
+        box-shadow: 0 10px 6px -10px var(--light-shadow);
         transform: perspective(250px) scale3d(1, 1, 1) translateY(5%);
     }
     .feedback-icon {
@@ -65,7 +65,7 @@ button.btn-feedback {
     color: var(--subtitle-color);
     z-index: 2;
     .alert {
-        background-color: #fff;
+        background-color: var(--header-bg-color);
         padding: 10px;
         border-radius: 5px;
         .alert-title {
