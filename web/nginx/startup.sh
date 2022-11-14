@@ -12,6 +12,7 @@ envsubst '$DNS_RESOLVER$CERTS_PRIVATE$CERTS_PUBLIC' </etc/nginx/nginx-temp.conf 
 
 # generate default.con
 envsubst '$EKS_DOMAIN$X_FORWARDED_PROTO$X_FORWARDED_HOST$ENVIRONMENT' </etc/nginx/conf.d/default-temp.conf > /etc/nginx/conf.d/default.conf
+envsubst '$DD_AGENT_HOST$DD_APM_NAME' </etc/nginx/dd-config.json > /etc/dd-config.json
 set -x
 /app/server/main -ca "${ETCD_CA}" -key "${ETCD_KEY}" -cert "${ETCD_CERT}" -endpoints "${ETCD_ENDPOINTS}" & 
 nginx -g 'daemon off;'

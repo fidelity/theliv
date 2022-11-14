@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -33,21 +34,22 @@ var totalRequests = prometheus.NewCounterVec(
 		Name: "http_requests_total",
 		Help: "Number of get requests.",
 	},
-	[]string{"path"},
+	[]string{"method", "path"},
 )
 
 var responseStatus = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
-		Name: "response_status",
+		Name: "http_response_status",
 		Help: "Status of HTTP response",
 	},
-	[]string{"status"},
+	[]string{"method", "path", "status"},
 )
 
 var httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Name: "http_response_time_seconds",
-	Help: "Duration of HTTP requests.",
-}, []string{"path"})
+	Name:    "http_response_time_seconds",
+	Help:    "Duration of HTTP requests.",
+	Buckets: []float64{1, 5, 10, 30, 60},
+}, []string{"method", "path"})
 
 func PrometheusMiddleware(next http.Handler) http.Handler {
 
@@ -55,18 +57,21 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 
 		if strings.Contains(r.RequestURI, "/theliv-api/v1") {
 
+			method := r.Method
 			path := strings.Split(r.RequestURI, "/")[3]
 
-			timer := prometheus.NewTimer(httpDuration.WithLabelValues(path))
+			start := time.Now()
+
 			rw := newResponseWriter(w)
 			next.ServeHTTP(rw, r)
 
 			statusCode := rw.statusCode
+			duration := time.Since(start)
 
-			responseStatus.WithLabelValues(strconv.Itoa(statusCode)).Inc()
-			totalRequests.WithLabelValues(path).Inc()
+			httpDuration.WithLabelValues(method, path).Observe(duration.Seconds())
+			responseStatus.WithLabelValues(method, path, strconv.Itoa(statusCode)).Inc()
+			totalRequests.WithLabelValues(method, path).Inc()
 
-			timer.ObserveDuration()
 		} else {
 			next.ServeHTTP(w, r)
 		}

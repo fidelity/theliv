@@ -54,6 +54,12 @@ RUN find /app/client/theliv/ | grep fa- | xargs -I '{}' mv '{}' /app/client/thel
 
 COPY web/nginx/default.conf /etc/nginx/conf.d/default-temp.conf
 COPY web/nginx/nginx.conf /etc/nginx/nginx-temp.conf
+COPY web/nginx/dd-config.json /etc/nginx/dd-config.json
+
+COPY web/nginx/install-nginx-opentracing.sh /etc/nginx/install-nginx-opentracing.sh
+RUN chmod a+x /etc/nginx/install-nginx-opentracing.sh
+RUN /etc/nginx/install-nginx-opentracing.sh
+
 COPY web/nginx/startup.sh /
 RUN chmod a+x /startup.sh
 
