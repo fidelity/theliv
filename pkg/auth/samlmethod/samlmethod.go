@@ -178,28 +178,27 @@ type Samlinfo struct {
 func (Samlinfo) GetUser(r *http.Request) (*rbac.User, error) {
 	if session := samlsp.SessionFromContext(r.Context()); session != nil {
 		// this will panic if we have the wrong type of Session, and that is OK.
-		emptyResult := []string{""}
 		sessionWithAttributes := session.(samlsp.SessionWithAttributes)
 		attributes := sessionWithAttributes.GetAttributes()
 		surname, ok := attributes["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"]
 		if !ok {
-			surname = emptyResult
+			return nil, errors.New("Cannot get user surname")
 		}
 		givenname, ok := attributes["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"]
 		if !ok {
-			givenname = emptyResult
+			return nil, errors.New("Cannot get user givenname")
 		}
 		displayname, ok := attributes["http://schemas.microsoft.com/identity/claims/displayname"]
 		if !ok {
-			displayname = emptyResult
+			return nil, errors.New("Cannot get user displayname")
 		}
 		emailaddress, ok := attributes["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"]
 		if !ok {
-			emailaddress = emptyResult
+			return nil, errors.New("Cannot get user emailaddress")
 		}
 		corpid, ok := attributes["corpid"]
 		if !ok {
-			corpid = displayname
+			return nil, errors.New("Cannot get user corpid")
 		}
 
 		return &rbac.User{
