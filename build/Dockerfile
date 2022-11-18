@@ -52,7 +52,7 @@ RUN mkdir /app/client/theliv/static
 RUN mv -f /app/client/theliv/*.js /app/client/theliv/*.css /app/client/theliv/static/
 RUN find /app/client/theliv/ | grep fa- | xargs -I '{}' mv '{}' /app/client/theliv/static/
 
-COPY web/nginx/default.conf /etc/nginx/conf.d/default-temp.conf
+COPY web/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY web/nginx/nginx.conf /etc/nginx/nginx-temp.conf
 COPY web/nginx/datadog.conf /etc/nginx/conf.d/datadog.conf
 
