@@ -54,7 +54,7 @@ RUN find /app/client/theliv/ | grep fa- | xargs -I '{}' mv '{}' /app/client/thel
 
 COPY web/nginx/default.conf /etc/nginx/conf.d/default-temp.conf
 COPY web/nginx/nginx.conf /etc/nginx/nginx-temp.conf
+COPY web/nginx/datadog.conf /etc/nginx/conf.d/datadog.conf
+
 COPY web/nginx/startup.sh /
 RUN chmod a+x /startup.sh
-
-
