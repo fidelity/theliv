@@ -86,6 +86,21 @@ func addSolutionFromMap(problem *problem.Problem, pod *v1.Pod, status *v1.Contai
 // Parameter splitIt, if true, parsed results will be split by \n.
 func GetSolutionsByTemplate(template string, object interface{}, splitIt bool) (solution []string) {
 	solution = []string{}
+	s, err := ExecGoTemplate(template, object)
+	if err != nil {
+		return
+	}
+	s1 := strings.TrimPrefix(strings.TrimSuffix(s, "\n"), "\n")
+	if splitIt {
+		solution = strings.Split(s1, "\n")
+	} else {
+		solution = append(solution, s1)
+	}
+	return
+}
+
+// Execute Go Template parse
+func ExecGoTemplate(template string, object interface{}) (s string, err error) {
 	t, err := solutionTemp.Parse(template)
 	if err != nil {
 		log.S().Errorf("Parse template got error: %s", err)
@@ -97,13 +112,7 @@ func GetSolutionsByTemplate(template string, object interface{}, splitIt bool) (
 		log.S().Errorf("Parse template with object got error: %s", err)
 		return
 	}
-	s := tpl.String()
-	s1 := strings.TrimPrefix(strings.TrimSuffix(s, "\n"), "\n")
-	if splitIt {
-		solution = strings.Split(s1, "\n")
-	} else {
-		solution = append(solution, s1)
-	}
+	s = tpl.String()
 	return
 }
 

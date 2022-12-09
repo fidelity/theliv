@@ -67,6 +67,9 @@ func Route(r chi.Router) {
 	// add role for app team
 	r.Route("/adgroup", AdGroup)
 
+	// new cluster registration
+	r.Route("/register", Register)
+
 	// config for UI
 	r.Route("/configinfo", ConfigInfo)
 
