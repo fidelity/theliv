@@ -37,6 +37,7 @@ var wg sync.WaitGroup
 // for each alert, you can define one or more func to call to build details or solutions
 var alertInvestigatorMap = map[string][]investigatorFunc{
 	"PodNotRunning": {in.PodNotRunningInvestigator, in.PodNotRunningSolutionsInvestigator},
+	"PodNotReady":   {in.PodNotReadyInvestigator},
 
 	"ContainerWaitingAsImagePullBackOff":     {in.ContainerImagePullBackoffInvestigator},
 	"ContainerWaitingAsCrashLoopBackoff":     {in.ContainerCrashLoopBackoffInvestigator},

@@ -18,9 +18,10 @@ import (
 	"strings"
 
 	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	a "github.com/microsoft/kiota/authentication/go/azure"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
+	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users/item/memberof"
 
 	"github.com/fidelity/theliv/internal/rbac"
@@ -224,7 +225,7 @@ func (Samlinfo) GetADgroups(r *http.Request) ([]string, error) {
 			if !ok {
 				return nil, errors.New("do not get the AD group")
 			}
-			ads, err := GetADgroupsByLink(adgrouplink[0])
+			ads, err := GetADgroupsByLink(r.Context(), adgrouplink[0])
 			if err != nil {
 				return nil, err
 			}
@@ -236,7 +237,7 @@ func (Samlinfo) GetADgroups(r *http.Request) ([]string, error) {
 	return nil, errors.New("get wrong session")
 }
 
-func GetADgroupsByLink(link string) ([]string, error) {
+func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
 	//check whether link is recognized
 	//change client id and secret as input
 	url, err := url.Parse(link)
@@ -259,48 +260,41 @@ func GetADgroupsByLink(link string) ([]string, error) {
 		return nil, err
 	}
 
-	auth, err := a.NewAzureIdentityAuthenticationProviderWithScopes(cred, []string{"https://graph.microsoft.com/.default"})
+	graphClient, err := msgraphsdk.NewGraphServiceClientWithCredentials(cred, []string{"https://graph.microsoft.com/.default"})
 	if err != nil {
-		fmt.Printf("Error authentication provider: %v\n", err)
+		fmt.Printf("Error creating graphClient: %v\n", err)
 		return nil, err
 	}
-	requestAdapter, err := msgraphsdk.NewGraphRequestAdapter(auth)
-	if err != nil {
-		fmt.Printf("Error creating adapter: %v\n", err)
-		return nil, err
-	}
-
-	graphClient := msgraphsdk.NewGraphServiceClient(requestAdapter)
-
 	requestParameters := &memberof.MemberOfRequestBuilderGetQueryParameters{
 		Select: []string{"displayName"},
 	}
-	options := &memberof.MemberOfRequestBuilderGetOptions{
-		Q: requestParameters,
+	options := &memberof.MemberOfRequestBuilderGetRequestConfiguration{
+		QueryParameters: requestParameters,
 	}
-	result, err := graphClient.UsersById(userId).MemberOf().Get(options)
+	result, err := graphClient.UsersById(userId).MemberOf().Get(ctx, options)
 	if err != nil {
 		return nil, err
 	}
 	adgroups := []string{}
 	for _, value := range result.GetValue() {
-		data := *value.Entity.GetAdditionalData()["displayName"].(*string)
+		data := *value.GetAdditionalData()["displayName"].(*string)
 		adgroups = append(adgroups, data)
 	}
 
-	for {
-		if result.GetNextLink() == nil {
-			break
-		}
-		result, err = memberof.NewMemberOfRequestBuilder(*result.GetNextLink(), requestAdapter).Get(nil)
-		if err != nil {
-			fmt.Printf("Error getting Adgroups: %v\n", err)
-			return nil, err
-		}
-		for _, value := range result.GetValue() {
-			data := *value.Entity.GetAdditionalData()["displayName"].(*string)
-			adgroups = append(adgroups, data)
-		}
+	pageIterator, err := msgraphcore.NewPageIterator(result, graphClient.GetAdapter(), models.CreateUserCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		fmt.Printf("Error getting Adgroups: %v\n", err)
+		return nil, err
+	}
+	err = pageIterator.Iterate(context.Background(), func(pageItem interface{}) bool {
+		item := pageItem.(models.DirectoryObjectable)
+		data := *item.GetAdditionalData()["displayName"].(*string)
+		adgroups = append(adgroups, data)
+		return true
+	})
+	if err != nil {
+		fmt.Printf("Error getting Adgroups: %v\n", err)
+		return nil, err
 	}
 	return adgroups, nil
 }

@@ -210,11 +210,11 @@ func loadEndpointsDetails(problem *problem.Problem) {
 func buildReasonMsg(reason string, message string) string {
 	var detail string
 	if reason != "" && message != "" {
-		detail = reason + ":" + message
+		detail = "Reason: " + reason + " Message: " + message
 	} else if message != "" {
-		detail = "message: " + message
+		detail = "Message: " + message
 	} else if reason != "" {
-		detail = "reason: " + reason
+		detail = "Reason: " + reason
 	}
 	return detail
 }
@@ -228,7 +228,7 @@ func appendDetail(problem *problem.Problem, detail string,
 func appendNonEmptyDetail(problem *problem.Problem, conType string,
 	conMsg, msg string, reason string) {
 	if msg != "" || reason != "" {
-		detail := conType + "=" + conMsg + ". "
+		detail := "Found Status: " + conType + "=" + conMsg + ". "
 		appendDetail(problem, detail, msg, reason)
 	}
 }
