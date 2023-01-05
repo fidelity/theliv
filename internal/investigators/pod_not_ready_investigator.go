@@ -16,7 +16,7 @@ const (
 	PodNotReadySolution = `Pod {{.Pod.ObjectMeta.Name}} has been in running phase but not ready for more than 5 mins.
 The Reason is: {{.Reason}}
 The Message is: {{.Message}}
-If the issue persists, please check the Readiness Gates set for the Pod.
+If the issue persists, please check the {{ .Config }} set for the Pod.
 Cmd to check Pod: kubectl get pod {{ .Pod.ObjectMeta.Name }} -n {{ .Pod.ObjectMeta.Namespace }} -o yaml
 `
 )
@@ -25,6 +25,7 @@ type PodNotReady struct {
 	Pod     *v1.Pod
 	Reason  string
 	Message string
+	Config  string
 }
 
 func PodNotReadyInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
@@ -33,10 +34,15 @@ func PodNotReadyInvestigator(ctx context.Context, problem *problem.Problem, inpu
 
 	for _, con := range pod.Status.Conditions {
 		if con.Type == "Ready" {
+			config := "container readinessProbe"
+			if con.Reason == "ReadinessGatesNotReady" {
+				config = "ReadinessGates"
+			}
 			podInf := PodNotReady{
 				Pod:     &pod,
 				Message: con.Message,
 				Reason:  con.Reason,
+				Config:  config,
 			}
 			solution := GetSolutionsByTemplate(PodNotReadySolution, podInf, true)
 			appendSolution(problem, solution)
