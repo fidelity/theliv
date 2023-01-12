@@ -143,7 +143,7 @@ func HandleStartAuthFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//change redirect url to main page
-	mainuris := "/theliv/"
+	mainuris := getRedirectUrl(r.Header.Get("redirect"))
 	mainuri, err := url.Parse(mainuris)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -171,6 +171,15 @@ func HandleStartAuthFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Error(w, err.Error(), http.StatusInternalServerError)
+}
+
+func getRedirectUrl(url string) (redirect string) {
+	redirect = "/theliv/"
+	path := strings.Split(url, redirect)
+	if len(path) == 2 {
+		redirect = redirect + path[1]
+	}
+	return
 }
 
 type Samlinfo struct {
