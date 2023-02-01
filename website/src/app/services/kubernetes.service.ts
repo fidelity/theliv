@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: Apache
  */
 import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable , Inject} from '@angular/core';
 import { catchError } from 'rxjs/operators';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { AppConfig } from 'src/config/app.config';
 import { environment } from '../../environments/environment';
+import { WindowToken } from '../shared/util/window';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +23,7 @@ export class KubernetesService {
 
   headers: any;
 
-  constructor(private httpClient: HttpClient) {
+  constructor(@Inject(WindowToken) private window: Window, private httpClient: HttpClient) {
     if (!environment.production) {
       this.headers = {
         headers: new HttpHeaders({
@@ -30,7 +31,11 @@ export class KubernetesService {
         })
       };
     } else {
-      this.headers = undefined;
+      this.headers = {
+        headers: new HttpHeaders({
+          redirect: this.window.location.href
+        })
+      };
     }
   }
 

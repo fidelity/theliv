@@ -50,11 +50,9 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 	pod *v1.Pod, status *v1.ContainerStatus,
 	solutions map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string) string {
 
-	filter := CreateEventFilterCriteria(DefaultTimespan, input.EventRetriever.AddFilters(pod.Name, pod.Namespace))
-	eventDataRef := input.EventRetriever.Retrieve(filter)
-	events, err := eventDataRef.GetEvents(ctx)
+	events, err := GetPodEvents(ctx, input, pod)
 	if err != nil {
-		log.S().Error("Got error when calling Datadog event API, error is %s", err)
+		log.S().Error("Got error when calling Kubernetes event API, error is %s", err)
 	}
 
 	if len(events) > 0 {
@@ -73,6 +71,13 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 	log.S().Infof("Can not find event details for pod %s, container %s", pod.Name, status.Name)
 
 	return ""
+}
+
+func GetPodEvents(ctx context.Context, input *problem.DetectorCreationInput, pod *v1.Pod) ([]observability.EventRecord, error) {
+
+	filter := CreateEventFilterCriteria(DefaultTimespan, input.EventRetriever.AddFilters(pod.Name, pod.Namespace))
+	eventDataRef := input.EventRetriever.Retrieve(filter)
+	return eventDataRef.GetEvents(ctx)
 }
 
 func addSolutionFromMap(problem *problem.Problem, pod *v1.Pod, status *v1.ContainerStatus, msg string,
