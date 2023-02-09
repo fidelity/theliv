@@ -3,14 +3,14 @@ module github.com/fidelity/theliv
 go 1.17
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.0
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.1
 	github.com/aws/aws-sdk-go-v2 v1.16.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.9
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.13.13
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.2
-	github.com/microsoft/kiota/authentication/go/azure v0.0.0-20211221082943-f98d671bb86d
 	github.com/microsoftgraph/msgraph-sdk-go v0.47.0
+	github.com/microsoftgraph/msgraph-sdk-go-core v0.30.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/prometheus/common v0.37.0
 	github.com/stretchr/testify v1.8.1
@@ -39,7 +39,7 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.2.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.0.0 // indirect
-	github.com/AzureAD/microsoft-authentication-library-for-go v0.7.0 // indirect
+	github.com/AzureAD/microsoft-authentication-library-for-go v0.8.1 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.18 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.12 // indirect
@@ -73,8 +73,6 @@ require (
 	github.com/microsoft/kiota-http-go v0.9.0 // indirect
 	github.com/microsoft/kiota-serialization-json-go v0.7.2 // indirect
 	github.com/microsoft/kiota-serialization-text-go v0.6.0 // indirect
-	github.com/microsoft/kiota/abstractions/go v0.0.0-20211202082735-099f3c37853a // indirect
-	github.com/microsoftgraph/msgraph-sdk-go-core v0.30.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect

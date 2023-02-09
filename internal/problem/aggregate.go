@@ -77,33 +77,18 @@ func buildReportCards(problems []Problem, client *kubeclient.KubeClient) map[str
 		}
 		switch v := p.AffectedResources.Resource.(type) {
 		case metav1.Object:
-			top, h := getTopResource(v, client)
+			top, h, arog := getTopResource(v, client)
 			cr := getReportCardResource(p, p.AffectedResources)
-			if h != nil {
-				if rd, ok := cards[h.toString()]; ok {
-					rd.Resources = append(rd.Resources, cr)
-				} else {
-					cards[h.toString()] = &ReportCard{
-						Name:            h.toString(),
-						Level:           p.Level,
-						Resources:       []*ReportCardResource{cr},
-						TopResourceType: "Helm",
-					}
-				}
+			if arog != nil {
+				appendCards(cards, cr, p, arog.Instance, "Argo")
+			} else if h != nil {
+				appendCards(cards, cr, p, h.toString(), "Helm")
 			} else {
-				if rd, ok := cards[top.GetName()]; ok {
-					rd.Resources = append(rd.Resources, cr)
-				} else {
-					card := &ReportCard{
-						Name:      top.GetName(),
-						Level:     p.Level,
-						Resources: []*ReportCardResource{cr},
-					}
-					if obj, ok := top.(runtime.Object); ok {
-						card.TopResourceType = obj.GetObjectKind().GroupVersionKind().Kind
-					}
-					cards[top.GetName()] = card
+				topType := ""
+				if obj, ok := top.(runtime.Object); ok {
+					topType = obj.GetObjectKind().GroupVersionKind().Kind
 				}
+				appendCards(cards, cr, p, top.GetName(), topType)
 			}
 		default:
 			// TODO log
@@ -139,22 +124,29 @@ func getHelmChart(meta metav1.Object) *helmChart {
 
 // getTopResource returns the top resource for the specified resource,
 // e.g. Deployment --> ReplicaSet --> Pod, so the top resource for Pod is Deployment
+// if any level of resource has Argo Instance info, then returns Argo Instance.
 // if any level of resource has helm chart info, then returns helm
-func getTopResource(mo metav1.Object, client *kubeclient.KubeClient) (metav1.Object, *helmChart) {
-	chart := getHelmChart(mo)
-	if !chart.isEmpty() {
-		return nil, chart
+func getTopResource(mo metav1.Object, client *kubeclient.KubeClient) (metav1.Object, *helmChart, *ArgoInstance) {
+	argo := getArgoInstance(mo)
+	if argo.Instance != "" {
+		return nil, nil, argo
+	}
+	if argo.RolloutTemplate == "" {
+		chart := getHelmChart(mo)
+		if !chart.isEmpty() {
+			return nil, chart, nil
+		}
 	}
 	oref := getControlOwner(mo)
 	// if there is no parent resource
 	if oref == nil {
-		return mo, nil
+		return mo, nil, nil
 	}
 	owner, err := client.GetOwner(context.TODO(), *oref, mo.GetNamespace())
 	if err != nil {
 		fmt.Printf("Failed to get owner resource from owner reference, %v", err)
 		// return the resource itself if cannot get its owner
-		return mo, nil
+		return mo, nil, nil
 	}
 	return getTopResource(owner, client)
 }
@@ -262,4 +254,26 @@ func cleanFieldNotRequired(data map[string]interface{}) map[string]interface{} {
 		}
 	}
 	return data
+}
+
+// If card exists, append to card.Resources, or append new card into whole cards.
+func appendCards(cards map[string]*ReportCard, cr *ReportCardResource, p Problem, name string, topType string) {
+	if rd, ok := cards[name]; ok {
+		rd.Resources = append(rd.Resources, cr)
+	} else {
+		cards[name] = &ReportCard{
+			Name:            name,
+			Level:           p.Level,
+			Resources:       []*ReportCardResource{cr},
+			TopResourceType: topType,
+		}
+	}
+}
+
+// Returns the ArgoInstance info if exists.
+func getArgoInstance(meta metav1.Object) *ArgoInstance {
+	return &ArgoInstance{
+		Instance:        meta.GetLabels()["argocd.argoproj.io/instance"],
+		RolloutTemplate: meta.GetLabels()["rollouts-pod-template-hash"],
+	}
 }
