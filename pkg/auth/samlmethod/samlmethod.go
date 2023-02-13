@@ -286,8 +286,12 @@ func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
 	}
 	adgroups := []string{}
 	for _, value := range result.GetValue() {
-		data := *value.GetAdditionalData()["displayName"].(*string)
-		adgroups = append(adgroups, data)
+		dataMap := value.GetAdditionalData()
+		if name, ok := dataMap["displayName"]; ok {
+			if data, good := name.(string); good {
+				adgroups = append(adgroups, strings.ToLower(data))
+			}
+		}
 	}
 
 	pageIterator, err := msgraphcore.NewPageIterator(result, graphClient.GetAdapter(), models.CreateUserCollectionResponseFromDiscriminatorValue)
@@ -297,8 +301,12 @@ func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
 	}
 	err = pageIterator.Iterate(context.Background(), func(pageItem interface{}) bool {
 		item := pageItem.(models.DirectoryObjectable)
-		data := *item.GetAdditionalData()["displayName"].(*string)
-		adgroups = append(adgroups, data)
+		dataMap := item.GetAdditionalData()
+		if name, ok := dataMap["displayName"]; ok {
+			if data, good := name.(string); good {
+				adgroups = append(adgroups, strings.ToLower(data))
+			}
+		}
 		return true
 	})
 	if err != nil {
