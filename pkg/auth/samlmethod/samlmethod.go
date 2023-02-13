@@ -287,9 +287,13 @@ func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
 	adgroups := []string{}
 	for _, value := range result.GetValue() {
 		dataMap := value.GetAdditionalData()
-		if name, ok := dataMap["displayName"]; ok {
-			if data, good := name.(string); good {
-				adgroups = append(adgroups, strings.ToLower(data))
+		if dataMap != nil {
+			if name, ok := dataMap["displayName"]; ok {
+				if name != nil {
+					if data, good := name.(string); good {
+						adgroups = append(adgroups, strings.ToLower(data))
+					}
+				}
 			}
 		}
 	}
@@ -302,9 +306,13 @@ func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
 	err = pageIterator.Iterate(context.Background(), func(pageItem interface{}) bool {
 		item := pageItem.(models.DirectoryObjectable)
 		dataMap := item.GetAdditionalData()
-		if name, ok := dataMap["displayName"]; ok {
-			if data, good := name.(string); good {
-				adgroups = append(adgroups, strings.ToLower(data))
+		if dataMap != nil {
+			if name, ok := dataMap["displayName"]; ok {
+				if name != nil {
+					if data, good := name.(string); good {
+						adgroups = append(adgroups, strings.ToLower(data))
+					}
+				}
 			}
 		}
 		return true
