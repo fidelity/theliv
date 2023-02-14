@@ -334,7 +334,7 @@ func (Samlinfo) GetADgroups(r *http.Request, userID string) ([]string, error) {
 	memberOf := result.Entries[0].GetAttributeValues("memberOf")
 	for _, mb := range memberOf {
 		if ad := extractADGroup(mb); ad != "" {
-			ads = append(ads, strings.ToLower(ad))
+			ads = append(ads, ad)
 		}
 	}
 	return ads, nil
