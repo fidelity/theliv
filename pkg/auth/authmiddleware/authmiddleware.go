@@ -74,8 +74,8 @@ func GetUser(r *http.Request) (*rbac.User, error) {
 	return authMethod.GetUser(r)
 }
 
-func GetADgroups(r *http.Request) ([]string, error) {
-	return authMethod.GetADgroups(r)
+func GetADgroups(r *http.Request, id string) ([]string, error) {
+	return authMethod.GetADgroups(r, id)
 }
 
 func getUrlPath(p string) string {
