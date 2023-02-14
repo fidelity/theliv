@@ -58,10 +58,11 @@ type ThelivConfig struct {
 	Auth                *AuthConfig         `json:"auth,omitempty"`
 	Prometheus          *PrometheusConfig   `json:"prometheus,omitempty"`
 	ProblemLevel        *ProblemLevelConfig `json:"problemlevel,omitempty"`
-	LogDriver           LogDriverType       `json:"logDriver,omitempty"`
-	EventDriver         LogDriverType       `json:"eventDriver,omitempty"`
-	LogDeeplinkDriver   LogDriverType       `json:"logDeeplinkDriver,omitempty"`
-	EventDeeplinkDriver LogDriverType       `json:"eventDeeplinkDriver,omitempty"`
+	Ldap                *LdapConfig
+	LogDriver           LogDriverType `json:"logDriver,omitempty"`
+	EventDriver         LogDriverType `json:"eventDriver,omitempty"`
+	LogDeeplinkDriver   LogDriverType `json:"logDeeplinkDriver,omitempty"`
+	EventDeeplinkDriver LogDriverType `json:"eventDeeplinkDriver,omitempty"`
 	// Only for UI usage
 	EmailAddr       string `json:"emailAddr,omitempty"`
 	DevelopedByTeam string `json:"developedByTeam,omitempty"`
@@ -173,4 +174,9 @@ func (conf *KubernetesCluster) GetAwsConfig() *aws.Config {
 		Region:      conf.Basic.Region,
 		Credentials: credentials.NewStaticCredentialsProvider(awsconf.Credentials.AccessKeyID, awsconf.Credentials.SecretAccessKey, awsconf.Credentials.SessionToken),
 	}
+}
+
+type LdapConfig struct {
+	Address string `json:"address"`
+	Query   string `json:"query"`
 }

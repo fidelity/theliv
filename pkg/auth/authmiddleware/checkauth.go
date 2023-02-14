@@ -63,7 +63,7 @@ func checkRBAC(r *http.Request) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	adgroups, err := GetADgroups(r)
+	adgroups, err := GetADgroups(r, user.UID)
 	if err != nil {
 		return false, err
 	}
@@ -88,7 +88,7 @@ func checkRBAC(r *http.Request) (bool, error) {
 	return matched, err
 }
 
-//check any of string match any of the pattern
+// check any of string match any of the pattern
 func checkPattern(patterns []string, strings []string) (bool, error) {
 	matched := false
 	if len(patterns) < 1 || len(strings) < 1 {

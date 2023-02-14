@@ -26,6 +26,9 @@ import (
 
 	"github.com/fidelity/theliv/internal/rbac"
 	"github.com/fidelity/theliv/pkg/config"
+	log "github.com/fidelity/theliv/pkg/log"
+	"github.com/go-ldap/ldap/v3"
+
 	"github.com/wangli1030/saml"
 	"github.com/wangli1030/saml/samlsp"
 )
@@ -223,7 +226,7 @@ func (Samlinfo) GetUser(r *http.Request) (*rbac.User, error) {
 	return nil, errors.New("Session is empty")
 }
 
-func (Samlinfo) GetADgroups(r *http.Request) ([]string, error) {
+func (Samlinfo) GetADgroups0(r *http.Request, id string) ([]string, error) {
 	if session := samlsp.SessionFromContext(r.Context()); session != nil {
 		// this will panic if we have the wrong type of Session, and that is OK.
 		sessionWithAttributes := session.(samlsp.SessionWithAttributes)
@@ -287,12 +290,10 @@ func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
 	adgroups := []string{}
 	for _, value := range result.GetValue() {
 		dataMap := value.GetAdditionalData()
-		if dataMap != nil {
-			if name, ok := dataMap["displayName"]; ok {
-				if name != nil {
-					if data, good := name.(string); good {
-						adgroups = append(adgroups, strings.ToLower(data))
-					}
+		if d1, ok := dataMap["displayName"]; ok {
+			if d1 != nil {
+				if data, good := d1.(*string); good {
+					adgroups = append(adgroups, *data)
 				}
 			}
 		}
@@ -306,12 +307,10 @@ func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
 	err = pageIterator.Iterate(context.Background(), func(pageItem interface{}) bool {
 		item := pageItem.(models.DirectoryObjectable)
 		dataMap := item.GetAdditionalData()
-		if dataMap != nil {
-			if name, ok := dataMap["displayName"]; ok {
-				if name != nil {
-					if data, good := name.(string); good {
-						adgroups = append(adgroups, strings.ToLower(data))
-					}
+		if d1, ok := dataMap["displayName"]; ok {
+			if d1 != nil {
+				if data, good := d1.(*string); good {
+					adgroups = append(adgroups, *data)
 				}
 			}
 		}
@@ -322,4 +321,57 @@ func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
 		return nil, err
 	}
 	return adgroups, nil
+}
+
+func (Samlinfo) GetADgroups(r *http.Request, userID string) ([]string, error) {
+
+	result := callLDAP(userID)
+	ads := []string{}
+	if result == nil || len(result.Entries) == 0 {
+		log.S().Warn("Response from LDAP is error or empty")
+		return ads, nil
+	}
+	memberOf := result.Entries[0].GetAttributeValues("memberOf")
+	for _, mb := range memberOf {
+		if ad := extractADGroup(mb); ad != "" {
+			ads = append(ads, strings.ToLower(ad))
+		}
+	}
+	return ads, nil
+}
+
+// calls LDAP, connect to server each time
+func callLDAP(userID string) *ldap.SearchResult {
+
+	ldapCfg := config.GetThelivConfig().Ldap
+
+	conn, err := ldap.DialTLS("tcp", ldapCfg.Address, &tls.Config{
+		InsecureSkipVerify: true,
+	})
+	if err != nil {
+		log.S().Errorf("Unable to connect to LDAP server, error is %v", err)
+		return nil
+	}
+	defer conn.Close()
+
+	result, err := conn.Search(ldap.NewSearchRequest(
+		ldapCfg.Query,
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		fmt.Sprintf("(&(samaccountname=%v))", userID),
+		[]string{"memberOf"},
+		nil,
+	))
+	if err != nil {
+		log.S().Errorf("Failed to search LDAP for user %v, error is %v", userID, err)
+	}
+	return result
+}
+
+func extractADGroup(member string) string {
+	if cns := strings.Split(member, ","); len(cns) > 0 {
+		if ads := strings.Split(cns[0], "="); len(ads) == 2 {
+			return ads[1]
+		}
+	}
+	return ""
 }
