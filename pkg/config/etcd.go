@@ -44,6 +44,10 @@ func (ecl *EtcdConfigLoader) LoadConfigs() {
 	if err := ecl.loadThelivLevelConfig(); err != nil {
 		log.S().Errorf("Failed to load theliv level config, error is %v\n", err)
 	}
+
+	if err := ecl.loadLdapConfig(); err != nil {
+		log.S().Errorf("Failed to load ldap config, error is %v\n", err)
+	}
 }
 
 func (ecl *EtcdConfigLoader) GetKubernetesConfig(name string) *KubernetesCluster {
@@ -168,4 +172,15 @@ func (ecl *EtcdConfigLoader) loadThelivLevelConfig() error {
 func getLastPart(key string) string {
 	names := strings.Split(key, "/")
 	return names[len(names)-1]
+}
+
+func (ecl *EtcdConfigLoader) loadLdapConfig() error {
+	conf := &LdapConfig{}
+	err := driver.GetObjectWithSub(driver.LDAP_CONFIG_KEY, conf)
+	if err != nil {
+		return err
+	}
+	thelivConfig.Ldap = conf
+	log.S().Infof("Successfully load ldap config")
+	return nil
 }

@@ -17,5 +17,5 @@ type User struct {
 
 type RBACInfo interface {
 	GetUser(r *http.Request) (*User, error)
-	GetADgroups(r *http.Request) ([]string, error)
+	GetADgroups(r *http.Request, id string) ([]string, error)
 }

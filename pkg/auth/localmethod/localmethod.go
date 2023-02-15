@@ -43,7 +43,7 @@ func (Localinfo) GetUser(r *http.Request) (*rbac.User, error) {
 	return nil, err
 }
 
-func (Localinfo) GetADgroups(r *http.Request) ([]string, error) {
+func (Localinfo) GetADgroups(r *http.Request, id string) ([]string, error) {
 	if true {
 		return nil, nil
 	}
