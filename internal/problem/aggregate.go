@@ -12,6 +12,7 @@ import (
 	"hash/crc32"
 	"sort"
 
+	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	log "github.com/fidelity/theliv/pkg/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,7 +29,7 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 	}
 
 	// user level namespace
-	ucards := buildReportCards(problems, client)
+	ucards := buildReportCards(ctx, problems, client)
 	for _, val := range ucards {
 		val.RootCause = rootCause(val.Resources)
 		// set ID
@@ -68,7 +69,7 @@ func buildClusterReportCard(p Problem) *ReportCard {
 	}
 }
 
-func buildReportCards(problems []Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
+func buildReportCards(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
 		// ignore cluster & managed namespace level NewProblems
@@ -77,12 +78,12 @@ func buildReportCards(problems []Problem, client *kubeclient.KubeClient) map[str
 		}
 		switch v := p.AffectedResources.Resource.(type) {
 		case metav1.Object:
-			top, h, arog := getTopResource(v, client)
+			top, h, argo := getTopResource(ctx, v, client)
 			cr := getReportCardResource(p, p.AffectedResources)
-			if arog != nil {
-				appendCards(cards, cr, p, arog.Instance, "Argo")
+			if argo != nil {
+				appendCards(cards, cr, p, argo.Instance, com.Argo)
 			} else if h != nil {
-				appendCards(cards, cr, p, h.toString(), "Helm")
+				appendCards(cards, cr, p, h.toString(), com.Helm)
 			} else {
 				topType := ""
 				if obj, ok := top.(runtime.Object); ok {
@@ -126,7 +127,7 @@ func getHelmChart(meta metav1.Object) *helmChart {
 // e.g. Deployment --> ReplicaSet --> Pod, so the top resource for Pod is Deployment
 // if any level of resource has Argo Instance info, then returns Argo Instance.
 // if any level of resource has helm chart info, then returns helm
-func getTopResource(mo metav1.Object, client *kubeclient.KubeClient) (metav1.Object, *helmChart, *ArgoInstance) {
+func getTopResource(ctx context.Context, mo metav1.Object, client *kubeclient.KubeClient) (metav1.Object, *helmChart, *ArgoInstance) {
 	argo := getArgoInstance(mo)
 	if argo.Instance != "" {
 		return nil, nil, argo
@@ -142,13 +143,13 @@ func getTopResource(mo metav1.Object, client *kubeclient.KubeClient) (metav1.Obj
 	if oref == nil {
 		return mo, nil, nil
 	}
-	owner, err := client.GetOwner(context.TODO(), *oref, mo.GetNamespace())
+	owner, err := client.GetOwner(ctx, *oref, mo.GetNamespace())
 	if err != nil {
 		fmt.Printf("Failed to get owner resource from owner reference, %v", err)
 		// return the resource itself if cannot get its owner
 		return mo, nil, nil
 	}
-	return getTopResource(owner, client)
+	return getTopResource(ctx, owner, client)
 }
 
 // Assume only 1 owner which controls the resource
