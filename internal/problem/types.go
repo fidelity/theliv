@@ -42,3 +42,8 @@ type helmChart struct {
 	chart    string
 	release  string
 }
+
+type ArgoInstance struct {
+	Instance        string
+	RolloutTemplate string
+}

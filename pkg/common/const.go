@@ -23,4 +23,6 @@ const (
 	Endpoint      = "endpoint"
 	Resourcetype  = "resourcetype"
 	Blank         = " "
+	Argo          = "Argo"
+	Helm          = "Helm"
 )
