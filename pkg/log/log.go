@@ -6,6 +6,9 @@
 package logging
 
 import (
+	"context"
+
+	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -60,4 +63,18 @@ func getLogger(config zap.Config) *zap.Logger {
 		panic("Error building Zap logger")
 	}
 	return loggerMgr
+}
+
+// Use S().Infof, add contextID
+func Infof(ctx context.Context, message string, args ...interface{}) {
+	S().Infof("["+getContextID(ctx)+"] "+message, args...)
+}
+
+// Use S().Errorf, add contextID
+func Errorf(ctx context.Context, message string, args ...interface{}) {
+	S().Errorf("["+getContextID(ctx)+"] "+message, args...)
+}
+
+func getContextID(ctx context.Context) string {
+	return middleware.GetReqID(ctx)
 }

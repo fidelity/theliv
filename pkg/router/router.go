@@ -18,8 +18,8 @@ import (
 func NewRouter() *chi.Mux {
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
 	r.Use(middleware.RequestID)
+	r.Use(middleware.Logger)
 
 	//set content type as json by default
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
