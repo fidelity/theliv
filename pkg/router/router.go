@@ -45,6 +45,9 @@ func NewRouter() *chi.Mux {
 
 // Router for /thliev-api/v1
 func Route(r chi.Router) {
+	// health check
+	r.Route("/sample", Sample)
+
 
 	// health check
 	r.Route("/health", HealthCheck)
