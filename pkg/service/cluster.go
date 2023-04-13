@@ -23,12 +23,12 @@ func ListNs(clusterName string, ctx context.Context) []string {
 	kconf := conf.GetKubeConfig()
 	clientset, err := kubernetes.NewForConfig(kconf)
 	if err != nil {
-		log.Errorf(ctx, "Failed to init kubeconfig for cluster %s, error is %v.", clusterName, err)
+		log.SWithContext(ctx).Errorf("Failed to init kubeconfig for cluster %s, error is %v.", clusterName, err)
 		return nil
 	}
 	nsList, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		log.Errorf(ctx, "Failed to list namespaces for cluster %s, error is %v.", clusterName, err)
+		log.SWithContext(ctx).Errorf("Failed to list namespaces for cluster %s, error is %v.", clusterName, err)
 		return nil
 	}
 	var names []string

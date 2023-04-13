@@ -14,13 +14,19 @@ type Address struct {
 func Hello(ctx context.Context) {
 	a1 := GetSampleAddress()
 
-	l := log.L(log.WithReqId(ctx))
+	l := log.LWithContext(ctx)
 	l.Info("Hello from Default Logger")
 
-	s := log.S(log.WithReqId(ctx))
+	s := log.SWithContext(ctx)
 	s.Info("Hello from Suggared Logger")
 	s.Infof("Address '%s': %s", a1.Name, a1.Address)
 
+	s1 := log.S()
+	s1.Info("Test without context")
+}
+
+func Hello1(ctx context.Context) {
+	log.S().Info("Test without context")
 }
 
 func GetSampleAddress() Address {
