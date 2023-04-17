@@ -95,17 +95,17 @@ const (
 )
 
 var PendingPodsSolutions = map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string{
-	PendingContainer:          getPendingPodCommonSolution(PendingContainerSolution),
-	PendingNodeSelector:       getPendingPodCommonSolution(PendingNodeSelectorSolution),
-	PendingNodeTaint:          getPendingPodCommonSolution(PendingNodeTaintSolution),
-	PendingNodeUnschedulable:  getPendingPodCommonSolution(PendingNodeUnschedulableSolution),
-	PendingPVCGetErr:          getPendingPodCommonSolution(PVCNotFoundSolution),
-	PendingPVCNotFound:        getPendingPodCommonSolution(PVCNotFoundSolution),
-	PendingUnboundPVC:         getPendingPodCommonSolution(PVCUnboundSolution),
-	PendingPVCProvisionFailed: getPendingPodCommonSolution(PVCUnboundSolution),
-	PendingInsufficient:       getPendingPodCommonSolution(PendingInsufficientSolution),
-	PendingNodeAffinity:       getPendingPodCommonSolution(PendingNodeAffinitySolution),
-	PendingNoHostPort:         getPendingPodCommonSolution(PendingNoHostPortSolution),
+	PendingContainer:          getPendingPodCommonSolution(context.Background(), PendingContainerSolution),
+	PendingNodeSelector:       getPendingPodCommonSolution(context.Background(), PendingNodeSelectorSolution),
+	PendingNodeTaint:          getPendingPodCommonSolution(context.Background(), PendingNodeTaintSolution),
+	PendingNodeUnschedulable:  getPendingPodCommonSolution(context.Background(), PendingNodeUnschedulableSolution),
+	PendingPVCGetErr:          getPendingPodCommonSolution(context.Background(), PVCNotFoundSolution),
+	PendingPVCNotFound:        getPendingPodCommonSolution(context.Background(), PVCNotFoundSolution),
+	PendingUnboundPVC:         getPendingPodCommonSolution(context.Background(), PVCUnboundSolution),
+	PendingPVCProvisionFailed: getPendingPodCommonSolution(context.Background(), PVCUnboundSolution),
+	PendingInsufficient:       getPendingPodCommonSolution(context.Background(), PendingInsufficientSolution),
+	PendingNodeAffinity:       getPendingPodCommonSolution(context.Background(), PendingNodeAffinitySolution),
+	PendingNoHostPort:         getPendingPodCommonSolution(context.Background(), PendingNoHostPortSolution),
 }
 
 func PodNotRunningInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
@@ -114,7 +114,7 @@ func PodNotRunningInvestigator(ctx context.Context, problem *problem.Problem, in
 	container := &v1.ContainerStatus{}
 
 	if getPodSolutionFromEvents(ctx, problem, input, &pod, container, PendingPodsSolutions) == "" {
-		solution := getPendingPodCommonSolution(PendingUnknownSolution)(&pod, container)
+		solution := getPendingPodCommonSolution(ctx, PendingUnknownSolution)(&pod, container)
 		appendSolution(problem, solution)
 	}
 
@@ -126,8 +126,8 @@ func PodNotRunningSolutionsInvestigator(ctx context.Context, problem *problem.Pr
 	// problem.SolutionDetails = append(problem.SolutionDetails, detail)
 }
 
-func getPendingPodCommonSolution(solution string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
+func getPendingPodCommonSolution(ctx context.Context, solution string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
 	return func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-		return GetSolutionsByTemplate(solution, pod, true)
+		return GetSolutionsByTemplate(ctx, solution, pod, true)
 	}
 }

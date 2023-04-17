@@ -43,19 +43,19 @@ func EndpointAddressNotAvailableInvestigator(ctx context.Context,
 		Name:      endpoint.Name,
 	}
 	if input.KubeClient.Get(ctx, svc, namespace, metav1.GetOptions{}) == nil {
-		logChecking(com.Service + com.Blank + svc.Name)
+		logChecking(ctx, com.Service + com.Blank + svc.Name)
 		problem.AffectedResources.ResourceKind = com.Service
 		problem.AffectedResources.Resource = svc
 	} else {
-		logChecking(com.Endpoint + com.Blank + endpoint.Name)
+		logChecking(ctx, com.Endpoint + com.Blank + endpoint.Name)
 		appendSolution(problem,
-			GetSolutionsByTemplate(NoServiceFoundSolution, endpoint, true))
+			GetSolutionsByTemplate(ctx, NoServiceFoundSolution, endpoint, true))
 	}
 
 	if len(endpoint.Subsets) != 0 {
-		solutions = GetSolutionsByTemplate(NotReadyAddressSolution, svc, true)
+		solutions = GetSolutionsByTemplate(ctx, NotReadyAddressSolution, svc, true)
 	} else {
-		solutions = GetSolutionsByTemplate(NoPoSelectedSolution, svc, true)
+		solutions = GetSolutionsByTemplate(ctx, NoPoSelectedSolution, svc, true)
 	}
 
 	appendSolution(problem, solutions)

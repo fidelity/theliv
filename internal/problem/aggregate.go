@@ -24,7 +24,7 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 	// cluster & managed namespace level NewProblems, report card only has the root cause
 	for _, p := range problems {
 		if p.Level != UserNamespace {
-			cards = append(cards, buildClusterReportCard(p))
+			cards = append(cards, buildClusterReportCard(ctx, p))
 		}
 	}
 
@@ -48,12 +48,12 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 }
 
 // Build report card for cluster level or managed namespace level
-func buildClusterReportCard(p Problem) *ReportCard {
+func buildClusterReportCard(ctx context.Context, p Problem) *ReportCard {
 	resources := []*ReportCardResource{}
 	var kind string
 	var rootCause *ReportCardIssue
 
-	res := getReportCardResource(p, p.AffectedResources)
+	res := getReportCardResource(ctx, p, p.AffectedResources)
 	resources = append(resources, res)
 	if rootCause == nil {
 		kind = p.AffectedResources.Resource.GetObjectKind().GroupVersionKind().Kind
@@ -79,7 +79,7 @@ func buildReportCards(ctx context.Context, problems []Problem, client *kubeclien
 		switch v := p.AffectedResources.Resource.(type) {
 		case metav1.Object:
 			top, h, argo := getTopResource(ctx, v, client)
-			cr := getReportCardResource(p, p.AffectedResources)
+			cr := getReportCardResource(ctx, p, p.AffectedResources)
 			if argo != nil {
 				appendCards(cards, cr, p, argo.Instance, com.Argo)
 			} else if h != nil {
@@ -165,8 +165,8 @@ func getControlOwner(mo metav1.Object) *metav1.OwnerReference {
 	return nil
 }
 
-func getReportCardResource(p Problem, resource ResourceDetails) *ReportCardResource {
-	cr := createReportCardResource(p, resource.Resource.(metav1.Object), resource.Resource.GetObjectKind().GroupVersionKind().Kind)
+func getReportCardResource(ctx context.Context, p Problem, resource ResourceDetails) *ReportCardResource {
+	cr := createReportCardResource(ctx, p, resource.Resource.(metav1.Object), resource.Resource.GetObjectKind().GroupVersionKind().Kind)
 	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails...)
 
 	// cr.Issue.Documents = urlToStr(p.Docs)
@@ -180,7 +180,7 @@ func getReportCardResource(p Problem, resource ResourceDetails) *ReportCardResou
 	return cr
 }
 
-func createReportCardResource(p Problem, v metav1.Object, kind string) *ReportCardResource {
+func createReportCardResource(ctx context.Context, p Problem, v metav1.Object, kind string) *ReportCardResource {
 	issue := ReportCardIssue{
 		Name:        p.Name,
 		Description: p.Description,
@@ -194,7 +194,7 @@ func createReportCardResource(p Problem, v metav1.Object, kind string) *ReportCa
 		Type:        kind,
 		Labels:      v.GetLabels(),
 		Annotations: v.GetAnnotations(),
-		Metadata:    convertMetadata(v),
+		Metadata:    convertMetadata(ctx, v),
 		Issue:       &issue,
 	}
 }
@@ -207,15 +207,15 @@ func hashcode(s string) string {
 	return fmt.Sprint(v)
 }
 
-func convertMetadata(obj metav1.Object) map[string]interface{} {
+func convertMetadata(ctx context.Context, obj metav1.Object) map[string]interface{} {
 	b, err := json.Marshal(obj)
 	if err != nil {
-		log.S().Errorf("Marshal json error: %s", err)
+		log.SWithContext(ctx).Errorf("Marshal json error: %s", err)
 	}
 	m := make(map[string]interface{})
 	err = json.Unmarshal(b, &m)
 	if err != nil {
-		log.S().Errorf("Unmarshal json error: %s", err)
+		log.SWithContext(ctx).Errorf("Unmarshal json error: %s", err)
 	}
 	return cleanFieldNotRequired(m)
 }

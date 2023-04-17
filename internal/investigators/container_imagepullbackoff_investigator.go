@@ -72,14 +72,14 @@ type PodAndStatus struct {
 }
 
 var ImagePullBackOffSolutions = map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string{
-	UnknownManifestMsg:    getImagePullBackOffSolution(UnknownManifestSolution),
-	RepositoryNotExistMsg: getImagePullBackOffSolution(UnknownManifestSolution),
-	NoSuchHostMsg:         getImagePullBackOffSolution(NoSuchHostSolution),
-	IOTimeoutMsg:          getImagePullBackOffSolution(IOTimeoutSolution),
-	ConnectionRefused:     getImagePullBackOffSolution(ConnectionRefusedSolution),
-	UnauthorizedMsg:       getImagePullBackOffSolution(UnauthorizedSolution),
-	QuotaRateLimitMsg:     getImagePullBackOffSolution(QuotaRateLimitSolution),
-	NotFoundMsg:           getImagePullBackOffSolution(UnknownManifestSolution),
+	UnknownManifestMsg:    getImagePullBackOffSolution(context.Background(), UnknownManifestSolution),
+	RepositoryNotExistMsg: getImagePullBackOffSolution(context.Background(), UnknownManifestSolution),
+	NoSuchHostMsg:         getImagePullBackOffSolution(context.Background(), NoSuchHostSolution),
+	IOTimeoutMsg:          getImagePullBackOffSolution(context.Background(), IOTimeoutSolution),
+	ConnectionRefused:     getImagePullBackOffSolution(context.Background(), ConnectionRefusedSolution),
+	UnauthorizedMsg:       getImagePullBackOffSolution(context.Background(), UnauthorizedSolution),
+	QuotaRateLimitMsg:     getImagePullBackOffSolution(context.Background(), QuotaRateLimitSolution),
+	NotFoundMsg:           getImagePullBackOffSolution(context.Background(), UnknownManifestSolution),
 }
 
 var ImagePullBackOffReasons = []string{"ImagePullBackOff", "ErrImagePull", "ErrImagePullBackOff"}
@@ -109,28 +109,28 @@ func investigateContainerImgPullBackOff(ctx context.Context, problem *problem.Pr
 			appendSolution(problem, solutions)
 		}
 
-		secretmsg := checksecretmsg(foundMsg, pod)
+		secretmsg := checksecretmsg(ctx, foundMsg, pod)
 		appendSolution(problem, secretmsg)
 	}
 }
 
-func checksecretmsg(msg string, pod v1.Pod) []string {
+func checksecretmsg(ctx context.Context, msg string, pod v1.Pod) []string {
 	var secretmsg []string
 	if msg == UnknownManifestMsg || msg == RepositoryNotExistMsg || msg == NotFoundMsg {
 		if len(pod.Spec.ImagePullSecrets) == 0 {
 			s := "5. " + SecretMsg2NotExist
-			secretmsg = GetSolutionsByTemplate(s, &pod, true)
+			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
 		} else {
 			s := "5. " + SecretMsg1 + "6. " + SecretMsg3
-			secretmsg = GetSolutionsByTemplate(s, &pod, true)
+			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
 		}
 	} else if msg == UnauthorizedMsg {
 		if len(pod.Spec.ImagePullSecrets) == 0 {
 			s := "4. " + SecretMsg2NotExist
-			secretmsg = GetSolutionsByTemplate(s, &pod, true)
+			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
 		} else {
 			s := "4. " + SecretMsg1 + "5. " + SecretMsg3
-			secretmsg = GetSolutionsByTemplate(s, &pod, true)
+			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
 		}
 	}
 	return secretmsg
@@ -149,9 +149,10 @@ func checkImagePullBackOffReason(reason string) bool {
 	return false
 }
 
-func getImagePullBackOffSolution(solution string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
+func getImagePullBackOffSolution(ctx context.Context, solution string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
 	return func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-		return GetSolutionsByTemplate(solution,
+		return GetSolutionsByTemplate(ctx, 
+			solution,
 			PodAndStatus{
 				Pod:    *pod,
 				Status: status,
