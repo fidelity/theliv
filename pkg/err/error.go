@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
+	"context"
 
 	log "github.com/fidelity/theliv/pkg/log"
 )
@@ -36,9 +37,9 @@ func (c CommonError) Error() string {
 }
 
 // New CommonError function, will log error message and stacktrace.
-func NewCommonError(kind ErrorType, msg string) error {
+func NewCommonError(ctx context.Context, kind ErrorType, msg string) error {
 	err := CommonError{Kind: kind, Message: kind.String() + ": " + msg}
-	log.S().Error(err.ErrorMsg())
+	log.SWithContext(ctx).Error(err.ErrorMsg())
 	return err
 }
 

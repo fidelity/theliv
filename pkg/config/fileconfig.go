@@ -6,6 +6,7 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"path"
@@ -33,21 +34,21 @@ func NewFileConfigLoader(configfile string) *FileConfigLoader {
 	return loader
 }
 
-func (l *FileConfigLoader) LoadConfigs() {
+func (l *FileConfigLoader) LoadConfigs(ctx context.Context) {
 	if err := l.loadThelivConfig(); err != nil {
-		log.S().Fatalf("Failed to load theliv config, %v", err)
+		log.SWithContext(ctx).Fatalf("Failed to load theliv config, %v", err)
 	}
 
 	if err := l.loadKubernetesConfig(); err != nil {
-		log.S().Fatalf("Failed to load kubernetes configs, %v", err)
+		log.SWithContext(ctx).Fatalf("Failed to load kubernetes configs, %v", err)
 	}
 }
 
-func (l *FileConfigLoader) GetKubernetesConfig(name string) *KubernetesCluster {
+func (l *FileConfigLoader) GetKubernetesConfig(ctx context.Context, name string) *KubernetesCluster {
 	return k8sConfig[name]
 }
 
-func (l *FileConfigLoader) GetK8SClusterNames() []string {
+func (l *FileConfigLoader) GetK8SClusterNames(ctx context.Context) []string {
 	names := make([]string, len(k8sConfig))
 	i := 0
 

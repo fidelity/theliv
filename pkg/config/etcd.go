@@ -7,6 +7,7 @@ package config
 
 import (
 	"fmt"
+	"context"
 
 	"regexp"
 	"strings"
@@ -24,39 +25,39 @@ type EtcdConfigLoader struct {
 	Endpoints []string
 }
 
-func (ecl *EtcdConfigLoader) LoadConfigs() {
-	driver.InitClientConfig(ecl.CAFile, ecl.CertFile, ecl.KeyFile, ecl.Endpoints)
-	if err := ecl.loadThelivConfig(); err != nil {
-		log.S().Panicf("Failed to load theliv config, error is %v\n", err)
+func (ecl *EtcdConfigLoader) LoadConfigs(ctx context.Context) {
+	driver.InitClientConfig(ctx, ecl.CAFile, ecl.CertFile, ecl.KeyFile, ecl.Endpoints)
+	if err := ecl.loadThelivConfig(ctx); err != nil {
+		log.SWithContext(ctx).Panicf("Failed to load theliv config, error is %v\n", err)
 	}
-	if err := ecl.loadDatadogConfig(); err != nil {
-		log.S().Errorf("Failed to load datadog config, error is %v\n", err)
-	}
-
-	if err := ecl.loadAuthConfig(); err != nil {
-		log.S().Errorf("Failed to load auth config, error is %v\n", err)
+	if err := ecl.loadDatadogConfig(ctx); err != nil {
+		log.SWithContext(ctx).Errorf("Failed to load datadog config, error is %v\n", err)
 	}
 
-	if err := ecl.loadPrometheusConfig(); err != nil {
-		log.S().Errorf("Failed to load prometheus config, error is %v\n", err)
+	if err := ecl.loadAuthConfig(ctx); err != nil {
+		log.SWithContext(ctx).Errorf("Failed to load auth config, error is %v\n", err)
 	}
 
-	if err := ecl.loadThelivLevelConfig(); err != nil {
-		log.S().Errorf("Failed to load theliv level config, error is %v\n", err)
+	if err := ecl.loadPrometheusConfig(ctx); err != nil {
+		log.SWithContext(ctx).Errorf("Failed to load prometheus config, error is %v\n", err)
 	}
 
-	if err := ecl.loadLdapConfig(); err != nil {
-		log.S().Errorf("Failed to load ldap config, error is %v\n", err)
+	if err := ecl.loadThelivLevelConfig(ctx); err != nil {
+		log.SWithContext(ctx).Errorf("Failed to load theliv level config, error is %v\n", err)
+	}
+
+	if err := ecl.loadLdapConfig(ctx); err != nil {
+		log.SWithContext(ctx).Errorf("Failed to load ldap config, error is %v\n", err)
 	}
 }
 
-func (ecl *EtcdConfigLoader) GetKubernetesConfig(name string) *KubernetesCluster {
+func (ecl *EtcdConfigLoader) GetKubernetesConfig(ctx context.Context, name string) *KubernetesCluster {
 	env := getK8SEnv(name)
 	key := fmt.Sprintf("%v/%v/%v", driver.CLUSTERS_KEY, env, name)
 	conf := &KubernetesCluster{}
-	err := driver.GetObjectWithSub(key, conf)
+	err := driver.GetObjectWithSub(ctx, key, conf)
 	if err != nil {
-		log.S().Errorf("Failed to load theliv config from etcd, error is %v\n", err)
+		log.SWithContext(ctx).Errorf("Failed to load theliv config from etcd, error is %v\n", err)
 		return nil
 	}
 	if len(conf.KubeConf) == 0 {
@@ -65,10 +66,10 @@ func (ecl *EtcdConfigLoader) GetKubernetesConfig(name string) *KubernetesCluster
 	return conf
 }
 
-func (ecl *EtcdConfigLoader) GetK8SClusterNames() []string {
-	keys, err := driver.GetKeys(driver.CLUSTERS_KEY)
+func (ecl *EtcdConfigLoader) GetK8SClusterNames(ctx context.Context) []string {
+	keys, err := driver.GetKeys(ctx, driver.CLUSTERS_KEY)
 	if err != nil {
-		log.S().Error("Failed to load cluster keys")
+		log.SWithContext(ctx).Error("Failed to load cluster keys")
 		return keys
 	}
 	tmp := make(map[string]string)
@@ -113,59 +114,59 @@ func getK8SEnv(cluster string) string {
 	return env
 }
 
-func (ecl *EtcdConfigLoader) loadThelivConfig() error {
+func (ecl *EtcdConfigLoader) loadThelivConfig(ctx context.Context) error {
 	conf := &ThelivConfig{}
-	err := driver.GetObject(driver.THELIV_CONFIG_KEY, conf)
+	err := driver.GetObject(ctx, driver.THELIV_CONFIG_KEY, conf)
 	if err != nil {
-		log.S().Errorf("Failed to load theliv config from etcd, error is %v\n", err)
+		log.SWithContext(ctx).Errorf("Failed to load theliv config from etcd, error is %v\n", err)
 		return err
 	}
 	thelivConfig = conf
-	log.S().Infof("Load theliv config from etcd: %v\n", conf)
+	log.SWithContext(ctx).Infof("Load theliv config from etcd: %v\n", conf)
 	return nil
 }
 
-func (ecl *EtcdConfigLoader) loadDatadogConfig() error {
+func (ecl *EtcdConfigLoader) loadDatadogConfig(ctx context.Context) error {
 	conf := &DatadogConfig{}
-	err := driver.GetObject(driver.DATADOG_CONFIG_KEY, conf)
+	err := driver.GetObject(ctx, driver.DATADOG_CONFIG_KEY, conf)
 	if err != nil {
 		return err
 	}
 	thelivConfig.Datadog = conf
-	log.S().Infof("Successfully load Datadog config %v\n", conf.ToMaskString())
+	log.SWithContext(ctx).Infof("Successfully load Datadog config %v\n", conf.ToMaskString())
 	return nil
 }
 
-func (ecl *EtcdConfigLoader) loadAuthConfig() error {
+func (ecl *EtcdConfigLoader) loadAuthConfig(ctx context.Context) error {
 	conf := &AuthConfig{}
-	err := driver.GetObjectWithSub(driver.THELIV_AUTH_KEY, conf)
+	err := driver.GetObjectWithSub(ctx, driver.THELIV_AUTH_KEY, conf)
 	if err != nil {
 		return err
 	}
 	thelivConfig.Auth = conf
-	log.S().Infof("Successfully load auth config %v\n", conf.ToMaskString())
+	log.SWithContext(ctx).Infof("Successfully load auth config %v\n", conf.ToMaskString())
 	return nil
 }
 
-func (ecl *EtcdConfigLoader) loadPrometheusConfig() error {
+func (ecl *EtcdConfigLoader) loadPrometheusConfig(ctx context.Context) error {
 	conf := &PrometheusConfig{}
-	err := driver.GetObjectWithSub(driver.PROMETHEUS_GLOBAL_CONFIG_KEY, conf)
+	err := driver.GetObjectWithSub(ctx, driver.PROMETHEUS_GLOBAL_CONFIG_KEY, conf)
 	if err != nil {
 		return err
 	}
 	thelivConfig.Prometheus = conf
-	log.S().Infof("Successfully load prometheus config")
+	log.SWithContext(ctx).Infof("Successfully load prometheus config")
 	return nil
 }
 
-func (ecl *EtcdConfigLoader) loadThelivLevelConfig() error {
+func (ecl *EtcdConfigLoader) loadThelivLevelConfig(ctx context.Context) error {
 	conf := &ProblemLevelConfig{}
-	err := driver.GetObjectWithSub(driver.THELIV_LEVEL_CONFIG_KEY, conf)
+	err := driver.GetObjectWithSub(ctx, driver.THELIV_LEVEL_CONFIG_KEY, conf)
 	if err != nil {
 		return err
 	}
 	thelivConfig.ProblemLevel = conf
-	log.S().Infof("Successfully load theliv level config")
+	log.SWithContext(ctx).Infof("Successfully load theliv level config")
 	return nil
 }
 
@@ -174,13 +175,13 @@ func getLastPart(key string) string {
 	return names[len(names)-1]
 }
 
-func (ecl *EtcdConfigLoader) loadLdapConfig() error {
+func (ecl *EtcdConfigLoader) loadLdapConfig(ctx context.Context) error {
 	conf := &LdapConfig{}
-	err := driver.GetObjectWithSub(driver.LDAP_CONFIG_KEY, conf)
+	err := driver.GetObjectWithSub(ctx, driver.LDAP_CONFIG_KEY, conf)
 	if err != nil {
 		return err
 	}
 	thelivConfig.Ldap = conf
-	log.S().Infof("Successfully load ldap config")
+	log.SWithContext(ctx).Infof("Successfully load ldap config")
 	return nil
 }
