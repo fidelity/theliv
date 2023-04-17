@@ -15,12 +15,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func ListNs(clusterName string, ctx context.Context) []string {
-	conf := config.GetConfigLoader().GetKubernetesConfig(clusterName)
+func ListNs(ctx context.Context, clusterName string) []string {
+	conf := config.GetConfigLoader().GetKubernetesConfig(ctx, clusterName)
 	if conf == nil {
 		return nil
 	}
-	kconf := conf.GetKubeConfig()
+	kconf := conf.GetKubeConfig(ctx)
 	clientset, err := kubernetes.NewForConfig(kconf)
 	if err != nil {
 		log.SWithContext(ctx).Errorf("Failed to init kubeconfig for cluster %s, error is %v.", clusterName, err)
@@ -38,6 +38,6 @@ func ListNs(clusterName string, ctx context.Context) []string {
 	return names
 }
 
-func GetClusters() []string {
-	return config.GetConfigLoader().GetK8SClusterNames()
+func GetClusters(ctx context.Context) []string {
+	return config.GetConfigLoader().GetK8SClusterNames(ctx)
 }

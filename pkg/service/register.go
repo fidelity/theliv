@@ -6,6 +6,8 @@
 package service
 
 import (
+	"context"
+	
 	invest "github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/pkg/database/etcd"
 )
@@ -42,14 +44,14 @@ type ClusterBasic struct {
 }
 
 // Insert or update 1 record, to /theliv/clusters/{name}/kubeconf.
-func RegisterCluster(basic ClusterBasic) error {
+func RegisterCluster(ctx context.Context, basic ClusterBasic) error {
 
 	clusterType := basic.Name[:3]
 
-	value, err := invest.ExecGoTemplate(TokenTemplate, basic)
+	value, err := invest.ExecGoTemplate(ctx, TokenTemplate, basic)
 	if err != nil {
 		return err
 	}
-	return etcd.PutStr(KeyPath+clusterType+"/"+basic.Name+KubeConf, value)
+	return etcd.PutStr(ctx, KeyPath+clusterType+"/"+basic.Name+KubeConf, value)
 
 }

@@ -7,6 +7,7 @@ package service
 
 import (
 	"strings"
+	"context"
 
 	auth "github.com/fidelity/theliv/pkg/auth/authmiddleware"
 	"github.com/fidelity/theliv/pkg/database/etcd"
@@ -18,12 +19,12 @@ const (
 )
 
 // This function will add 2 new path, into every role.
-func AddGroup(cluster string, namespace string, roles []string) (err error) {
+func AddGroup(ctx context.Context, cluster string, namespace string, roles []string) (err error) {
 
 	newPath := getPath(cluster, namespace)
 
 	for _, role := range roles {
-		if err = AddPath(role, newPath); err != nil {
+		if err = AddPath(ctx, role, newPath); err != nil {
 			return
 		}
 	}
@@ -31,12 +32,12 @@ func AddGroup(cluster string, namespace string, roles []string) (err error) {
 }
 
 // This function will remove 2 path, from every role.
-func RemoveGroup(cluster string, namespace string, roles []string) (err error) {
+func RemoveGroup(ctx context.Context, cluster string, namespace string, roles []string) (err error) {
 
 	rmvPath := getPath(cluster, namespace)
 
 	for _, role := range roles {
-		if err = RemovePath(role, rmvPath); err != nil {
+		if err = RemovePath(ctx, role, rmvPath); err != nil {
 			return
 		}
 	}
@@ -44,11 +45,11 @@ func RemoveGroup(cluster string, namespace string, roles []string) (err error) {
 }
 
 // Remove path from existing role
-func RemovePath(roleName string, rmvPath []string) (err error) {
+func RemovePath(ctx context.Context, roleName string, rmvPath []string) (err error) {
 	var updatedValue []string
 	var value []byte
 	rolePath := auth.RolePrefix + roleName
-	value, err = etcd.Get(rolePath)
+	value, err = etcd.Get(ctx, rolePath)
 	if err != nil {
 		return
 	}
@@ -62,7 +63,7 @@ func RemovePath(roleName string, rmvPath []string) (err error) {
 	if existingValue == newValue {
 		return
 	}
-	err = etcd.PutStr(rolePath, newValue)
+	err = etcd.PutStr(ctx, rolePath, newValue)
 	return
 }
 
