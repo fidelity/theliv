@@ -21,7 +21,7 @@ func Cluster(r chi.Router) {
 }
 
 func listClusters(w http.ResponseWriter, r *http.Request) {
-	clusters := service.GetClusters()
+	clusters := service.GetClusters(r.Context())
 	if empty := processEmpty(w, r, clusters); !empty {
 		render.Respond(w, r, clusters)
 	}
@@ -29,7 +29,7 @@ func listClusters(w http.ResponseWriter, r *http.Request) {
 
 func listNamespaces(w http.ResponseWriter, r *http.Request) {
 	clusterName := chi.URLParam(r, "clusterName")
-	names := service.ListNs(clusterName, r.Context())
+	names := service.ListNs(r.Context(), clusterName)
 
 	if empty := processEmpty(w, r, names); !empty {
 		render.Respond(w, r, names)
