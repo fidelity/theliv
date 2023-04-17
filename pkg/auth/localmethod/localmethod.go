@@ -18,7 +18,7 @@ var accesskeyPrefix = "/theliv/accesskeys/"
 func CheckAuthorization(r *http.Request) (*http.Request, error) {
 	accesskey := r.Header.Get("ACCESSKEY")
 	if len(accesskey) > 0 {
-		content, err := etcd.Get(accesskeyPrefix + accesskey)
+		content, err := etcd.Get(r.Context(), accesskeyPrefix + accesskey)
 		if err != nil {
 			return r, err
 		}
@@ -36,7 +36,7 @@ type Localinfo struct {
 func (Localinfo) GetUser(r *http.Request) (*rbac.User, error) {
 	userinfo := &rbac.User{}
 	accesskey := r.Header.Get("ACCESSKEY")
-	err := etcd.GetObject(accesskeyPrefix+accesskey, userinfo)
+	err := etcd.GetObject(r.Context(), accesskeyPrefix+accesskey, userinfo)
 	if err == nil {
 		return userinfo, nil
 	}

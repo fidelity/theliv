@@ -9,6 +9,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"context"
 
 	"github.com/fidelity/theliv/pkg/config"
 	"github.com/fidelity/theliv/pkg/database/etcd"
@@ -18,18 +19,18 @@ const UIDPrefix string = "/theliv/uids/"
 const RolePrefix string = "/theliv/roles/"
 const URLPrefix string = "/theliv-api/v1"
 
-func getRole(UID string) ([]string, error) {
+func getRole(ctx context.Context, UID string) ([]string, error) {
 	UID = UIDPrefix + UID
-	value, err := etcd.Get(UID)
+	value, err := etcd.Get(ctx, UID)
 	if err != nil {
 		return nil, err
 	}
 	roles := strings.Split(string(value), ",")
 	return roles[:], nil
 }
-func getPath(role string) ([]string, error) {
+func getPath(ctx context.Context, role string) ([]string, error) {
 	role = RolePrefix + role
-	value, err := etcd.Get(role)
+	value, err := etcd.Get(ctx, role)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +60,7 @@ func checkRBAC(r *http.Request) (bool, error) {
 	} else {
 		return false, err
 	}
-	roles, err := getRole(user.UID)
+	roles, err := getRole(r.Context(), user.UID)
 	if err != nil {
 		return false, err
 	}
@@ -69,8 +70,8 @@ func checkRBAC(r *http.Request) (bool, error) {
 	}
 	roles = append(roles, adgroups...)
 	var grantPath []string
-	for _, r := range roles {
-		path, err := getPath(r)
+	for _, role := range roles {
+		path, err := getPath(r.Context(), role)
 		if err != nil {
 			return false, err
 		}
