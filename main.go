@@ -6,7 +6,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 
@@ -39,10 +38,10 @@ func main() {
 		conf = config.NewFileConfigLoader(thelivConfig)
 	} else {
 		conf = config.NewEtcdConfigLoader(etcdca, etcdcert, etcdkey, strings.Split(etcdendpoints, ",")...)
-		log.SWithContext(context.Background()).Infof("Will load config from etcd, %v\n", conf)
+		log.S().Infof("Will load config from etcd, %v\n", conf)
 	}
 
-	conf.LoadConfigs(context.Background())
+	conf.LoadConfigs()
 	samlmethod.Init()
 
 	r := router.NewRouter()
@@ -54,6 +53,6 @@ func main() {
 
 	err := http.ListenAndServe(fmt.Sprintf(":%v", theliv.Port), r)
 	if err != nil {
-		log.SWithContext(context.Background()).Fatalf("Failed to start server, %v", err)
+		log.S().Fatalf("Failed to start server, %v", err)
 	}
 }

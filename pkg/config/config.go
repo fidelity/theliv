@@ -29,7 +29,7 @@ const (
 // And Kubernetes cluster based on K8S cluster ID.
 type ConfigLoader interface {
 	// ThelivConfig returns ThelivConfig
-	LoadConfigs(ctx context.Context)
+	LoadConfigs()
 	GetKubernetesConfig(ctx context.Context, name string) *KubernetesCluster
 	GetK8SClusterNames(ctx context.Context) []string
 }

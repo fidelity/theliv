@@ -37,15 +37,15 @@ const (
 )
 
 // Init client config, could be called only once, before any other functions
-func InitClientConfig(ctx context.Context, ca string, cert string, key string, endpoints []string) {
+func InitClientConfig(ca string, cert string, key string, endpoints []string) {
 	c, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
-		log.SWithContext(ctx).Panicf("Failed to load cert pair for etcd cluster, %v", err)
+		log.S().Panicf("Failed to load cert pair for etcd cluster, %v", err)
 	}
 
 	caData, err := ioutil.ReadFile(ca)
 	if err != nil {
-		log.SWithContext(ctx).Panicf("Failed to load ca cert for etcd cluster, %v", err)
+		log.S().Panicf("Failed to load ca cert for etcd cluster, %v", err)
 	}
 
 	pool := x509.NewCertPool()
@@ -61,16 +61,16 @@ func InitClientConfig(ctx context.Context, ca string, cert string, key string, e
 		DialTimeout: dialTimeout,
 		TLS:         _tlsConfig,
 	}
-	client = newClient(ctx)
+	client = newClient()
 }
 
-func newClient(ctx context.Context) *clientv3.Client {
+func newClient() *clientv3.Client {
 	if config == nil {
-		log.SWithContext(ctx).Panicf("Etcd client config is not initialized yet!")
+		log.S().Panicf("Etcd client config is not initialized yet!")
 	}
 	client, err := clientv3.New(*config)
 	if err != nil {
-		log.SWithContext(ctx).Panicf("Failed to init etcd client, error : %v", client)
+		log.S().Panicf("Failed to init etcd client, error : %v", client)
 	}
 	return client
 }
@@ -80,19 +80,19 @@ func PutStr(ctx context.Context, key, value string) error {
 	// client := newClient()
 	// defer client.Close()
 
-	_, err := client.Put(context.TODO(), key, value)
+	_, err := client.Put(ctx, key, value)
 	log.SWithContext(ctx).Errorf("Failed to put %v to etcd\n", key)
 	return err
 }
 
 // Marshall the value (struct) and put to etcd
-func Put(ctx context.Context, key string, value interface{}) error {
+func Put(key string, value interface{}) error {
 	c, err := json.Marshal(value)
 	if err != nil {
-		log.SWithContext(ctx).Errorf("Failed to marshall %v\n", value)
+		log.S().Errorf("Failed to marshall %v\n", value)
 		return err
 	}
-	return PutStr(ctx, key, string(c))
+	return PutStr(context.Background(), key, string(c))
 }
 
 // Get keys only with prefix
@@ -100,7 +100,7 @@ func GetKeys(ctx context.Context, prefix string) ([]string, error) {
 	// client := newClient()
 	// defer client.Close()
 
-	res, err := client.Get(context.TODO(), prefix, clientv3.WithPrefix(), clientv3.WithKeysOnly())
+	res, err := client.Get(ctx, prefix, clientv3.WithPrefix(), clientv3.WithKeysOnly())
 	if err != nil {
 		log.SWithContext(ctx).Errorf("Failed to get %v with keys only and prefix, error is %v\n", prefix, err)
 		return nil, err
@@ -142,7 +142,7 @@ func GetObject(ctx context.Context, key string, value interface{}) error {
 func Get(ctx context.Context, key string) ([]byte, error) {
 	// client := newClient()
 	// defer client.Close()
-	res, err := client.Get(context.TODO(), key)
+	res, err := client.Get(ctx, key)
 	if err != nil {
 		log.SWithContext(ctx).Errorf("Failed to get %v, error is %v\n", key, err)
 		return nil, err
@@ -177,21 +177,21 @@ func GetObjectWithSub(ctx context.Context, key string, obj interface{}) error {
 			k := string(value.Key)
 			sub := strings.Replace(k, firstkey, "", -1)
 			if field, ok := getFieldByTag(obj, "json", sub); ok {
-				setStructFieldValue(ctx, field, value.Value)
+				setStructFieldValue(field, value.Value)
 			}
 		}
 	}
 	return nil
 }
 
-func setStructFieldValue(ctx context.Context, field *reflect.Value, value []byte) {
+func setStructFieldValue(field *reflect.Value, value []byte) {
 	switch field.Kind() {
 	case reflect.Struct:
 		// for struct type, create new struct and unmarshal
 		v := reflect.New(field.Type()).Elem()
 		err := json.Unmarshal(value, v.Addr().Interface())
 		if err != nil {
-			log.SWithContext(ctx).Errorf("Failed to unmarshall value to field %v \n", field.Type().Name())
+			log.S().Errorf("Failed to unmarshall value to field %v \n", field.Type().Name())
 		}
 		field.Set(v)
 	case reflect.Slice:
@@ -201,13 +201,13 @@ func setStructFieldValue(ctx context.Context, field *reflect.Value, value []byte
 }
 
 // Get both keys and values start with prefix
-func GetWithPrefix(ctx context.Context, pre string) (map[string][]byte, error) {
+func GetWithPrefix(pre string) (map[string][]byte, error) {
 	result := make(map[string][]byte)
 	// client := newClient()
 	// defer client.Close()
 	res, err := client.Get(context.TODO(), pre, clientv3.WithPrefix())
 	if err != nil {
-		log.SWithContext(ctx).Errorf("Failed to call GetWithPrefix, prefix %v, error is %v\n", pre, err)
+		log.S().Errorf("Failed to call GetWithPrefix, prefix %v, error is %v\n", pre, err)
 		return result, err
 	}
 	for _, kv := range res.Kvs {

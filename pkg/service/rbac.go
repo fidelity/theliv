@@ -19,11 +19,11 @@ const SEPARATOR = ","
 // If KV exists in database, append newly added path.
 // Value in database is string format, a collection seperated by ",".
 // If database operation failed, return error, else return nil.
-func AddPath(ctx context.Context, roleName string, newPaths []string) (err error) {
+func AddPath(roleName string, newPaths []string) (err error) {
 	var updatedValue []string
 	var value []byte
 	rolePath := auth.RolePrefix + roleName
-	value, err = etcd.Get(ctx, rolePath)
+	value, err = etcd.Get(context.Background(), rolePath)
 	if err != nil {
 		return
 	}
@@ -37,7 +37,7 @@ func AddPath(ctx context.Context, roleName string, newPaths []string) (err error
 	if existingValue == newValue {
 		return
 	}
-	err = etcd.PutStr(ctx, rolePath, newValue)
+	err = etcd.PutStr(context.Background(), rolePath, newValue)
 	return
 }
 

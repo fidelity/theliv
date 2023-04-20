@@ -6,10 +6,10 @@
 package config
 
 import (
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"path"
+	"context"
 
 	log "github.com/fidelity/theliv/pkg/log"
 
@@ -34,13 +34,13 @@ func NewFileConfigLoader(configfile string) *FileConfigLoader {
 	return loader
 }
 
-func (l *FileConfigLoader) LoadConfigs(ctx context.Context) {
+func (l *FileConfigLoader) LoadConfigs() {
 	if err := l.loadThelivConfig(); err != nil {
-		log.SWithContext(ctx).Fatalf("Failed to load theliv config, %v", err)
+		log.S().Fatalf("Failed to load theliv config, %v", err)
 	}
 
 	if err := l.loadKubernetesConfig(); err != nil {
-		log.SWithContext(ctx).Fatalf("Failed to load kubernetes configs, %v", err)
+		log.S().Fatalf("Failed to load kubernetes configs, %v", err)
 	}
 }
 

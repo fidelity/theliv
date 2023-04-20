@@ -49,7 +49,7 @@ func addGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, MissingAdGroup, http.StatusBadRequest)
 		return
 	}
-	if err := service.AddGroup(r.Context(), cluster, namespace, adgroups.AdGroups); err != nil {
+	if err := service.AddGroup(cluster, namespace, adgroups.AdGroups); err != nil {
 		http.Error(w, SERVICE_UNAVAILABLE, http.StatusServiceUnavailable)
 		return
 	}
@@ -75,7 +75,7 @@ func removeGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, MissingAdGroup, http.StatusBadRequest)
 		return
 	}
-	if err := service.RemoveGroup(r.Context(), cluster, namespace, ads.AdGroups); err != nil {
+	if err := service.RemoveGroup(cluster, namespace, ads.AdGroups); err != nil {
 		http.Error(w, SERVICE_UNAVAILABLE, http.StatusServiceUnavailable)
 		return
 	}

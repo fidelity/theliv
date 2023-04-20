@@ -19,12 +19,12 @@ const (
 )
 
 // This function will add 2 new path, into every role.
-func AddGroup(ctx context.Context, cluster string, namespace string, roles []string) (err error) {
+func AddGroup(cluster string, namespace string, roles []string) (err error) {
 
 	newPath := getPath(cluster, namespace)
 
 	for _, role := range roles {
-		if err = AddPath(ctx, role, newPath); err != nil {
+		if err = AddPath(role, newPath); err != nil {
 			return
 		}
 	}
@@ -32,12 +32,12 @@ func AddGroup(ctx context.Context, cluster string, namespace string, roles []str
 }
 
 // This function will remove 2 path, from every role.
-func RemoveGroup(ctx context.Context, cluster string, namespace string, roles []string) (err error) {
+func RemoveGroup(cluster string, namespace string, roles []string) (err error) {
 
 	rmvPath := getPath(cluster, namespace)
 
 	for _, role := range roles {
-		if err = RemovePath(ctx, role, rmvPath); err != nil {
+		if err = RemovePath(role, rmvPath); err != nil {
 			return
 		}
 	}
@@ -45,11 +45,11 @@ func RemoveGroup(ctx context.Context, cluster string, namespace string, roles []
 }
 
 // Remove path from existing role
-func RemovePath(ctx context.Context, roleName string, rmvPath []string) (err error) {
+func RemovePath(roleName string, rmvPath []string) (err error) {
 	var updatedValue []string
 	var value []byte
 	rolePath := auth.RolePrefix + roleName
-	value, err = etcd.Get(ctx, rolePath)
+	value, err = etcd.Get(context.Background(), rolePath)
 	if err != nil {
 		return
 	}
@@ -63,7 +63,7 @@ func RemovePath(ctx context.Context, roleName string, rmvPath []string) (err err
 	if existingValue == newValue {
 		return
 	}
-	err = etcd.PutStr(ctx, rolePath, newValue)
+	err = etcd.PutStr(context.Background(), rolePath, newValue)
 	return
 }
 

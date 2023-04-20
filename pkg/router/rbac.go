@@ -50,7 +50,7 @@ func addPath(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, MISS_PATHS_IN_BODY, http.StatusBadRequest)
 		return
 	}
-	if err := service.AddPath(r.Context(), roleName, paths.Paths); err != nil {
+	if err := service.AddPath(roleName, paths.Paths); err != nil {
 		http.Error(w, SERVICE_UNAVAILABLE, http.StatusServiceUnavailable)
 		return
 	}

@@ -50,7 +50,7 @@ func SubmitFeedback(r chi.Router) {
 			Message: d.Message,
 		}
 		
-		err = etcd.Put(r.Context(), key, data)
+		err = etcd.Put(key, data)
 		if err != nil {
 			processError(w, r, err)
 		} else {
