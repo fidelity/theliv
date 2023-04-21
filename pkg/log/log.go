@@ -7,6 +7,7 @@ package logging
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -70,4 +71,15 @@ func LWithContext(ctx context.Context) *zap.Logger {
 // Return Logger.Sugar instance with request id from context
 func SWithContext(ctx context.Context) *zap.SugaredLogger {
 	return LWithContext(ctx).Sugar()
+}
+
+// Used as middleware, to insert request id into the response header if present
+func RequestIDHandler(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if reqID := middleware.GetReqID(r.Context()); reqID != "" {
+			w.Header().Set("X-Request-Id", reqID)
+		}
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
 }
