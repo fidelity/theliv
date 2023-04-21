@@ -27,6 +27,7 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 			cards = append(cards, buildClusterReportCard(ctx, p))
 		}
 	}
+	log.SWithContext(ctx).Infof("%d cluster level report cards generated", len(cards))
 
 	// user level namespace
 	ucards := buildReportCards(ctx, problems, client)
@@ -36,6 +37,8 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 		val.ID = hashcode(val.TopResourceType + "/" + val.Name)
 		cards = append(cards, val)
 	}
+	log.SWithContext(ctx).Infof("Generated user level report cards. Total report cards: %d", len(cards))
+
 	// Sort makes sure the cluster level report card is the first one,
 	// then sort by id
 	sort.Slice(cards, func(i, j int) bool {

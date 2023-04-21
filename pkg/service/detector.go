@@ -63,6 +63,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.SWithContext(ctx).Infof("Kube client successfully created")
 	input.KubeClient = client
 
 	eventRetriever := k8s.NewK8sEventRetriever(client)
@@ -72,10 +73,12 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.SWithContext(ctx).Infof("%d prometheus alerts found", len(alerts.Alerts))
 
 	// build problems from  alerts, problem is investigator input
 	problems := buildProblemsFromAlerts(alerts.Alerts)
 	problems = filterProblems(ctx, problems, input)
+	log.SWithContext(ctx).Infof("Generated %d problems after filtering", len(alerts.Alerts))
 	if err = buildProblemAffectedResource(ctx, problems, input); err != nil {
 		return nil, err
 	}
@@ -92,6 +95,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 		}
 		problemresults = append(problemresults, *p)
 	}
+	log.SWithContext(ctx).Infof("Generated %d problem results", len(problemresults))
 
 	// Aggregator
 	return problem.Aggregate(ctx, problemresults, client)
