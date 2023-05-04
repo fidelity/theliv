@@ -76,12 +76,12 @@ func newClient() *clientv3.Client {
 }
 
 // Put KV to etcd
-func PutStr(ctx context.Context, key, value string) error {
+func PutStr(key, value string) error {
 	// client := newClient()
 	// defer client.Close()
 
-	_, err := client.Put(ctx, key, value)
-	log.SWithContext(ctx).Errorf("Failed to put %v to etcd\n", key)
+	_, err := client.Put(context.Background(), key, value)
+	log.S().Errorf("Failed to put %v to etcd\n", key)
 	return err
 }
 
@@ -92,7 +92,7 @@ func Put(key string, value interface{}) error {
 		log.S().Errorf("Failed to marshall %v\n", value)
 		return err
 	}
-	return PutStr(context.Background(), key, string(c))
+	return PutStr(key, string(c))
 }
 
 // Get keys only with prefix

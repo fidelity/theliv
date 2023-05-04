@@ -6,10 +6,10 @@
 package err
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"runtime"
-	"context"
 
 	log "github.com/fidelity/theliv/pkg/log"
 )
@@ -84,6 +84,7 @@ func PanicHandler(next http.Handler) http.Handler {
 				case error:
 					message = e.Error()
 				}
+				log.SWithContext(r.Context()).Error(message)
 				w.Write([]byte(message))
 			}
 		}()

@@ -6,8 +6,8 @@
 package service
 
 import (
-	"strings"
 	"context"
+	"strings"
 
 	auth "github.com/fidelity/theliv/pkg/auth/authmiddleware"
 	"github.com/fidelity/theliv/pkg/database/etcd"
@@ -63,7 +63,7 @@ func RemovePath(roleName string, rmvPath []string) (err error) {
 	if existingValue == newValue {
 		return
 	}
-	err = etcd.PutStr(context.Background(), rolePath, newValue)
+	err = etcd.PutStr(rolePath, newValue)
 	return
 }
 

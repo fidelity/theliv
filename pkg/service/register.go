@@ -7,7 +7,7 @@ package service
 
 import (
 	"context"
-	
+
 	invest "github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/pkg/database/etcd"
 )
@@ -52,6 +52,6 @@ func RegisterCluster(ctx context.Context, basic ClusterBasic) error {
 	if err != nil {
 		return err
 	}
-	return etcd.PutStr(ctx, KeyPath+clusterType+"/"+basic.Name+KubeConf, value)
+	return etcd.PutStr(KeyPath+clusterType+"/"+basic.Name+KubeConf, value)
 
 }
