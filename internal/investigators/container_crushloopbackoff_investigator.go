@@ -96,20 +96,20 @@ type CrushLoopPodInfo struct {
 	ExitCode      int32
 }
 
-var CrashLoopBackOffSolutions = map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string{
-	ExecutableNotFoundMsg: getCrushLoopBackOffCommonSolution(context.Background(), SolutionExecutableNotFoundMsg, nil),
-	NoSuchFileMsg:         getCrushLoopBackOffCommonSolution(context.Background(), SolutionNoSuchFile, nil),
-	ReadinessProbeFailMsg: getCrushLoopBackOffCommonSolution(context.Background(), CrushLoopBackOffMsg+SolutionReadinessProbeFail, getSolutionReadinessProbeFailMsg),
-	LivenessProbeFailMsg:  getCrushLoopBackOffCommonSolution(context.Background(), CrushLoopBackOffMsg+SolutionLivenessProbeFail, getSolutionLivenessProbeFailMsg),
-	StartupProbeFailMsg:   getCrushLoopBackOffCommonSolution(context.Background(), CrushLoopBackOffMsg+SolutionStartupProbeFailMsg, getSolutionStartupProbeFailMsg),
-	ExitWithOOM:           getCrushLoopBackOffCommonSolution(context.Background(), CrushLoopBackOffMsg+SolutionOOM, getSolutionOOM),
-	ExitCode1:             getCrushLoopBackOffCommonSolution(context.Background(), SolutionExitCode1, nil),
-	ExitCode126:           getCrushLoopBackOffCommonSolution(context.Background(), SolutionExitCode126, nil),
-	ExitCode127:           getCrushLoopBackOffCommonSolution(context.Background(), SolutionExitCode127, nil),
-	ExitCode2To128:        getCrushLoopBackOffCommonSolution(context.Background(), SolutionExitCode2To128, nil),
-	ExitCode137:           getCrushLoopBackOffCommonSolution(context.Background(), SolutionExitCode137, nil),
-	ExitCode139:           getCrushLoopBackOffCommonSolution(context.Background(), SolutionExitCode139, nil),
-	ExitCode129To255:      getCrushLoopBackOffCommonSolution(context.Background(), SolutionExitCode129To255, nil),
+var CrashLoopBackOffSolutions = map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string{
+	ExecutableNotFoundMsg: getCrushLoopBackOffCommonSolution(SolutionExecutableNotFoundMsg, nil),
+	NoSuchFileMsg:         getCrushLoopBackOffCommonSolution(SolutionNoSuchFile, nil),
+	ReadinessProbeFailMsg: getCrushLoopBackOffCommonSolution(CrushLoopBackOffMsg+SolutionReadinessProbeFail, getSolutionReadinessProbeFailMsg),
+	LivenessProbeFailMsg:  getCrushLoopBackOffCommonSolution(CrushLoopBackOffMsg+SolutionLivenessProbeFail, getSolutionLivenessProbeFailMsg),
+	StartupProbeFailMsg:   getCrushLoopBackOffCommonSolution(CrushLoopBackOffMsg+SolutionStartupProbeFailMsg, getSolutionStartupProbeFailMsg),
+	ExitWithOOM:           getCrushLoopBackOffCommonSolution(CrushLoopBackOffMsg+SolutionOOM, getSolutionOOM),
+	ExitCode1:             getCrushLoopBackOffCommonSolution(SolutionExitCode1, nil),
+	ExitCode126:           getCrushLoopBackOffCommonSolution(SolutionExitCode126, nil),
+	ExitCode127:           getCrushLoopBackOffCommonSolution(SolutionExitCode127, nil),
+	ExitCode2To128:        getCrushLoopBackOffCommonSolution(SolutionExitCode2To128, nil),
+	ExitCode137:           getCrushLoopBackOffCommonSolution(SolutionExitCode137, nil),
+	ExitCode139:           getCrushLoopBackOffCommonSolution(SolutionExitCode139, nil),
+	ExitCode129To255:      getCrushLoopBackOffCommonSolution(SolutionExitCode129To255, nil),
 }
 
 func ContainerCrashLoopBackoffInvestigator(ctx context.Context, problem *problem.Problem,
@@ -122,10 +122,10 @@ func ContainerCrashLoopBackoffInvestigator(ctx context.Context, problem *problem
 			if getPodSolutionFromEvents(ctx, problem, input, &pod, &status, CrashLoopBackOffSolutions) == "" {
 				code := getRootCauseByExitCode(&pod)
 				if code != "" {
-					addSolutionFromMap(problem, &pod, nil, code, CrashLoopBackOffSolutions)
+					addSolutionFromMap(ctx, problem, &pod, nil, code, CrashLoopBackOffSolutions)
 					return
 				}
-				solution := getCrushLoopBackOffCommonSolution(ctx, DefaultSolution, nil)(&pod, &v1.ContainerStatus{})
+				solution := getCrushLoopBackOffCommonSolution(DefaultSolution, nil)(ctx, &pod, &v1.ContainerStatus{})
 				appendSolution(problem, solution)
 			}
 		}
@@ -163,8 +163,8 @@ func getRootCauseByExitCode(pod *v1.Pod) string {
 	return ""
 }
 
-func getCrushLoopBackOffCommonSolution(ctx context.Context, template string, addStep func(pod *v1.Pod) string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-	return func(pod *v1.Pod, status *v1.ContainerStatus) []string {
+func getCrushLoopBackOffCommonSolution(template string, addStep func(pod *v1.Pod) string) func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string {
+	return func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string {
 
 		containerName := getContainerName(pod, CrashLoopBackOff)
 		containerStatus := getFailedContainerStatus(pod, containerName)

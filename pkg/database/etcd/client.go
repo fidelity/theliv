@@ -118,22 +118,22 @@ func GetKeys(ctx context.Context, prefix string) ([]string, error) {
 
 // Get object (struct) from etcd, assume all the data in etcd should be in json format
 // value should be a pointer
-func GetObject(ctx context.Context, key string, value interface{}) error {
+func GetObject(key string, value interface{}) error {
 	// client := newClient()
 	// defer client.Close()
 	res, err := client.Get(context.TODO(), key)
 	if err != nil {
-		log.SWithContext(ctx).Errorf("Failed to get %v, error is %v\n", key, err)
+		log.S().Errorf("Failed to get %v, error is %v\n", key, err)
 		return err
 	}
 	if l := len(res.Kvs); l != 1 {
-		log.SWithContext(ctx).Infof("Get %v keys from etcd\n", l)
+		log.S().Infof("Get %v keys from etcd\n", l)
 		return err
 	}
 	//assume all the value should be in json format
 	err = json.Unmarshal(res.Kvs[0].Value, value)
 	if err != nil {
-		log.SWithContext(ctx).Errorf("Failed to unmarshall value to %v\n", value)
+		log.S().Errorf("Failed to unmarshall value to %v\n", value)
 	}
 	return err
 }

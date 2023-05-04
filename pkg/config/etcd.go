@@ -6,8 +6,8 @@
 package config
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 
 	"regexp"
 	"strings"
@@ -116,7 +116,7 @@ func getK8SEnv(cluster string) string {
 
 func (ecl *EtcdConfigLoader) loadThelivConfig() error {
 	conf := &ThelivConfig{}
-	err := driver.GetObject(context.Background(), driver.THELIV_CONFIG_KEY, conf)
+	err := driver.GetObject(driver.THELIV_CONFIG_KEY, conf)
 	if err != nil {
 		log.S().Errorf("Failed to load theliv config from etcd, error is %v\n", err)
 		return err
@@ -128,7 +128,7 @@ func (ecl *EtcdConfigLoader) loadThelivConfig() error {
 
 func (ecl *EtcdConfigLoader) loadDatadogConfig() error {
 	conf := &DatadogConfig{}
-	err := driver.GetObject(context.Background(), driver.DATADOG_CONFIG_KEY, conf)
+	err := driver.GetObject(driver.DATADOG_CONFIG_KEY, conf)
 	if err != nil {
 		return err
 	}

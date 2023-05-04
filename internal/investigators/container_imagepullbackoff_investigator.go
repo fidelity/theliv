@@ -71,15 +71,15 @@ type PodAndStatus struct {
 	Status *v1.ContainerStatus
 }
 
-var ImagePullBackOffSolutions = map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string{
-	UnknownManifestMsg:    getImagePullBackOffSolution(context.Background(), UnknownManifestSolution),
-	RepositoryNotExistMsg: getImagePullBackOffSolution(context.Background(), UnknownManifestSolution),
-	NoSuchHostMsg:         getImagePullBackOffSolution(context.Background(), NoSuchHostSolution),
-	IOTimeoutMsg:          getImagePullBackOffSolution(context.Background(), IOTimeoutSolution),
-	ConnectionRefused:     getImagePullBackOffSolution(context.Background(), ConnectionRefusedSolution),
-	UnauthorizedMsg:       getImagePullBackOffSolution(context.Background(), UnauthorizedSolution),
-	QuotaRateLimitMsg:     getImagePullBackOffSolution(context.Background(), QuotaRateLimitSolution),
-	NotFoundMsg:           getImagePullBackOffSolution(context.Background(), UnknownManifestSolution),
+var ImagePullBackOffSolutions = map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string{
+	UnknownManifestMsg:    getImagePullBackOffSolution(UnknownManifestSolution),
+	RepositoryNotExistMsg: getImagePullBackOffSolution(UnknownManifestSolution),
+	NoSuchHostMsg:         getImagePullBackOffSolution(NoSuchHostSolution),
+	IOTimeoutMsg:          getImagePullBackOffSolution(IOTimeoutSolution),
+	ConnectionRefused:     getImagePullBackOffSolution(ConnectionRefusedSolution),
+	UnauthorizedMsg:       getImagePullBackOffSolution(UnauthorizedSolution),
+	QuotaRateLimitMsg:     getImagePullBackOffSolution(QuotaRateLimitSolution),
+	NotFoundMsg:           getImagePullBackOffSolution(UnknownManifestSolution),
 }
 
 var ImagePullBackOffReasons = []string{"ImagePullBackOff", "ErrImagePull", "ErrImagePullBackOff"}
@@ -103,7 +103,7 @@ func investigateContainerImgPullBackOff(ctx context.Context, problem *problem.Pr
 
 		if foundMsg == "" {
 			detail := status.State.Waiting.Message
-			solutions := ImagePullBackOffSolutions[UnknownManifestMsg](&pod, &status)
+			solutions := ImagePullBackOffSolutions[UnknownManifestMsg](ctx, &pod, &status)
 			foundMsg = UnknownManifestMsg
 			appendSolution(problem, detail)
 			appendSolution(problem, solutions)
@@ -149,9 +149,9 @@ func checkImagePullBackOffReason(reason string) bool {
 	return false
 }
 
-func getImagePullBackOffSolution(ctx context.Context, solution string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-	return func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-		return GetSolutionsByTemplate(ctx, 
+func getImagePullBackOffSolution(solution string) func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string {
+	return func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string {
+		return GetSolutionsByTemplate(ctx,
 			solution,
 			PodAndStatus{
 				Pod:    *pod,

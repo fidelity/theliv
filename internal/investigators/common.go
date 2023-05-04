@@ -48,7 +48,7 @@ func SetStartTime(currentTime time.Time, timespan problem.TimeSpan) time.Time {
 func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput,
 	pod *v1.Pod, status *v1.ContainerStatus,
-	solutions map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string) string {
+	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string) string {
 
 	events, err := GetPodEvents(ctx, input, pod)
 	if err != nil {
@@ -61,7 +61,7 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 				matched, err := regexp.MatchString(strings.ToLower(msg), strings.ToLower(event.Message))
 				if err == nil && matched {
 					log.SWithContext(ctx).Infof("Found event with error '%s', pod %s, container %s", msg, pod.Name, status.Name)
-					addSolutionFromMap(problem, pod, status, msg, solutions)
+					addSolutionFromMap(ctx, problem, pod, status, msg, solutions)
 					return msg
 				}
 			}
@@ -80,10 +80,10 @@ func GetPodEvents(ctx context.Context, input *problem.DetectorCreationInput, pod
 	return eventDataRef.GetEvents(ctx)
 }
 
-func addSolutionFromMap(problem *problem.Problem, pod *v1.Pod, status *v1.ContainerStatus, msg string,
-	solutions map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string) {
+func addSolutionFromMap(ctx context.Context, problem *problem.Problem, pod *v1.Pod, status *v1.ContainerStatus, msg string,
+	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string) {
 
-	appendSolution(problem, solutions[msg](pod, status))
+	appendSolution(problem, solutions[msg](ctx, pod, status))
 }
 
 // A general function used to parse go template.
