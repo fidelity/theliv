@@ -6,9 +6,9 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"context"
 
 	log "github.com/fidelity/theliv/pkg/log"
 
@@ -154,7 +154,7 @@ type ClusterBasicInfo struct {
 }
 
 // GetClusterConfig returns Kubernetes config based on cluster name
-func (conf *KubernetesCluster) GetKubeConfig(ctx context.Context, ) *restclient.Config {
+func (conf *KubernetesCluster) GetKubeConfig(ctx context.Context) *restclient.Config {
 	client, err := clientcmd.RESTConfigFromKubeConfig(conf.KubeConf)
 	if err != nil {
 		log.SWithContext(ctx).Errorf("Failed to load kubernetes config, for cluster %v, error is %v\n", conf.Basic.Name, err)
@@ -163,7 +163,7 @@ func (conf *KubernetesCluster) GetKubeConfig(ctx context.Context, ) *restclient.
 	return client
 }
 
-func (conf *KubernetesCluster) GetAwsConfig(ctx context.Context, ) *aws.Config {
+func (conf *KubernetesCluster) GetAwsConfig(ctx context.Context) *aws.Config {
 	awsconf := &AwsConfig{}
 	err := json.Unmarshal(conf.AwsConf, awsconf)
 	if err != nil {
