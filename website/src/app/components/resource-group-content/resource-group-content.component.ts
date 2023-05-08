@@ -19,7 +19,9 @@ const yaml = require('js-yaml');
 export class ResourceGroupContentComponent implements OnInit {
   resourceGroup: any;
   selectedResource: any;
+  containerResource: any;
   podResource: any;
+  replicasetResource: any;
   deployResource: any;
   svcResource: any;
   ingressResource: any;
@@ -52,11 +54,13 @@ export class ResourceGroupContentComponent implements OnInit {
     this.resourceGroup = this.kubeService.resourceList$.getValue();
     this.route.params.subscribe(params => {
       this.selectedResource = this.resourceGroup.find((item: any) => item.id === params.id);
-      this.podResource = this.selectedResource.resources.filter((item: any) => item.type === 'Pod');
-      this.deployResource = this.selectedResource.resources.filter((item: any) => item.type === 'Deployment');
-      this.svcResource = this.selectedResource.resources.filter((item: any) => item.type === 'Service');
-      this.ingressResource = this.selectedResource.resources.filter((item: any) => item.type === 'Ingress');
-      this.otherResource = this.selectedResource.resources.filter((item: any) => item.type !== 'Pod' && item.type !== 'Deployment' && item.type !== 'Service' && item.type !== 'Ingress');
+      this.containerResource = this.selectedResource.resources.filter((item: any) => item.type === 'container');
+      this.podResource = this.selectedResource.resources.filter((item: any) => item.type === 'pod');
+      this.replicasetResource = this.selectedResource.resources.filter((item: any) => item.type === 'replicaset');
+      this.deployResource = this.selectedResource.resources.filter((item: any) => item.type === 'deployment');
+      this.svcResource = this.selectedResource.resources.filter((item: any) => item.type === 'service');
+      this.ingressResource = this.selectedResource.resources.filter((item: any) => item.type === 'ingress');
+      this.otherResource = this.selectedResource.resources.filter((item: any) => item.type !== 'pod' && item.type !== 'deployment' && item.type !== 'service' && item.type !== 'ingress' && item.type !== 'container' && item.type !== 'replicaset');
     });
     this.ns = this.kubeService.selectedNs$.getValue();
     this.cluster = this.kubeService.selectedClusters$.getValue();

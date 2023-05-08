@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"sort"
+	"strings"
 
 	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/kubeclient"
@@ -56,7 +57,7 @@ func buildClusterReportCard(p Problem) *ReportCard {
 	res := getReportCardResource(p, p.AffectedResources)
 	resources = append(resources, res)
 	if rootCause == nil {
-		kind = p.AffectedResources.Resource.GetObjectKind().GroupVersionKind().Kind
+		kind = p.AffectedResources.ResourceKind
 		rootCause = res.Issue
 	}
 	return &ReportCard{
@@ -166,7 +167,7 @@ func getControlOwner(mo metav1.Object) *metav1.OwnerReference {
 }
 
 func getReportCardResource(p Problem, resource ResourceDetails) *ReportCardResource {
-	cr := createReportCardResource(p, resource.Resource.(metav1.Object), resource.Resource.GetObjectKind().GroupVersionKind().Kind)
+	cr := createReportCardResource(p, resource.Resource.(metav1.Object), resource.ResourceKind)
 	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails...)
 
 	// cr.Issue.Documents = urlToStr(p.Docs)
@@ -189,8 +190,12 @@ func createReportCardResource(p Problem, v metav1.Object, kind string) *ReportCa
 		CauseLevel:  p.CauseLevel,
 		CreatedTime: v.GetCreationTimestamp().String(),
 	}
+	name := v.GetName()
+	if strings.Contains(p.Name, "Container") {
+		name = p.Tags["container"]
+	}
 	return &ReportCardResource{
-		Name:        v.GetName(),
+		Name:        name,
 		Type:        kind,
 		Labels:      v.GetLabels(),
 		Annotations: v.GetAnnotations(),
