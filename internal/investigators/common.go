@@ -12,6 +12,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"go.uber.org/zap"
 
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/observability"
@@ -48,11 +49,15 @@ func SetStartTime(currentTime time.Time, timespan problem.TimeSpan) time.Time {
 func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput,
 	pod *v1.Pod, status *v1.ContainerStatus,
-	solutions map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string) string {
+	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string) string {
+	l := log.SWithContext(ctx).With(
+		zap.String("pod", pod.Name),
+		zap.String("container", status.Name),
+	)
 
 	events, err := GetPodEvents(ctx, input, pod)
 	if err != nil {
-		log.S().Error("Got error when calling Kubernetes event API, error is %s", err)
+		l.Error("Got error when calling Kubernetes event API, error is %s", err)
 	}
 
 	if len(events) > 0 {
@@ -60,15 +65,15 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 			for msg := range solutions {
 				matched, err := regexp.MatchString(strings.ToLower(msg), strings.ToLower(event.Message))
 				if err == nil && matched {
-					log.S().Infof("Found event with error '%s', pod %s, container %s", msg, pod.Name, status.Name)
-					addSolutionFromMap(problem, pod, status, msg, solutions)
+					log.SWithContext(ctx).Infof("Found event with error '%s'", msg)
+					addSolutionFromMap(ctx, problem, pod, status, msg, solutions)
 					return msg
 				}
 			}
 		}
 	}
 
-	log.S().Infof("Can not find event details for pod %s, container %s", pod.Name, status.Name)
+	log.SWithContext(ctx).Infof("Can not find event details")
 
 	return ""
 }
@@ -80,18 +85,18 @@ func GetPodEvents(ctx context.Context, input *problem.DetectorCreationInput, pod
 	return eventDataRef.GetEvents(ctx)
 }
 
-func addSolutionFromMap(problem *problem.Problem, pod *v1.Pod, status *v1.ContainerStatus, msg string,
-	solutions map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string) {
+func addSolutionFromMap(ctx context.Context, problem *problem.Problem, pod *v1.Pod, status *v1.ContainerStatus, msg string,
+	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string) {
 
-	appendSolution(problem, solutions[msg](pod, status))
+	appendSolution(problem, solutions[msg](ctx, pod, status))
 }
 
 // A general function used to parse go template.
 // Go template passed in string type, parsed results returned in []string type.
 // Parameter splitIt, if true, parsed results will be split by \n.
-func GetSolutionsByTemplate(template string, object interface{}, splitIt bool) (solution []string) {
+func GetSolutionsByTemplate(ctx context.Context, template string, object interface{}, splitIt bool) (solution []string) {
 	solution = []string{}
-	s, err := ExecGoTemplate(template, object)
+	s, err := ExecGoTemplate(ctx, template, object)
 	if err != nil {
 		return
 	}
@@ -105,24 +110,24 @@ func GetSolutionsByTemplate(template string, object interface{}, splitIt bool) (
 }
 
 // Execute Go Template parse
-func ExecGoTemplate(template string, object interface{}) (s string, err error) {
+func ExecGoTemplate(ctx context.Context, template string, object interface{}) (s string, err error) {
 	t, err := solutionTemp.Parse(template)
 	if err != nil {
-		log.S().Errorf("Parse template got error: %s", err)
+		log.SWithContext(ctx).Errorf("Parse template got error: %s", err)
 		return
 	}
 	var tpl bytes.Buffer
 	err = t.Execute(&tpl, object)
 	if err != nil {
-		log.S().Errorf("Parse template with object got error: %s", err)
+		log.SWithContext(ctx).Errorf("Parse template with object got error: %s", err)
 		return
 	}
 	s = tpl.String()
 	return
 }
 
-func logChecking(res string) {
-	log.S().Infof("Checking status with %s", res)
+func logChecking(ctx context.Context, res string) {
+	log.SWithContext(ctx).Infof("Checking status with %s", res)
 }
 
 func appendSolution(problem *problem.Problem, solutions interface{}) {

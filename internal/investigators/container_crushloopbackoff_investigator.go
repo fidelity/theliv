@@ -96,7 +96,7 @@ type CrushLoopPodInfo struct {
 	ExitCode      int32
 }
 
-var CrashLoopBackOffSolutions = map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string{
+var CrashLoopBackOffSolutions = map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string{
 	ExecutableNotFoundMsg: getCrushLoopBackOffCommonSolution(SolutionExecutableNotFoundMsg, nil),
 	NoSuchFileMsg:         getCrushLoopBackOffCommonSolution(SolutionNoSuchFile, nil),
 	ReadinessProbeFailMsg: getCrushLoopBackOffCommonSolution(CrushLoopBackOffMsg+SolutionReadinessProbeFail, getSolutionReadinessProbeFailMsg),
@@ -122,10 +122,10 @@ func ContainerCrashLoopBackoffInvestigator(ctx context.Context, problem *problem
 			if getPodSolutionFromEvents(ctx, problem, input, &pod, &status, CrashLoopBackOffSolutions) == "" {
 				code := getRootCauseByExitCode(&pod)
 				if code != "" {
-					addSolutionFromMap(problem, &pod, nil, code, CrashLoopBackOffSolutions)
+					addSolutionFromMap(ctx, problem, &pod, nil, code, CrashLoopBackOffSolutions)
 					return
 				}
-				solution := getCrushLoopBackOffCommonSolution(DefaultSolution, nil)(&pod, &v1.ContainerStatus{})
+				solution := getCrushLoopBackOffCommonSolution(DefaultSolution, nil)(ctx, &pod, &v1.ContainerStatus{})
 				appendSolution(problem, solution)
 			}
 		}
@@ -163,14 +163,14 @@ func getRootCauseByExitCode(pod *v1.Pod) string {
 	return ""
 }
 
-func getCrushLoopBackOffCommonSolution(template string, addStep func(pod *v1.Pod) string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-	return func(pod *v1.Pod, status *v1.ContainerStatus) []string {
+func getCrushLoopBackOffCommonSolution(template string, addStep func(pod *v1.Pod) string) func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string {
+	return func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string {
 
 		containerName := getContainerName(pod, CrashLoopBackOff)
 		containerStatus := getFailedContainerStatus(pod, containerName)
 		code := containerStatus.LastTerminationState.Terminated.ExitCode
 
-		solution := GetSolutionsByTemplate(CrushLoopBackOffMsg+template+KubectlLogCmd,
+		solution := GetSolutionsByTemplate(ctx, CrushLoopBackOffMsg+template+KubectlLogCmd,
 			getPodInfo(*pod, containerName, code), true)
 
 		if addStep != nil {

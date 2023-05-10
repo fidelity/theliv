@@ -80,7 +80,7 @@ func PutStr(key, value string) error {
 	// client := newClient()
 	// defer client.Close()
 
-	_, err := client.Put(context.TODO(), key, value)
+	_, err := client.Put(context.Background(), key, value)
 	log.S().Errorf("Failed to put %v to etcd\n", key)
 	return err
 }
@@ -96,18 +96,18 @@ func Put(key string, value interface{}) error {
 }
 
 // Get keys only with prefix
-func GetKeys(prefix string) ([]string, error) {
+func GetKeys(ctx context.Context, prefix string) ([]string, error) {
 	// client := newClient()
 	// defer client.Close()
 
-	res, err := client.Get(context.TODO(), prefix, clientv3.WithPrefix(), clientv3.WithKeysOnly())
+	res, err := client.Get(ctx, prefix, clientv3.WithPrefix(), clientv3.WithKeysOnly())
 	if err != nil {
-		log.S().Errorf("Failed to get %v with keys only and prefix, error is %v\n", prefix, err)
+		log.SWithContext(ctx).Errorf("Failed to get %v with keys only and prefix, error is %v\n", prefix, err)
 		return nil, err
 	}
 	keys := make([]string, 0)
 	if res.Kvs == nil {
-		log.S().Infof("No keys found for prefix %v\n", prefix)
+		log.SWithContext(ctx).Infof("No keys found for prefix %v\n", prefix)
 		return keys, nil
 	}
 	for _, k := range res.Kvs {
@@ -139,16 +139,16 @@ func GetObject(key string, value interface{}) error {
 }
 
 // Get content from key directly
-func Get(key string) ([]byte, error) {
+func Get(ctx context.Context, key string) ([]byte, error) {
 	// client := newClient()
 	// defer client.Close()
-	res, err := client.Get(context.TODO(), key)
+	res, err := client.Get(ctx, key)
 	if err != nil {
-		log.S().Errorf("Failed to get %v, error is %v\n", key, err)
+		log.SWithContext(ctx).Errorf("Failed to get %v, error is %v\n", key, err)
 		return nil, err
 	}
 	if l := len(res.Kvs); l != 1 {
-		log.S().Infof("Get %v keys from etcd\n", l)
+		log.SWithContext(ctx).Infof("Get %v keys from etcd\n", l)
 		return nil, err
 	}
 	return res.Kvs[0].Value, nil
@@ -156,12 +156,12 @@ func Get(key string) ([]byte, error) {
 
 // Get the json value of the key, also the sub paths
 // Adding the sub values to parent, ASSUME the type of sub is []byte
-func GetObjectWithSub(key string, obj interface{}) error {
+func GetObjectWithSub(ctx context.Context, key string, obj interface{}) error {
 	// client := newClient()
 	// defer client.Close()
-	res, err := client.Get(context.TODO(), key, clientv3.WithPrefix())
+	res, err := client.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		log.S().Errorf("Failed to get prefix %v, error is %v\n", key, err)
+		log.SWithContext(ctx).Errorf("Failed to get prefix %v, error is %v\n", key, err)
 		return err
 	}
 	firstkey := key + "/"
@@ -171,7 +171,7 @@ func GetObjectWithSub(key string, obj interface{}) error {
 
 			err := json.Unmarshal(value.Value, obj)
 			if err != nil {
-				log.S().Errorf("Failed to unmarshall value to obj, the etcd key is: %v\n", firstkey)
+				log.SWithContext(ctx).Errorf("Failed to unmarshall value to obj, the etcd key is: %v\n", firstkey)
 			}
 		} else {
 			k := string(value.Key)

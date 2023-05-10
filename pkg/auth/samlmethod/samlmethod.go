@@ -325,10 +325,10 @@ func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
 
 func (Samlinfo) GetADgroups(r *http.Request, userID string) ([]string, error) {
 
-	result := callLDAP(userID)
+	result := callLDAP(r.Context(), userID)
 	ads := []string{}
 	if result == nil || len(result.Entries) == 0 {
-		log.S().Warn("Response from LDAP is error or empty")
+		log.SWithContext(r.Context()).Warn("Response from LDAP is error or empty")
 		return ads, nil
 	}
 	memberOf := result.Entries[0].GetAttributeValues("memberOf")
@@ -341,7 +341,7 @@ func (Samlinfo) GetADgroups(r *http.Request, userID string) ([]string, error) {
 }
 
 // calls LDAP, connect to server each time
-func callLDAP(userID string) *ldap.SearchResult {
+func callLDAP(ctx context.Context, userID string) *ldap.SearchResult {
 
 	ldapCfg := config.GetThelivConfig().Ldap
 
@@ -349,7 +349,7 @@ func callLDAP(userID string) *ldap.SearchResult {
 		InsecureSkipVerify: true,
 	})
 	if err != nil {
-		log.S().Errorf("Unable to connect to LDAP server, error is %v", err)
+		log.SWithContext(ctx).Errorf("Unable to connect to LDAP server, error is %v", err)
 		return nil
 	}
 	defer conn.Close()
@@ -362,7 +362,7 @@ func callLDAP(userID string) *ldap.SearchResult {
 		nil,
 	))
 	if err != nil {
-		log.S().Errorf("Failed to search LDAP for user %v, error is %v", userID, err)
+		log.SWithContext(ctx).Errorf("Failed to search LDAP for user %v, error is %v", userID, err)
 	}
 	return result
 }

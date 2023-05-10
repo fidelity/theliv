@@ -63,19 +63,22 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.SWithContext(ctx).Infof("Kube client successfully created")
 	input.KubeClient = client
 
 	eventRetriever := k8s.NewK8sEventRetriever(client)
 	input.EventRetriever = eventRetriever
 
-	alerts, err := prometheus.GetAlerts(input)
+	alerts, err := prometheus.GetAlerts(ctx, input)
 	if err != nil {
 		return nil, err
 	}
+	log.SWithContext(ctx).Infof("%d prometheus alerts found", len(alerts.Alerts))
 
 	// build problems from  alerts, problem is investigator input
 	problems := buildProblemsFromAlerts(alerts.Alerts)
 	problems = filterProblems(ctx, problems, input)
+	log.SWithContext(ctx).Infof("Generated %d problems after filtering", len(alerts.Alerts))
 	if err = buildProblemAffectedResource(ctx, problems, input); err != nil {
 		return nil, err
 	}
@@ -92,6 +95,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 		}
 		problemresults = append(problemresults, *p)
 	}
+	log.SWithContext(ctx).Infof("Generated %d problem results", len(problemresults))
 
 	// Aggregator
 	return problem.Aggregate(ctx, problemresults, client)
@@ -184,7 +188,7 @@ func loadResourceByType(ctx context.Context, client *kubeclient.KubeClient, prob
 		loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, com.Endpoint, "")
 		problem.CauseLevel = 6
 	default:
-		log.S().Warnf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
+		log.SWithContext(ctx).Warnf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
 	}
 	return nil
 }
@@ -204,7 +208,7 @@ func loadNamespacedResource(client *kubeclient.KubeClient, ctx context.Context,
 	if client.Get(ctx, obj, namespace, metav1.GetOptions{}) == nil {
 		buildAffectedResource(problem, buildName, buildType, obj)
 	} else {
-		log.S().Errorf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
+		log.SWithContext(ctx).Errorf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
 	}
 }
 

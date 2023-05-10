@@ -53,11 +53,11 @@ func PodNotReadyInvestigator(ctx context.Context, problem *problem.Problem, inpu
 		if con.Type == "Ready" {
 			var solution []string
 			if con.Reason == "ReadinessGatesNotReady" {
-				solution = GetSolutionsByTemplate(ReadinessGateFailedSolution, con.Message, true)
+				solution = GetSolutionsByTemplate(ctx, ReadinessGateFailedSolution, con.Message, true)
 			} else {
 				events, err := GetPodEvents(ctx, input, &pod)
 				if err != nil {
-					log.S().Error("Got error when calling Kubernetes event API, error is %s", err)
+					log.SWithContext(ctx).Error("Got error when calling Kubernetes event API, error is %s", err)
 				}
 
 				msg := "Message: " + con.Message
@@ -66,16 +66,16 @@ func PodNotReadyInvestigator(ctx context.Context, problem *problem.Problem, inpu
 						for _, eventMsg := range PodNotReadyEventMessage {
 							matched, err := regexp.MatchString(strings.ToLower(eventMsg), strings.ToLower(event.Message))
 							if err == nil && matched {
-								log.S().Infof("Found event with error '%s', pod %s", eventMsg, pod.Name)
+								log.SWithContext(ctx).Infof("Found event with error '%s', pod %s", eventMsg, pod.Name)
 								msg = "Event: " + event.Message
 							}
 						}
 					}
 				}
-				solution = GetSolutionsByTemplate(ReadinessProbeFailedSolution, msg, true)
+				solution = GetSolutionsByTemplate(ctx, ReadinessProbeFailedSolution, msg, true)
 			}
 			appendSolution(problem, solution)
-			appendSolution(problem, GetSolutionsByTemplate(UsefulCommands, pod, true))
+			appendSolution(problem, GetSolutionsByTemplate(ctx, UsefulCommands, pod, true))
 		}
 	}
 

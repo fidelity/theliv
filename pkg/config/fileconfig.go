@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path"
+	"context"
 
 	log "github.com/fidelity/theliv/pkg/log"
 
@@ -43,11 +44,11 @@ func (l *FileConfigLoader) LoadConfigs() {
 	}
 }
 
-func (l *FileConfigLoader) GetKubernetesConfig(name string) *KubernetesCluster {
+func (l *FileConfigLoader) GetKubernetesConfig(ctx context.Context, name string) *KubernetesCluster {
 	return k8sConfig[name]
 }
 
-func (l *FileConfigLoader) GetK8SClusterNames() []string {
+func (l *FileConfigLoader) GetK8SClusterNames(ctx context.Context) []string {
 	names := make([]string, len(k8sConfig))
 	i := 0
 

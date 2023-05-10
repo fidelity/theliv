@@ -94,7 +94,7 @@ const (
 `
 )
 
-var PendingPodsSolutions = map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string{
+var PendingPodsSolutions = map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string{
 	PendingContainer:          getPendingPodCommonSolution(PendingContainerSolution),
 	PendingNodeSelector:       getPendingPodCommonSolution(PendingNodeSelectorSolution),
 	PendingNodeTaint:          getPendingPodCommonSolution(PendingNodeTaintSolution),
@@ -114,7 +114,7 @@ func PodNotRunningInvestigator(ctx context.Context, problem *problem.Problem, in
 	container := &v1.ContainerStatus{}
 
 	if getPodSolutionFromEvents(ctx, problem, input, &pod, container, PendingPodsSolutions) == "" {
-		solution := getPendingPodCommonSolution(PendingUnknownSolution)(&pod, container)
+		solution := getPendingPodCommonSolution(PendingUnknownSolution)(ctx, &pod, container)
 		appendSolution(problem, solution)
 	}
 
@@ -126,8 +126,8 @@ func PodNotRunningSolutionsInvestigator(ctx context.Context, problem *problem.Pr
 	// problem.SolutionDetails = append(problem.SolutionDetails, detail)
 }
 
-func getPendingPodCommonSolution(solution string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-	return func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-		return GetSolutionsByTemplate(solution, pod, true)
+func getPendingPodCommonSolution(solution string) func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string {
+	return func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string {
+		return GetSolutionsByTemplate(ctx, solution, pod, true)
 	}
 }

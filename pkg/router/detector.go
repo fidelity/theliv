@@ -46,12 +46,12 @@ func createDetectorInputWithContext(r *http.Request) context.Context {
 	namespace := chi.URLParam(r, "namespace")
 
 	// Get kubeconfig for the specified cluster
-	conf := config.GetConfigLoader().GetKubernetesConfig(cluster)
+	conf := config.GetConfigLoader().GetKubernetesConfig(r.Context(), cluster)
 	if conf == nil {
 		return ctx
 	}
 
-	k8sconfig := conf.GetKubeConfig()
+	k8sconfig := conf.GetKubeConfig(r.Context())
 	// awsconfig := conf.GetAwsConfig()
 	// var ac aws.Config
 	// if awsconfig != nil {

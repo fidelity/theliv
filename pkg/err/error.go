@@ -6,6 +6,7 @@
 package err
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"runtime"
@@ -36,9 +37,9 @@ func (c CommonError) Error() string {
 }
 
 // New CommonError function, will log error message and stacktrace.
-func NewCommonError(kind ErrorType, msg string) error {
+func NewCommonError(ctx context.Context, kind ErrorType, msg string) error {
 	err := CommonError{Kind: kind, Message: kind.String() + ": " + msg}
-	log.S().Error(err.ErrorMsg())
+	log.SWithContext(ctx).Error(err.ErrorMsg())
 	return err
 }
 
@@ -83,6 +84,7 @@ func PanicHandler(next http.Handler) http.Handler {
 				case error:
 					message = e.Error()
 				}
+				log.SWithContext(r.Context()).Error(message)
 				w.Write([]byte(message))
 			}
 		}()

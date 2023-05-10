@@ -18,7 +18,7 @@ var accesskeyPrefix = "/theliv/accesskeys/"
 func CheckAuthorization(r *http.Request) (*http.Request, error) {
 	accesskey := r.Header.Get("ACCESSKEY")
 	if len(accesskey) > 0 {
-		content, err := etcd.Get(accesskeyPrefix + accesskey)
+		content, err := etcd.Get(r.Context(), accesskeyPrefix+accesskey)
 		if err != nil {
 			return r, err
 		}

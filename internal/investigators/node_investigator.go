@@ -58,32 +58,32 @@ const (
 
 func NodeNotReadyInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(problem, NotReadySolution)
+	getNodeCommonSolution(ctx, problem, NotReadySolution)
 }
 
 func NodeDiskPressureInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(problem, DiskPressSolution)
+	getNodeCommonSolution(ctx, problem, DiskPressSolution)
 }
 
 func NodeMemoryPressureInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(problem, MemPressSolution)
+	getNodeCommonSolution(ctx, problem, MemPressSolution)
 }
 
 func NodePIDPressureInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(problem, PidPressSolution)
+	getNodeCommonSolution(ctx, problem, PidPressSolution)
 }
 
 func NodeNetworkUnavailableInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(problem, NetUnAvailableSolution)
+	getNodeCommonSolution(ctx, problem, NetUnAvailableSolution)
 }
 
-func getNodeCommonSolution(problem *problem.Problem, template string) {
+func getNodeCommonSolution(ctx context.Context, problem *problem.Problem, template string) {
 	no := *problem.AffectedResources.Resource.(*v1.Node)
-	logChecking(com.Node + com.Blank + no.Name)
-	solutions := GetSolutionsByTemplate(template, no, true)
+	logChecking(ctx, com.Node + com.Blank + no.Name)
+	solutions := GetSolutionsByTemplate(ctx, template, no, true)
 	appendSolution(problem, solutions)
 }

@@ -35,7 +35,7 @@ func clusterRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	basic.Name = cluster
-	if err := service.RegisterCluster(basic); err != nil {
+	if err := service.RegisterCluster(r.Context(), basic); err != nil {
 		http.Error(w, SERVICE_UNAVAILABLE, http.StatusServiceUnavailable)
 		return
 	}

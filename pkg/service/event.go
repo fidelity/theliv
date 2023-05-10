@@ -33,8 +33,8 @@ func GetEvents(ctx context.Context) (interface{}, error) {
 
 	events, err := eventDataRef.GetEvents(ctx)
 	if err != nil {
-		log.S().Error("Got error when calling kubernetes event API, error is %s", err)
-		return nil, errors.NewCommonError(4, err.Error())
+		log.SWithContext(ctx).Error("Got error when calling kubernetes event API, error is %s", err)
+		return nil, errors.NewCommonError(ctx, 4, err.Error())
 	}
 	return events, nil
 }

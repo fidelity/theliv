@@ -6,6 +6,7 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -29,8 +30,8 @@ const (
 type ConfigLoader interface {
 	// ThelivConfig returns ThelivConfig
 	LoadConfigs()
-	GetKubernetesConfig(name string) *KubernetesCluster
-	GetK8SClusterNames() []string
+	GetKubernetesConfig(ctx context.Context, name string) *KubernetesCluster
+	GetK8SClusterNames(ctx context.Context) []string
 }
 
 var (
@@ -153,20 +154,20 @@ type ClusterBasicInfo struct {
 }
 
 // GetClusterConfig returns Kubernetes config based on cluster name
-func (conf *KubernetesCluster) GetKubeConfig() *restclient.Config {
+func (conf *KubernetesCluster) GetKubeConfig(ctx context.Context) *restclient.Config {
 	client, err := clientcmd.RESTConfigFromKubeConfig(conf.KubeConf)
 	if err != nil {
-		log.S().Errorf("Failed to load kubernetes config, for cluster %v, error is %v\n", conf.Basic.Name, err)
+		log.SWithContext(ctx).Errorf("Failed to load kubernetes config, for cluster %v, error is %v\n", conf.Basic.Name, err)
 		return nil
 	}
 	return client
 }
 
-func (conf *KubernetesCluster) GetAwsConfig() *aws.Config {
+func (conf *KubernetesCluster) GetAwsConfig(ctx context.Context) *aws.Config {
 	awsconf := &AwsConfig{}
 	err := json.Unmarshal(conf.AwsConf, awsconf)
 	if err != nil {
-		log.S().Errorf("Failed to load awsconfig for cluster %v, error is %v\n", conf.Basic.Name, err)
+		log.SWithContext(ctx).Errorf("Failed to load awsconfig for cluster %v, error is %v\n", conf.Basic.Name, err)
 		return nil
 	}
 
