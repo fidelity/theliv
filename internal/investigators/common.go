@@ -12,6 +12,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"go.uber.org/zap"
 
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/observability"
@@ -49,10 +50,14 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput,
 	pod *v1.Pod, status *v1.ContainerStatus,
 	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string) string {
+	l := log.SWithContext(ctx).With(
+		zap.String("pod", pod.Name),
+		zap.String("container", status.Name),
+	)
 
 	events, err := GetPodEvents(ctx, input, pod)
 	if err != nil {
-		log.SWithContext(ctx).Error("Got error when calling Kubernetes event API, error is %s", err)
+		l.Error("Got error when calling Kubernetes event API, error is %s", err)
 	}
 
 	if len(events) > 0 {
@@ -60,7 +65,7 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 			for msg := range solutions {
 				matched, err := regexp.MatchString(strings.ToLower(msg), strings.ToLower(event.Message))
 				if err == nil && matched {
-					log.SWithContext(ctx).Infof("Found event with error '%s', pod %s, container %s", msg, pod.Name, status.Name)
+					log.SWithContext(ctx).Infof("Found event with error '%s'", msg)
 					addSolutionFromMap(ctx, problem, pod, status, msg, solutions)
 					return msg
 				}
@@ -68,7 +73,7 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 		}
 	}
 
-	log.SWithContext(ctx).Infof("Can not find event details for pod %s, container %s", pod.Name, status.Name)
+	log.SWithContext(ctx).Infof("Can not find event details")
 
 	return ""
 }
