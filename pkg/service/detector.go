@@ -150,43 +150,43 @@ func loadResourceByType(ctx context.Context, client *kubeclient.KubeClient, prob
 	switch problem.Tags[com.Resourcetype] {
 	case com.Pod:
 		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, "")
-		problem.CauseLevel = 1
+		problem.CauseLevel = 2
 	case com.Container:
 		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Container)
 		problem.CauseLevel = 1
 	case com.Initcontainer:
-		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Initcontainer)
+		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Container)
 		problem.CauseLevel = 1
 	case com.Deployment:
 		loadNamespacedResource(client, ctx, problem, &appsv1.Deployment{}, com.Deployment, "")
-		problem.CauseLevel = 3
+		problem.CauseLevel = 4
 	case com.Replicaset:
 		loadNamespacedResource(client, ctx, problem, &appsv1.ReplicaSet{}, com.Replicaset, "")
-		problem.CauseLevel = 2
+		problem.CauseLevel = 3
 	case com.Statefulset:
 		loadNamespacedResource(client, ctx, problem, &appsv1.StatefulSet{}, com.Statefulset, "")
-		problem.CauseLevel = 2
+		problem.CauseLevel = 3
 	case com.Daemonset:
 		loadNamespacedResource(client, ctx, problem, &appsv1.DaemonSet{}, com.Daemonset, "")
-		problem.CauseLevel = 2
+		problem.CauseLevel = 3
 	case com.Node:
 		loadNamespacedResource(client, ctx, problem, &corev1.Node{}, com.Node, "")
 		problem.CauseLevel = 0
 	case com.Job:
 		loadNamespacedResource(client, ctx, problem, &batchv1.Job{}, com.Job, "")
-		problem.CauseLevel = 4
+		problem.CauseLevel = 5
 	case com.Cronjob:
 		loadNamespacedResource(client, ctx, problem, &batchv1.CronJob{}, com.Cronjob, "")
-		problem.CauseLevel = 4
+		problem.CauseLevel = 5
 	case com.Service:
 		loadNamespacedResource(client, ctx, problem, &corev1.Service{}, com.Service, "")
-		problem.CauseLevel = 5
+		problem.CauseLevel = 6
 	case com.Ingress:
 		loadNamespacedResource(client, ctx, problem, &networkv1.Ingress{}, com.Ingress, "")
-		problem.CauseLevel = 6
+		problem.CauseLevel = 7
 	case com.Endpoint:
 		loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, com.Endpoint, "")
-		problem.CauseLevel = 5
+		problem.CauseLevel = 6
 	default:
 		log.SWithContext(ctx).Warnf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
 	}
