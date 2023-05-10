@@ -29,7 +29,7 @@ func listClusters(w http.ResponseWriter, r *http.Request) {
 
 func listNamespaces(w http.ResponseWriter, r *http.Request) {
 	clusterName := chi.URLParam(r, "clusterName")
-	names := service.ListNs(clusterName)
+	names := service.ListNs(clusterName, r.Context())
 
 	if empty := processEmpty(w, r, names); !empty {
 		render.Respond(w, r, names)
