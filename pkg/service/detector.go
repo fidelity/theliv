@@ -78,22 +78,24 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	// build problems from  alerts, problem is investigator input
 	problems := buildProblemsFromAlerts(alerts.Alerts)
 	problems = filterProblems(ctx, problems, input)
-	log.SWithContext(ctx).Infof("Generated %d problems after filtering", len(alerts.Alerts))
+	log.SWithContext(ctx).Infof("Generated %d problems after filtering", len(problems))
 	if err = buildProblemAffectedResource(ctx, problems, input); err != nil {
 		return nil, err
 	}
 
 	problemresults := make([]problem.Problem, 0)
 	for _, p := range problems {
-		// check investigator func map or use common investigator for each problem
-		if funcs, ok := alertInvestigatorMap[p.Name]; ok {
-			for _, fc := range funcs {
-				fc(ctx, p, input)
+		if p.AffectedResources.Resource != nil {
+			// check investigator func map or use common investigator for each problem
+			if funcs, ok := alertInvestigatorMap[p.Name]; ok {
+				for _, fc := range funcs {
+					fc(ctx, p, input)
+				}
+			} else {
+				investigators.CommonInvestigator(ctx, p, input)
 			}
-		} else {
-			investigators.CommonInvestigator(ctx, p, input)
+			problemresults = append(problemresults, *p)
 		}
-		problemresults = append(problemresults, *p)
 	}
 	log.SWithContext(ctx).Infof("Generated %d problem results", len(problemresults))
 
@@ -208,7 +210,7 @@ func loadNamespacedResource(client *kubeclient.KubeClient, ctx context.Context,
 	if client.Get(ctx, obj, namespace, metav1.GetOptions{}) == nil {
 		buildAffectedResource(problem, buildName, buildType, obj)
 	} else {
-		log.SWithContext(ctx).Errorf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
+		log.SWithContext(ctx).Errorf("Not found affected resource for %s: %s", problem.Tags[com.Resourcetype], buildName)
 	}
 }
 
