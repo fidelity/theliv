@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.1
 	github.com/aws/aws-sdk-go-v2 v1.18.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.12.9
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.24
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.14.11
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.2
