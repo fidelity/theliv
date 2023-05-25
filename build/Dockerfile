@@ -49,8 +49,8 @@ FROM nginx:latest
 RUN addgroup --system --gid 1500 theliv
 RUN adduser --system --uid 1500 --gid 1500 theliv
 
-RUN chwon -R theliv:theliv /usr/share/ca-certificates
-RUN chwon theliv:theliv /etc/ca-certificates.conf
+RUN chown -R theliv:theliv /usr/share/ca-certificates
+RUN chown theliv:theliv /etc/ca-certificates.conf
 
 COPY --from=build-go /go-service/main /app/server/
 COPY --from=build-node /app/dist/theliv /app/client/theliv
