@@ -55,7 +55,7 @@ RUN chown -R nginx:nginx /usr/share/ca-certificates && \
 
 # modify nginx related file permissions
 RUN chown -R nginx:nginx /var/log/nginx
-RUN mkdir -p /var/cache/nginx $$ \
+RUN mkdir -p /var/cache/nginx && \
         chown -R nginx:nginx /var/cache/nginx 
 RUN touch /var/run/nginx.pid && \
         chown -R nginx:nginx /var/run/nginx.pid
