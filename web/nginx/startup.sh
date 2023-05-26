@@ -4,8 +4,8 @@ export DNS_RESOLVER=$(cat /etc/resolv.conf | grep nameserver | cut -d' ' -f2)
 export EKS_DOMAIN=$(cat /etc/resolv.conf | grep search | cut -d' ' -f2)
 
 # generate nginx.conf
-export CERTS_PRIVATE=/certs/theliv-private.pem
-export CERTS_PUBLIC=/certs/theliv-public.crt
+export CERTS_PRIVATE=/etc/ssl/certs/theliv-private.pem
+export CERTS_PUBLIC=/etc/ssl/certs/theliv-public.crt
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ${CERTS_PRIVATE} -out ${CERTS_PUBLIC} -subj "/CN=theliv.io"
 envsubst '$DNS_RESOLVER$CERTS_PRIVATE$CERTS_PUBLIC' </etc/nginx/nginx-temp.conf > /etc/nginx/nginx.conf
 
