@@ -54,11 +54,11 @@ RUN chown -R nginx:nginx /usr/share/ca-certificates && \
         chown -R nginx:nginx /etc/ssl/certs
 
 # modify nginx related file permissions
-RUN chown -R nginx:nginx /var/cache/nginx $$ \
-        chown -R nginx:nginx /var/log/nginx
+RUN chown -R nginx:nginx /var/log/nginx
+RUN mkdir -p /var/cache/nginx $$ \
+        chown -R nginx:nginx /var/cache/nginx 
 RUN touch /var/run/nginx.pid && \
         chown -R nginx:nginx /var/run/nginx.pid
-        
 
 # modify nginx file permissions
 RUN chown -R nginx:nginx /etc/nginx/
@@ -73,6 +73,10 @@ RUN find /app/client/theliv/ | grep fa- | xargs -I '{}' mv '{}' /app/client/thel
 COPY web/nginx/default.conf /etc/nginx/conf.d/default-temp.conf
 COPY web/nginx/nginx.conf /etc/nginx/nginx-temp.conf
 COPY web/nginx/datadog.conf /etc/nginx/conf.d/datadog.conf
+
+RUN chown nginx:nginx /etc/nginx/conf.d/default-temp.conf && \
+        chown nginx:nginx /etc/nginx/nginx-temp.conf && \
+        chown -R nginx:nginx /etc/nginx/conf.d/datadog.conf
 
 COPY web/nginx/startup.sh /
 RUN chmod a+x /startup.sh
