@@ -45,12 +45,16 @@ RUN npm run build
 # 3) BUILD FINAL IMAGE
 FROM nginx:latest
 
-# modify certificate file permissions
-RUN addgroup --system --gid 1500 theliv
-RUN adduser --system --uid 1500 --gid 1500 theliv
+# change uid & gid of nginx user
+RUN usermod -u 10014 nginx && groupmod -g 10014 nginx
 
-RUN chown -R theliv:theliv /usr/share/ca-certificates
-RUN chown theliv:theliv /etc/ca-certificates.conf
+# modify ca-certificate file permissions
+RUN chown -R nginx:nginx /usr/share/ca-certificates && \
+        chown nginx:nginx /etc/ca-certificates.conf && \
+        chown nginx:nginx /etc/ssl/certs
+
+# modify nginx file permissions
+RUN chown -R nginx:nginx /etc/nginx/
 
 COPY --from=build-go /go-service/main /app/server/
 COPY --from=build-node /app/dist/theliv /app/client/theliv
