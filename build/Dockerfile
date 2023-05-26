@@ -79,5 +79,5 @@ RUN chown nginx:nginx /etc/nginx/conf.d/default-temp.conf && \
         chown -R nginx:nginx /etc/nginx/conf.d/datadog.conf
 
 COPY web/nginx/startup.sh /
-RUN chown nginx:nginx /etc/nginx/nginx-temp.conf && \
+RUN chown nginx:nginx /startup.sh && \
         chmod ug+x /startup.sh
