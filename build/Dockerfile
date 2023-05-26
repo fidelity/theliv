@@ -51,7 +51,9 @@ RUN usermod -u 10014 nginx && groupmod -g 10014 nginx
 # modify ca-certificate file permissions
 RUN chown -R nginx:nginx /usr/share/ca-certificates && \
         chown nginx:nginx /etc/ca-certificates.conf && \
-        chown nginx:nginx /etc/ssl/certs
+        chown -R nginx:nginx /etc/ssl/certs && \
+        chown -R nginx:nginx /var/cache/nginx
+        
 
 # modify nginx file permissions
 RUN chown -R nginx:nginx /etc/nginx/
