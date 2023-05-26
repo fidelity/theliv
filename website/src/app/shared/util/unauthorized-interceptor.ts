@@ -50,7 +50,7 @@ export class UnauthorizedInterceptor implements HttpInterceptor {
                         case 500:       //500 Internal Server Error
                             this.dialogdata={
                                 status: 'Internal Server Error',
-                                message: 'Woops! There is an internal server error. Please contact development team for support.'
+                                message: err.error.message
                             }
                             break;
                         case 502:       //502 Bad Gateway
@@ -62,7 +62,7 @@ export class UnauthorizedInterceptor implements HttpInterceptor {
                         case 503:       //503 Service Unavailable
                             this.dialogdata={
                                 status: 'Service Unavailable',
-                                message: 'The service is now unavailable. Please contact development team for support.'
+                                message: err.error.message
                             }
                             break;
                         default:

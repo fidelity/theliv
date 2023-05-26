@@ -6,10 +6,10 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"path"
-	"context"
 
 	log "github.com/fidelity/theliv/pkg/log"
 
@@ -44,11 +44,11 @@ func (l *FileConfigLoader) LoadConfigs() {
 	}
 }
 
-func (l *FileConfigLoader) GetKubernetesConfig(ctx context.Context, name string) *KubernetesCluster {
-	return k8sConfig[name]
+func (l *FileConfigLoader) GetKubernetesConfig(ctx context.Context, name string) (*KubernetesCluster, error) {
+	return k8sConfig[name], nil
 }
 
-func (l *FileConfigLoader) GetK8SClusterNames(ctx context.Context) []string {
+func (l *FileConfigLoader) GetK8SClusterNames(ctx context.Context) ([]string, error) {
 	names := make([]string, len(k8sConfig))
 	i := 0
 
@@ -56,7 +56,7 @@ func (l *FileConfigLoader) GetK8SClusterNames(ctx context.Context) []string {
 		names[i] = key
 		i++
 	}
-	return names
+	return names, nil
 }
 
 // load kubernetes cluster configs from files under folder `ThelivConfig.ClusterDir`
