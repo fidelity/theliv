@@ -11,7 +11,9 @@ import (
 	"net/http"
 	"runtime"
 
+	com "github.com/fidelity/theliv/pkg/common"
 	log "github.com/fidelity/theliv/pkg/log"
+	"github.com/go-chi/render"
 )
 
 type ErrorType uint8
@@ -24,6 +26,7 @@ const (
 	KUBERNETES
 	CLOUD
 	PROMETHEUS
+	API
 )
 
 // Customised Error, with Kind
@@ -63,6 +66,8 @@ func (s ErrorType) String() string {
 		return "CLOUD"
 	case PROMETHEUS:
 		return "PROMETHEUS"
+	case API:
+		return "API"
 	default:
 		return "UNKNOWN"
 	}
@@ -85,7 +90,7 @@ func PanicHandler(next http.Handler) http.Handler {
 					message = e.Error()
 				}
 				log.SWithContext(r.Context()).Error(message)
-				w.Write([]byte(message))
+				render.JSON(w, r, NewCommonError(r.Context(), 7, com.UncaughtApiErr))
 			}
 		}()
 		next.ServeHTTP(w, r)
@@ -98,7 +103,7 @@ func PanicHandler(next http.Handler) http.Handler {
 func GetStatusCode(err error) int {
 	switch e := err.(type) {
 	case CommonError:
-		if e.Kind > 1 {
+		if e.Kind == 6 {
 			return http.StatusServiceUnavailable
 		} else {
 			return http.StatusInternalServerError

@@ -7,6 +7,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/fidelity/theliv/internal/investigators"
@@ -14,6 +15,7 @@ import (
 	"github.com/fidelity/theliv/internal/problem"
 	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
+	theErr "github.com/fidelity/theliv/pkg/err"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/observability/k8s"
@@ -57,11 +59,12 @@ var alertInvestigatorMap = map[string][]investigatorFunc{
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
+	contact := fmt.Sprintf(com.Contact, config.GetThelivConfig().TeamName)
 	input := GetDetectorInput(ctx)
 
 	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
 	if err != nil {
-		return nil, err
+		return nil, theErr.NewCommonError(ctx, 4, com.LoadKubeConfigFailed+contact)
 	}
 	log.SWithContext(ctx).Infof("Kube client successfully created")
 	input.KubeClient = client
@@ -71,7 +74,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 
 	alerts, err := prometheus.GetAlerts(ctx, input)
 	if err != nil {
-		return nil, err
+		return nil, theErr.NewCommonError(ctx, 6, com.PrometheusNotAvailable+contact)
 	}
 	log.SWithContext(ctx).Infof("%d prometheus alerts found", len(alerts.Alerts))
 
@@ -80,7 +83,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	problems = filterProblems(ctx, problems, input)
 	log.SWithContext(ctx).Infof("Generated %d problems after filtering", len(problems))
 	if err = buildProblemAffectedResource(ctx, problems, input); err != nil {
-		return nil, err
+		return nil, theErr.NewCommonError(ctx, 4, com.LoadResourceFailed+contact)
 	}
 
 	problemresults := make([]problem.Problem, 0)

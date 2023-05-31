@@ -7,6 +7,7 @@ package config
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"regexp"
@@ -51,26 +52,26 @@ func (ecl *EtcdConfigLoader) LoadConfigs() {
 	}
 }
 
-func (ecl *EtcdConfigLoader) GetKubernetesConfig(ctx context.Context, name string) *KubernetesCluster {
+func (ecl *EtcdConfigLoader) GetKubernetesConfig(ctx context.Context, name string) (*KubernetesCluster, error) {
 	env := getK8SEnv(name)
 	key := fmt.Sprintf("%v/%v/%v", driver.CLUSTERS_KEY, env, name)
 	conf := &KubernetesCluster{}
 	err := driver.GetObjectWithSub(ctx, key, conf)
 	if err != nil {
 		log.SWithContext(ctx).Errorf("Failed to load theliv config from etcd, error is %v\n", err)
-		return nil
+		return nil, err
 	}
 	if len(conf.KubeConf) == 0 {
-		return nil
+		return nil, errors.New("empty KubeConf")
 	}
-	return conf
+	return conf, nil
 }
 
-func (ecl *EtcdConfigLoader) GetK8SClusterNames(ctx context.Context) []string {
+func (ecl *EtcdConfigLoader) GetK8SClusterNames(ctx context.Context) ([]string, error) {
 	keys, err := driver.GetKeys(ctx, driver.CLUSTERS_KEY)
 	if err != nil {
-		log.SWithContext(ctx).Error("Failed to load cluster keys")
-		return keys
+		log.SWithContext(ctx).Errorf("Failed to load cluster keys, error is %v.", err)
+		return keys, err
 	}
 	tmp := make(map[string]string)
 	result := make([]string, 0)
@@ -93,7 +94,7 @@ func (ecl *EtcdConfigLoader) GetK8SClusterNames(ctx context.Context) []string {
 			}
 		}
 	}
-	return result
+	return result, nil
 }
 
 func NewEtcdConfigLoader(ca, cert, key string, endpoints ...string) *EtcdConfigLoader {
