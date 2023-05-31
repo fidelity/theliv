@@ -14,7 +14,7 @@ require (
 	github.com/microsoftgraph/msgraph-sdk-go-core v0.30.1
 	github.com/prometheus/client_golang v1.15.1
 	github.com/prometheus/common v0.43.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/wangli1030/saml v0.4.7
 	go.etcd.io/etcd/client/v3 v3.5.9
 	go.uber.org/zap v1.24.0
