@@ -45,6 +45,24 @@ RUN npm run build
 # 3) BUILD FINAL IMAGE
 FROM nginx:latest
 
+# change uid & gid of nginx user
+RUN usermod -u 10014 nginx && groupmod -g 10014 nginx
+
+# modify ca-certificate file permissions
+RUN chown -R nginx:nginx /usr/share/ca-certificates && \
+        chown nginx:nginx /etc/ca-certificates.conf && \
+        chown -R nginx:nginx /etc/ssl/certs
+
+# modify nginx related file permissions
+RUN chown -R nginx:nginx /var/log/nginx
+RUN mkdir -p /var/cache/nginx && \
+        chown -R nginx:nginx /var/cache/nginx 
+RUN touch /var/run/nginx.pid && \
+        chown -R nginx:nginx /var/run/nginx.pid
+
+# modify nginx file permissions
+RUN chown -R nginx:nginx /etc/nginx/
+
 COPY --from=build-go /go-service/main /app/server/
 COPY --from=build-node /app/dist/theliv /app/client/theliv
 
@@ -56,5 +74,10 @@ COPY web/nginx/default.conf /etc/nginx/conf.d/default-temp.conf
 COPY web/nginx/nginx.conf /etc/nginx/nginx-temp.conf
 COPY web/nginx/datadog.conf /etc/nginx/conf.d/datadog.conf
 
+RUN chown nginx:nginx /etc/nginx/conf.d/default-temp.conf && \
+        chown nginx:nginx /etc/nginx/nginx-temp.conf && \
+        chown -R nginx:nginx /etc/nginx/conf.d/datadog.conf
+
 COPY web/nginx/startup.sh /
-RUN chmod a+x /startup.sh
+RUN chown nginx:nginx /startup.sh && \
+        chmod ug+x /startup.sh
