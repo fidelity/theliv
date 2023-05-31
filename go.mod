@@ -13,7 +13,7 @@ require (
 	github.com/microsoftgraph/msgraph-sdk-go v0.47.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v0.30.1
 	github.com/prometheus/client_golang v1.15.1
-	github.com/prometheus/common v0.43.0
+	github.com/prometheus/common v0.44.0
 	github.com/stretchr/testify v1.8.3
 	github.com/wangli1030/saml v0.4.7
 	go.etcd.io/etcd/client/v3 v3.5.9
@@ -94,10 +94,10 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/oauth2 v0.8.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/term v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
