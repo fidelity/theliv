@@ -173,10 +173,16 @@
     flex-direction: column;
     align-items: center;
     margin: 50px;
+    width: 800px;
+    height: 500px;
     .video-title {
         font-size: 28px;
         font-weight: 700;
         margin: 10px 0;
+    }
+    .video-image {
+        width: 800px;
+        height: 450px;
     }
 }
 

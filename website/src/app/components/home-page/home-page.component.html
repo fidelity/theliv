@@ -54,9 +54,6 @@
     
     <div class="video-player">
         <div class="video-title">How to Use Theliv in 1 Minute</div>
-        <iframe *ngIf="!loading" width="800" height="450" frameborder="0" allowfullscreen [src]="urlSafe"></iframe>
-        <div *ngIf="loading" class="loading">
-            <fa-icon class="fa-spin" [icon]="faSpinner"></fa-icon>
-        </div>
+        <a [href]="urlSafe" target="_blank"><img class="video-image" frameborder="0" src="assets/images/video.png"></a>
     </div>
 </div>
