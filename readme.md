@@ -22,7 +22,7 @@ Let's say you are a developer using your devops teams' deployment pipeline in Je
 
 So, in a way a system like Theliv is absolutely necessary to 'truly' scale cloud native architecture to thousands of developers in an organization.
 
-Finally theliv aims to be an extensible framework where custom checks can be plugged in whereever required.
+Finally theliv aims to be an extensible framework where custom checks can be plugged in wherever required.
 
 ### Goals
 
