@@ -20,25 +20,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// Aggregate problems into report cards. Problems related to the same resource will be grouped together.
 func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) (interface{}, error) {
 	cards := make([]*ReportCard, 0)
-	// cluster & managed namespace level NewProblems, report card only has the root cause
-	for _, p := range problems {
-		if p.Level != UserNamespace {
-			cards = append(cards, buildClusterReportCard(ctx, p))
-		}
-	}
-	log.SWithContext(ctx).Infof("%d cluster level report cards generated", len(cards))
-
-	// user level namespace
-	ucards := buildReportCards(ctx, problems, client)
-	for _, val := range ucards {
+	for _, val := range buildReportCards(ctx, problems, client) {
 		val.RootCause = rootCause(val.Resources)
 		// set ID
 		val.ID = hashcode(val.TopResourceType + "/" + val.Name)
 		cards = append(cards, val)
 	}
-	log.SWithContext(ctx).Infof("Generated user level report cards. Total report cards: %d", len(cards))
+	log.SWithContext(ctx).Infof("Generated %d report cards", len(cards))
 
 	// Sort makes sure the cluster level report card is the first one,
 	// then sort by id
@@ -76,18 +67,15 @@ func buildClusterReportCard(ctx context.Context, p Problem) *ReportCard {
 func buildReportCards(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
-		// ignore cluster & managed namespace level NewProblems
-		if p.Level != UserNamespace {
-			continue
-		}
 		switch v := p.AffectedResources.Resource.(type) {
 		case metav1.Object:
-			top, h, argo := getTopResource(ctx, v, client)
+			// determine if root resource is an argo instance, helm chart, or k8s object
+			top, helm, argo := getTopResource(ctx, v, client)
 			cr := getReportCardResource(ctx, p, p.AffectedResources)
 			if argo != nil {
 				appendCards(cards, cr, p, argo.Instance, com.Argo)
-			} else if h != nil {
-				appendCards(cards, cr, p, h.toString(), com.Helm)
+			} else if helm != nil {
+				appendCards(cards, cr, p, helm.toString(), com.Helm)
 			} else {
 				topType := ""
 				if obj, ok := top.(runtime.Object); ok {
