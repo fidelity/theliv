@@ -42,28 +42,6 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 	return cards, nil
 }
 
-// Build report card for cluster level or managed namespace level
-func buildClusterReportCard(ctx context.Context, p Problem) *ReportCard {
-	resources := []*ReportCardResource{}
-	var kind string
-	var rootCause *ReportCardIssue
-
-	res := getReportCardResource(ctx, p, p.AffectedResources)
-	resources = append(resources, res)
-	if rootCause == nil {
-		kind = p.AffectedResources.ResourceKind
-		rootCause = res.Issue
-	}
-	return &ReportCard{
-		Name:            p.Description,
-		Level:           p.Level,
-		Resources:       resources,
-		TopResourceType: kind,
-		ID:              hashcode(kind + "/" + p.Description),
-		RootCause:       rootCause,
-	}
-}
-
 func buildReportCards(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
