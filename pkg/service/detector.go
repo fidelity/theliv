@@ -102,7 +102,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	}
 	log.SWithContext(ctx).Infof("Generated %d problem results", len(problemresults))
 
-	// Aggregator
+	// Convert problems to report cards
 	return problem.Aggregate(ctx, problemresults, client)
 }
 
@@ -121,6 +121,7 @@ func buildProblemsFromAlerts(alerts []v1.Alert) []*problem.Problem {
 	return problems
 }
 
+// Classifies problems as cluster or namespace level, filters all other problems.
 func filterProblems(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) []*problem.Problem {
 	thelivcfg := config.GetThelivConfig()
 	managednamespaces := thelivcfg.ProblemLevel.ManagedNamespaces
