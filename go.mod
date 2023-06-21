@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.14.12
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/render v1.0.2
-	github.com/go-ldap/ldap/v3 v3.4.4
+	github.com/go-ldap/ldap/v3 v3.4.5
 	github.com/prometheus/client_golang v1.15.1
 	github.com/prometheus/common v0.44.0
 	github.com/stretchr/testify v1.8.4
@@ -34,7 +34,7 @@ require (
 )
 
 require (
-	github.com/Azure/go-ntlmssp v0.0.0-20220621081337-cb9428e4ac1e // indirect
+	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.33 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.27 // indirect
