@@ -3,9 +3,9 @@ module github.com/fidelity/theliv
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.18.0
+	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.24
-	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.14.12
+	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.14.14
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/render v1.0.2
 	github.com/go-ldap/ldap/v3 v3.4.4
@@ -36,8 +36,8 @@ require (
 require (
 	github.com/Azure/go-ntlmssp v0.0.0-20220621081337-cb9428e4ac1e // indirect
 	github.com/ajg/form v1.5.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.33 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.27 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.34 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.28 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
