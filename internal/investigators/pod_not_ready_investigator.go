@@ -16,21 +16,21 @@ import (
 )
 
 const (
-	ReadinessProbeFailedSolution = `1. Why the pod is not ready is because of the reason: ContainersNotReady
+	ReadinessProbeFailedSolution = `1. Why the pod is not ready is because of the reason: ContainersNotReady.
 2. It appears that your readiness probe is having trouble in this instance.
-3. {{.}}
-For more details, you can refer to the Events section. You can click on the pod name above to see the Pod configurations.
+3. {{.}}.
+4. For more details, you can refer to the Events section. You can click on the pod name above to see the Pod configurations.
 `
 
-	ReadinessGateFailedSolution = `1. Why the pod is not ready is because of the reason: ReadinessGatesNotReady
+	ReadinessGateFailedSolution = `1. Why the pod is not ready is because of the reason: ReadinessGatesNotReady.
 2. It appears that your readiness Gates are having trouble in this instance.
-3. Message: {{.}}
-Please check the readiness gate configurations for your pod. You can click on the pod name above to see the Pod configurations.
+3. Message: {{.}}.
+4. Please check the readiness gate configurations for your pod. You can click on the pod name above to see the Pod configurations.
 `
 
-	UsefulCommands = `Useful Commands:
-kubectl get pod {{.Name}} -n {{.ObjectMeta.Namespace}} -o yaml
-kubectl get events -n {{.ObjectMeta.Namespace}}`
+	UsefulCommands = `
+1. kubectl get pod {{.Name}} -n {{.ObjectMeta.Namespace}} -o yaml
+2. kubectl get events -n {{.ObjectMeta.Namespace}}`
 )
 
 type PodNotReady struct {
@@ -74,9 +74,7 @@ func PodNotReadyInvestigator(ctx context.Context, problem *problem.Problem, inpu
 				}
 				solution = GetSolutionsByTemplate(ctx, ReadinessProbeFailedSolution, msg, true)
 			}
-			appendSolution(problem, solution)
-			appendSolution(problem, GetSolutionsByTemplate(ctx, UsefulCommands, pod, true))
+			appendSolution(problem, solution, GetSolutionsByTemplate(ctx, UsefulCommands, pod, true))
 		}
 	}
-
 }
