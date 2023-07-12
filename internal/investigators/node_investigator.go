@@ -18,17 +18,15 @@ const (
 1. Node {{ .ObjectMeta.Name }} is not Ready.
 2. NotReady message is: {{ range $index, $value := .Status.Conditions }}{{- if eq $value.Type "Ready" }}{{$value.Message}}{{- end}}{{end}}.
 3. Please wait for sometime, if issue persists, you may need to ssh to the Node and check.
-4. Cmd to check Kubelet log: journalctl -u kubelet.
-5. Cmd to check Kubelet service status: systemctl status kubelet.
-6. Cmd to restart Kubelet service: systemctl restart kubelet.
+4. To restart Kubelet service, please refer to below UsefulCommands.
 `
 
 	MemPressSolution = `
 1. Node {{ .ObjectMeta.Name }} is reporting memory pressure issue.
 2. MemoryPressure message is: {{ range $index, $value := .Status.Conditions }}{{- if eq $value.Type "MemoryPressure" }}{{$value.Message}}{{- end}}{{end}}.
 3. You may need to ssh to the Node, kill unnecessary processes.
-4. You can find Pods running on this Node, re-allocate some to other Nodes.
-5. Cmd to find Pods on this Node: kubectl get pods -o wide -A | grep {{ .ObjectMeta.Name }}
+4. You can find Pods running on this Node, re-allocate them to other Nodes.
+5. To get pods running on the Node, refer to below command 1.
 `
 
 	DiskPressSolution = `
@@ -41,49 +39,60 @@ const (
 1. Node {{ .ObjectMeta.Name }} is reporting Pid pressure issue.
 2. PIDPressure message is: {{ range $index, $value := .Status.Conditions }}{{- if eq $value.Type "PIDPressure" }}{{$value.Message}}{{- end}}{{end}}.
 3. You may need to ssh to the Node, kill unnecessary processes.
-4. You can find Pods running on this Node, re-allocate some to other Nodes.
-5. Cmd to find Pods on this Node: kubectl get pods -o wide -A | grep {{ .ObjectMeta.Name }}
+4. You can find Pods running on this Node, re-allocate them to other Nodes. Refer to below command 1.
 `
 
 	NetUnAvailableSolution = `
 1. Node {{ .ObjectMeta.Name }} is reporting network unavailable issue.
 2. NetworkUnavailable message is: {{ range $index, $value := .Status.Conditions }}{{- if eq $value.Type "NetworkUnavailable" }}{{$value.Message}}{{- end}}{{end}}.
 3. Please check if Kubelet service in node is started, and there's no network connection issue.
-4. You may need to ssh to the Node and check the Kubelet service.
-5. Cmd to check Kubelet log: journalctl -u kubelet.
-6. Cmd to check Kubelet service status: systemctl status kubelet.
-7. Cmd to restart Kubelet service: systemctl restart kubelet.
+4. You may need to ssh to the Node and check the Kubelet service. Refer to below UsefulCommands.
+`
+
+	FindPoOnNoCmd = `
+1. kubectl get pods -o wide -A | grep {{ .ObjectMeta.Name }}
+`
+
+	KubeletCmd = `
+1. journalctl -u kubelet.
+2. systemctl status kubelet.
+3. systemctl restart kubelet.
 `
 )
 
 func NodeNotReadyInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(ctx, problem, NotReadySolution)
+	getNodeCommonSolution(ctx, problem, NotReadySolution, KubeletCmd)
 }
 
 func NodeDiskPressureInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(ctx, problem, DiskPressSolution)
+	getNodeCommonSolution(ctx, problem, DiskPressSolution, "")
 }
 
 func NodeMemoryPressureInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(ctx, problem, MemPressSolution)
+	getNodeCommonSolution(ctx, problem, MemPressSolution, FindPoOnNoCmd)
 }
 
 func NodePIDPressureInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(ctx, problem, PidPressSolution)
+	getNodeCommonSolution(ctx, problem, PidPressSolution, FindPoOnNoCmd)
 }
 
 func NodeNetworkUnavailableInvestigator(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	getNodeCommonSolution(ctx, problem, NetUnAvailableSolution)
+	getNodeCommonSolution(ctx, problem, NetUnAvailableSolution, KubeletCmd)
 }
 
-func getNodeCommonSolution(ctx context.Context, problem *problem.Problem, template string) {
+func getNodeCommonSolution(ctx context.Context, problem *problem.Problem, template string, cmdTemplate string) {
 	no := *problem.AffectedResources.Resource.(*v1.Node)
-	logChecking(ctx, com.Node + com.Blank + no.Name)
+	logChecking(ctx, com.Node+com.Blank+no.Name)
 	solutions := GetSolutionsByTemplate(ctx, template, no, true)
-	appendSolution(problem, solutions)
+	var cmd []string = nil
+	if cmdTemplate != "" {
+		cmd = GetSolutionsByTemplate(ctx, cmdTemplate, no, true)
+	}
+
+	appendSolution(problem, solutions, cmd)
 }

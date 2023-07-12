@@ -20,25 +20,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// Aggregate problems into report cards. Problems related to the same resource will be grouped together.
 func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) (interface{}, error) {
 	cards := make([]*ReportCard, 0)
-	// cluster & managed namespace level NewProblems, report card only has the root cause
-	for _, p := range problems {
-		if p.Level != UserNamespace {
-			cards = append(cards, buildClusterReportCard(ctx, p))
-		}
-	}
-	log.SWithContext(ctx).Infof("%d cluster level report cards generated", len(cards))
-
-	// user level namespace
-	ucards := buildReportCards(ctx, problems, client)
-	for _, val := range ucards {
+	for _, val := range buildReportCards(ctx, problems, client) {
 		val.RootCause = rootCause(val.Resources)
 		// set ID
 		val.ID = hashcode(val.TopResourceType + "/" + val.Name)
 		cards = append(cards, val)
 	}
-	log.SWithContext(ctx).Infof("Generated user level report cards. Total report cards: %d", len(cards))
+	log.SWithContext(ctx).Infof("Generated %d report cards", len(cards))
 
 	// Sort makes sure the cluster level report card is the first one,
 	// then sort by id
@@ -51,43 +42,18 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 	return cards, nil
 }
 
-// Build report card for cluster level or managed namespace level
-func buildClusterReportCard(ctx context.Context, p Problem) *ReportCard {
-	resources := []*ReportCardResource{}
-	var kind string
-	var rootCause *ReportCardIssue
-
-	res := getReportCardResource(ctx, p, p.AffectedResources)
-	resources = append(resources, res)
-	if rootCause == nil {
-		kind = p.AffectedResources.ResourceKind
-		rootCause = res.Issue
-	}
-	return &ReportCard{
-		Name:            p.Description,
-		Level:           p.Level,
-		Resources:       resources,
-		TopResourceType: kind,
-		ID:              hashcode(kind + "/" + p.Description),
-		RootCause:       rootCause,
-	}
-}
-
 func buildReportCards(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
-		// ignore cluster & managed namespace level NewProblems
-		if p.Level != UserNamespace {
-			continue
-		}
 		switch v := p.AffectedResources.Resource.(type) {
 		case metav1.Object:
-			top, h, argo := getTopResource(ctx, v, client)
+			// determine if root resource is an argo instance, helm chart, or k8s object
+			top, helm, argo := getTopResource(ctx, v, client)
 			cr := getReportCardResource(ctx, p, p.AffectedResources)
 			if argo != nil {
 				appendCards(cards, cr, p, argo.Instance, com.Argo)
-			} else if h != nil {
-				appendCards(cards, cr, p, h.toString(), com.Helm)
+			} else if helm != nil {
+				appendCards(cards, cr, p, helm.toString(), com.Helm)
 			} else {
 				topType := ""
 				if obj, ok := top.(runtime.Object); ok {
@@ -172,6 +138,7 @@ func getControlOwner(mo metav1.Object) *metav1.OwnerReference {
 func getReportCardResource(ctx context.Context, p Problem, resource ResourceDetails) *ReportCardResource {
 	cr := createReportCardResource(ctx, p, resource.Resource.(metav1.Object), resource.ResourceKind)
 	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails...)
+	cr.Issue.Commands = append(cr.Issue.Commands, p.UsefulCommands...)
 
 	// cr.Issue.Documents = urlToStr(p.Docs)
 	// if resource.Deeplink != nil {

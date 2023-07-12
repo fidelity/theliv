@@ -12,6 +12,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
 	"go.uber.org/zap"
 
 	log "github.com/fidelity/theliv/pkg/log"
@@ -49,7 +50,7 @@ func SetStartTime(currentTime time.Time, timespan problem.TimeSpan) time.Time {
 func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 	input *problem.DetectorCreationInput,
 	pod *v1.Pod, status *v1.ContainerStatus,
-	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string) string {
+	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) ([]string, []string)) string {
 	l := log.SWithContext(ctx).With(
 		zap.String("pod", pod.Name),
 		zap.String("container", status.Name),
@@ -86,9 +87,10 @@ func GetPodEvents(ctx context.Context, input *problem.DetectorCreationInput, pod
 }
 
 func addSolutionFromMap(ctx context.Context, problem *problem.Problem, pod *v1.Pod, status *v1.ContainerStatus, msg string,
-	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) []string) {
+	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) ([]string, []string)) {
+	solution, cmd := solutions[msg](ctx, pod, status)
 
-	appendSolution(problem, solutions[msg](ctx, pod, status))
+	appendSolution(problem, solution, cmd)
 }
 
 // A general function used to parse go template.
@@ -130,11 +132,21 @@ func logChecking(ctx context.Context, res string) {
 	log.SWithContext(ctx).Infof("Checking status with %s", res)
 }
 
-func appendSolution(problem *problem.Problem, solutions interface{}) {
-	switch v := solutions.(type) {
-	case string:
-		problem.SolutionDetails = append(problem.SolutionDetails, v)
-	case []string:
-		problem.SolutionDetails = append(problem.SolutionDetails, v...)
+func appendSolution(problem *problem.Problem, solutions interface{}, commands interface{}) {
+	if solutions != nil {
+		switch v := solutions.(type) {
+		case string:
+			problem.SolutionDetails = append(problem.SolutionDetails, v)
+		case []string:
+			problem.SolutionDetails = append(problem.SolutionDetails, v...)
+		}
+	}
+	if commands != nil {
+		switch c := commands.(type) {
+		case string:
+			problem.UsefulCommands = append(problem.UsefulCommands, c)
+		case []string:
+			problem.UsefulCommands = append(problem.UsefulCommands, c...)
+		}
 	}
 }

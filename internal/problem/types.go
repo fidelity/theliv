@@ -18,6 +18,7 @@ type ReportCardIssue struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Solutions   []string          `json:"solutions,omitempty"`
+	Commands    []string          `json:"commands,omitempty"`
 	CreatedTime string            `json:"createdTime,omitempty"`
 	Tags        map[string]string `json:"tags,omitempty"`
 	DomainName  DomainName        `json:"domainName,omitempty"`

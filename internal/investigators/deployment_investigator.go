@@ -18,12 +18,13 @@ const (
 	NotAvailableSolution = `
 1. Deployment {{.Name}} is not available.
 2. Please check the replica(s) status in this deployment.
-3. Cmd: kubectl describe deploy {{.Name}} -n {{ .ObjectMeta.Namespace }}
 `
 	ResourceQuotaSolution = `
 1. Deployment {{.Name}} has Insufficient quota.
 2. Please check the requests/limits of your deployment.
-3. Cmd: kubectl describe deploy {{.Name}} -n {{ .ObjectMeta.Namespace }}
+`
+	DescribeCmd = `
+kubectl describe deploy {{.Name}} -n {{ .ObjectMeta.Namespace }}
 `
 )
 
@@ -44,8 +45,9 @@ func DeploymentReplicasMismatchInvestigator(ctx context.Context, problem *proble
 
 func getDeployCommonSolution(ctx context.Context, problem *problem.Problem) {
 	deploy := *problem.AffectedResources.Resource.(*v1.Deployment)
-	logChecking(ctx, com.Deployment + com.Blank + deploy.Name)
-	appendSolution(problem, getDeploySolution(ctx, deploy))
+	logChecking(ctx, com.Deployment+com.Blank+deploy.Name)
+	appendSolution(problem, getDeploySolution(ctx, deploy),
+		GetSolutionsByTemplate(ctx, DescribeCmd, deploy, true))
 }
 
 func getDeploySolution(ctx context.Context, deploy v1.Deployment) []string {
