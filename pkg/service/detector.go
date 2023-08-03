@@ -14,6 +14,7 @@ import (
 	"github.com/fidelity/theliv/internal/problem"
 	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
+	"github.com/fidelity/theliv/pkg/eval"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/observability/k8s"
@@ -57,6 +58,7 @@ var alertInvestigatorMap = map[string][]investigatorFunc{
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
+	defer eval.Timer("service/detector - DetectAlerts")()
 	input := GetDetectorInput(ctx)
 
 	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
@@ -98,6 +100,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 }
 
 func buildProblemsFromAlerts(alerts []v1.Alert) []*problem.Problem {
+	defer eval.Timer("service/detector - buildProblemsFromAlerts")()
 	problems := make([]*problem.Problem, 0)
 	for _, alert := range alerts {
 		p := problem.Problem{}
@@ -113,6 +116,7 @@ func buildProblemsFromAlerts(alerts []v1.Alert) []*problem.Problem {
 }
 
 func filterProblems(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) []*problem.Problem {
+	defer eval.Timer("service/detector - filterProblems")()
 	thelivcfg := config.GetThelivConfig()
 	managednamespaces := thelivcfg.ProblemLevel.ManagedNamespaces
 	results := make([]*problem.Problem, 0)
@@ -132,6 +136,7 @@ func filterProblems(ctx context.Context, problems []*problem.Problem, input *pro
 }
 
 func buildProblemAffectedResource(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) error {
+	defer eval.Timer("service/detector - buildProblemAffectedResource (contains go routines)")()
 	client := input.KubeClient
 	wg.Add(len(problems))
 	for _, problem := range problems {
@@ -142,6 +147,7 @@ func buildProblemAffectedResource(ctx context.Context, problems []*problem.Probl
 }
 
 func loadResourceByType(ctx context.Context, client *kubeclient.KubeClient, problem *problem.Problem) error {
+	defer eval.Timer("service/detector - loadResourceByType (go routine)")()
 	defer wg.Done()
 	switch problem.Tags[com.Resourcetype] {
 	case com.Pod:

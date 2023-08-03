@@ -11,15 +11,23 @@ import (
 	"fmt"
 	"hash/crc32"
 	"sort"
+	"sync"
 
 	com "github.com/fidelity/theliv/pkg/common"
+	"github.com/fidelity/theliv/pkg/eval"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	log "github.com/fidelity/theliv/pkg/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+var (
+	wg   sync.WaitGroup
+	lock = sync.RWMutex{}
+)
+
 func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) (interface{}, error) {
+	defer eval.Timer("problem/aggregate - Aggregate")()
 	cards := make([]*ReportCard, 0)
 	// cluster & managed namespace level NewProblems, report card only has the root cause
 	for _, p := range problems {
@@ -49,6 +57,7 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 
 // Build report card for cluster level or managed namespace level
 func buildClusterReportCard(p Problem) *ReportCard {
+	defer eval.Timer("problem/aggregate - buildClusterReportCard")()
 	resources := []*ReportCardResource{}
 	var kind string
 	var rootCause *ReportCardIssue
@@ -70,32 +79,43 @@ func buildClusterReportCard(p Problem) *ReportCard {
 }
 
 func buildReportCards(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
+	defer eval.Timer("problem/aggregate - buildReportCards")()
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
 		// ignore cluster & managed namespace level NewProblems
 		if p.Level != UserNamespace {
 			continue
 		}
-		switch v := p.AffectedResources.Resource.(type) {
-		case metav1.Object:
-			top, h, argo := getTopResource(ctx, v, client)
-			cr := getReportCardResource(p, p.AffectedResources)
-			if argo != nil {
-				appendCards(cards, cr, p, argo.Instance, com.Argo)
-			} else if h != nil {
-				appendCards(cards, cr, p, h.toString(), com.Helm)
-			} else {
-				topType := ""
-				if obj, ok := top.(runtime.Object); ok {
-					topType = obj.GetObjectKind().GroupVersionKind().Kind
-				}
-				appendCards(cards, cr, p, top.GetName(), topType)
-			}
-		default:
-			// TODO log
-		}
+
+		wg.Add(1)
+		go buildCard(ctx, client, cards, p)
 	}
+
+	wg.Wait()
 	return cards
+}
+
+func buildCard(ctx context.Context, client *kubeclient.KubeClient, cards map[string]*ReportCard, p Problem) {
+	defer eval.Timer("problem/aggregate - buildCard")()
+	defer wg.Done()
+	switch v := p.AffectedResources.Resource.(type) {
+	case metav1.Object:
+		top, h, argo := getTopResource(ctx, v, client)
+		cr := getReportCardResource(p, p.AffectedResources)
+		if argo != nil {
+			appendCards(cards, cr, p, argo.Instance, com.Argo)
+		} else if h != nil {
+			appendCards(cards, cr, p, h.toString(), com.Helm)
+		} else {
+			topType := ""
+			if obj, ok := top.(runtime.Object); ok {
+				topType = obj.GetObjectKind().GroupVersionKind().Kind
+			}
+			appendCards(cards, cr, p, top.GetName(), topType)
+		}
+	default:
+		// TODO log
+	}
 }
 
 func rootCause(res []*ReportCardResource) *ReportCardIssue {
@@ -128,6 +148,7 @@ func getHelmChart(meta metav1.Object) *helmChart {
 // if any level of resource has Argo Instance info, then returns Argo Instance.
 // if any level of resource has helm chart info, then returns helm
 func getTopResource(ctx context.Context, mo metav1.Object, client *kubeclient.KubeClient) (metav1.Object, *helmChart, *ArgoInstance) {
+	defer eval.Timer("problem/aggregate - getTopResource")()
 	argo := getArgoInstance(mo)
 	if argo.Instance != "" {
 		return nil, nil, argo
@@ -259,6 +280,8 @@ func cleanFieldNotRequired(data map[string]interface{}) map[string]interface{} {
 
 // If card exists, append to card.Resources, or append new card into whole cards.
 func appendCards(cards map[string]*ReportCard, cr *ReportCardResource, p Problem, name string, topType string) {
+	lock.Lock()
+	defer lock.Unlock()
 	if rd, ok := cards[name]; ok {
 		rd.Resources = append(rd.Resources, cr)
 	} else {
