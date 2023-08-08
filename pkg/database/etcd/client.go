@@ -81,7 +81,6 @@ func PutStr(key, value string) error {
 	// defer client.Close()
 
 	_, err := client.Put(context.Background(), key, value)
-	log.S().Errorf("Failed to put %v to etcd\n", key)
 	return err
 }
 
