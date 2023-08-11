@@ -7,8 +7,10 @@ package investigators
 
 import (
 	"context"
+	"sync"
 
 	com "github.com/fidelity/theliv/pkg/common"
+	"github.com/fidelity/theliv/pkg/eval"
 	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/fidelity/theliv/internal/problem"
@@ -55,7 +57,10 @@ kubectl describe no {{ .Name}}
 `
 )
 
-func CommonInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
+func CommonInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - CommonInvestigator")()
+	defer wg.Done()
+
 	switch problem.Tags[com.Resourcetype] {
 	case com.Pod:
 		loadPodDetails(ctx, problem)

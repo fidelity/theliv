@@ -32,9 +32,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-type investigatorFunc func(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput)
+type investigatorFunc func(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput)
 
 var wg sync.WaitGroup
+var lock sync.RWMutex
 
 // modify this map when adding new investigator func for alert
 // for each alert, you can define one or more func to call to build details or solutions
@@ -94,14 +95,17 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 			// check investigator func map or use common investigator for each problem
 			if funcs, ok := alertInvestigatorMap[p.Name]; ok {
 				for _, fc := range funcs {
-					fc(ctx, p, input)
+					wg.Add(1)
+					go fc(ctx, &wg, p, input)
 				}
 			} else {
-				investigators.CommonInvestigator(ctx, p, input)
+				wg.Add(1)
+				go investigators.CommonInvestigator(ctx, &wg, p, input)
 			}
 			problemresults = append(problemresults, *p)
 		}
 	}
+	wg.Wait()
 	log.SWithContext(ctx).Infof("Generated %d problem results", len(problemresults))
 
 	// Convert problems to report cards

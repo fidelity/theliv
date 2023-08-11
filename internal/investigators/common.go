@@ -10,6 +10,7 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -21,6 +22,8 @@ import (
 
 	"github.com/fidelity/theliv/internal/problem"
 )
+
+var lock sync.RWMutex
 
 // Default Timespan, used in Event Filtering.
 var DefaultTimespan = problem.TimeSpan{
@@ -97,6 +100,8 @@ func addSolutionFromMap(ctx context.Context, problem *problem.Problem, pod *v1.P
 // Go template passed in string type, parsed results returned in []string type.
 // Parameter splitIt, if true, parsed results will be split by \n.
 func GetSolutionsByTemplate(ctx context.Context, template string, object interface{}, splitIt bool) (solution []string) {
+	lock.Lock()
+	defer lock.Unlock()
 	solution = []string{}
 	s, err := ExecGoTemplate(ctx, template, object)
 	if err != nil {
@@ -133,6 +138,8 @@ func logChecking(ctx context.Context, res string) {
 }
 
 func appendSolution(problem *problem.Problem, solutions interface{}, commands interface{}) {
+	lock.Lock()
+	defer lock.Unlock()
 	if solutions != nil {
 		switch v := solutions.(type) {
 		case string:

@@ -8,9 +8,11 @@ package investigators
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
 	com "github.com/fidelity/theliv/pkg/common"
+	"github.com/fidelity/theliv/pkg/eval"
 	v1 "k8s.io/api/apps/v1"
 )
 
@@ -28,18 +30,27 @@ kubectl describe deploy {{.Name}} -n {{ .ObjectMeta.Namespace }}
 `
 )
 
-func DeploymentNotAvailableInvestigator(ctx context.Context, problem *problem.Problem,
+func DeploymentNotAvailableInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - DeploymentNotAvailableInvestigator")()
+	defer wg.Done()
+
 	getDeployCommonSolution(ctx, problem)
 }
 
-func DeploymentGenerationMismatchInvestigator(ctx context.Context, problem *problem.Problem,
+func DeploymentGenerationMismatchInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - DeploymentGenerationMismatchInvestigator")()
+	defer wg.Done()
+
 	getDeployCommonSolution(ctx, problem)
 }
 
-func DeploymentReplicasMismatchInvestigator(ctx context.Context, problem *problem.Problem,
+func DeploymentReplicasMismatchInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - DeploymentReplicasMismatchInvestigator")()
+	defer wg.Done()
+
 	getDeployCommonSolution(ctx, problem)
 }
 

@@ -9,8 +9,10 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
+	"github.com/fidelity/theliv/pkg/eval"
 	log "github.com/fidelity/theliv/pkg/log"
 	v1 "k8s.io/api/core/v1"
 )
@@ -45,10 +47,11 @@ var PodNotReadyEventMessage = []string{
 	// "Back-off restarting failed container",
 }
 
-func PodNotReadyInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
+func PodNotReadyInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - PodNotReadyInvestigator")()
+	defer wg.Done()
 
 	pod := *problem.AffectedResources.Resource.(*v1.Pod)
-
 	for _, con := range pod.Status.Conditions {
 		if con.Type == "Ready" {
 			var solution []string

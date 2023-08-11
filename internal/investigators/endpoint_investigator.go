@@ -7,9 +7,11 @@ package investigators
 
 import (
 	"context"
+	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
 	com "github.com/fidelity/theliv/pkg/common"
+	"github.com/fidelity/theliv/pkg/eval"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,8 +32,10 @@ const (
 `
 )
 
-func EndpointAddressNotAvailableInvestigator(ctx context.Context,
+func EndpointAddressNotAvailableInvestigator(ctx context.Context, wg *sync.WaitGroup,
 	problem *problem.Problem, input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - EndpointAddressNotAvailableInvestigator")()
+	defer wg.Done()
 
 	var solutions []string
 
@@ -58,5 +62,4 @@ func EndpointAddressNotAvailableInvestigator(ctx context.Context,
 	}
 
 	appendSolution(problem, solutions, GetSolutionsByTemplate(ctx, GetEndpointsCmd, endpoint, true))
-
 }

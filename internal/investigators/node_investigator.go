@@ -7,9 +7,11 @@ package investigators
 
 import (
 	"context"
+	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
 	com "github.com/fidelity/theliv/pkg/common"
+	"github.com/fidelity/theliv/pkg/eval"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -60,28 +62,38 @@ const (
 `
 )
 
-func NodeNotReadyInvestigator(ctx context.Context, problem *problem.Problem,
+func NodeNotReadyInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - NodeNotReadyInvestigator")()
+	defer wg.Done()
 	getNodeCommonSolution(ctx, problem, NotReadySolution, KubeletCmd)
 }
 
-func NodeDiskPressureInvestigator(ctx context.Context, problem *problem.Problem,
+func NodeDiskPressureInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - NodeDiskPressureInvestigator")()
+	defer wg.Done()
 	getNodeCommonSolution(ctx, problem, DiskPressSolution, "")
 }
 
-func NodeMemoryPressureInvestigator(ctx context.Context, problem *problem.Problem,
+func NodeMemoryPressureInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - NodeMemoryPressureInvestigator")()
+	defer wg.Done()
 	getNodeCommonSolution(ctx, problem, MemPressSolution, FindPoOnNoCmd)
 }
 
-func NodePIDPressureInvestigator(ctx context.Context, problem *problem.Problem,
+func NodePIDPressureInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - NodePIDPressureInvestigator")()
+	defer wg.Done()
 	getNodeCommonSolution(ctx, problem, PidPressSolution, FindPoOnNoCmd)
 }
 
-func NodeNetworkUnavailableInvestigator(ctx context.Context, problem *problem.Problem,
+func NodeNetworkUnavailableInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer eval.Timer("investigators - NodeNetworkUnavailableInvestigator")()
+	defer wg.Done()
 	getNodeCommonSolution(ctx, problem, NetUnAvailableSolution, KubeletCmd)
 }
 
