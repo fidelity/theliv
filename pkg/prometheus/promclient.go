@@ -33,7 +33,7 @@ var TLSRoundTripper http.RoundTripper = &http.Transport{
 	}),
 }
 
-func GetAlerts(input *problem.DetectorCreationInput) (result v1.AlertsResult, err error) {
+func GetAlerts(ctx context.Context, input *problem.DetectorCreationInput) (result v1.AlertsResult, err error) {
 
 	result = v1.AlertsResult{}
 	promcfg := config.GetThelivConfig().Prometheus
@@ -46,7 +46,7 @@ func GetAlerts(input *problem.DetectorCreationInput) (result v1.AlertsResult, er
 			TLSRoundTripper),
 	})
 	if err != nil {
-		log.S().Errorf("Got error when creating Prometheus client, error is %s", err)
+		log.SWithContext(ctx).Errorf("Got error when creating Prometheus client, error is %s", err)
 		return
 	}
 
@@ -55,8 +55,8 @@ func GetAlerts(input *problem.DetectorCreationInput) (result v1.AlertsResult, er
 	defer cancel()
 	result, err = v1api.Alerts(ctx)
 	if err != nil {
-		err = errors.NewCommonError(6, err.Error())
-		log.S().Errorf("Got error when getting Prometheus alerts, error is %s", err)
+		err = errors.NewCommonError(ctx, 6, err.Error())
+		log.SWithContext(ctx).Errorf("Got error when getting Prometheus alerts, error is %s", err)
 	}
 	return
 }

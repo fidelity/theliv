@@ -108,14 +108,13 @@
                 margin-left: 5px;
                 font-size: 14px;
                 a {
-                    color: var(--body-color);
                     font-weight: 600;
                     font-size: 14px;
                     margin-top: 4px;
                     margin-left: 4px;
                     line-height: 1em;
                     line-break: anywhere;
-                    border-bottom: 1px solid var(--placeholder-color);
+                    border-bottom: 1px dashed;
                     &:hover {
                         color: var(--level-button);
                         border-bottom: 1px solid;
@@ -361,6 +360,22 @@ li {
             //     margin-right: 8px;
             //     flex-shrink: 0;
             // }
+        }
+        &-commands {
+            div {
+                font-weight: 600;
+                color: var(--commands);
+            }
+            li {
+                white-space: pre-line;
+                list-style: none;
+                color: var(--subtitle-color);
+                margin-top: -0.5em;
+            }
+            p {
+                margin-top: 0.2em;
+                margin-bottom: 1.2em;
+            }
         }
         &-link {
             margin-top: 1em;

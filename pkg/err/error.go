@@ -6,11 +6,14 @@
 package err
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"runtime"
 
+	com "github.com/fidelity/theliv/pkg/common"
 	log "github.com/fidelity/theliv/pkg/log"
+	"github.com/go-chi/render"
 )
 
 type ErrorType uint8
@@ -23,6 +26,7 @@ const (
 	KUBERNETES
 	CLOUD
 	PROMETHEUS
+	API
 )
 
 // Customised Error, with Kind
@@ -36,9 +40,9 @@ func (c CommonError) Error() string {
 }
 
 // New CommonError function, will log error message and stacktrace.
-func NewCommonError(kind ErrorType, msg string) error {
+func NewCommonError(ctx context.Context, kind ErrorType, msg string) error {
 	err := CommonError{Kind: kind, Message: kind.String() + ": " + msg}
-	log.S().Error(err.ErrorMsg())
+	log.SWithContext(ctx).Error(err.ErrorMsg())
 	return err
 }
 
@@ -62,6 +66,8 @@ func (s ErrorType) String() string {
 		return "CLOUD"
 	case PROMETHEUS:
 		return "PROMETHEUS"
+	case API:
+		return "API"
 	default:
 		return "UNKNOWN"
 	}
@@ -83,7 +89,8 @@ func PanicHandler(next http.Handler) http.Handler {
 				case error:
 					message = e.Error()
 				}
-				w.Write([]byte(message))
+				log.SWithContext(r.Context()).Error(message)
+				render.JSON(w, r, NewCommonError(r.Context(), 7, com.UncaughtApiErr))
 			}
 		}()
 		next.ServeHTTP(w, r)
@@ -96,7 +103,7 @@ func PanicHandler(next http.Handler) http.Handler {
 func GetStatusCode(err error) int {
 	switch e := err.(type) {
 	case CommonError:
-		if e.Kind > 1 {
+		if e.Kind == 6 {
 			return http.StatusServiceUnavailable
 		} else {
 			return http.StatusInternalServerError

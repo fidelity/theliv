@@ -6,6 +6,8 @@
 package config
 
 import (
+	"context"
+	"errors"
 	"fmt"
 
 	"regexp"
@@ -50,26 +52,26 @@ func (ecl *EtcdConfigLoader) LoadConfigs() {
 	}
 }
 
-func (ecl *EtcdConfigLoader) GetKubernetesConfig(name string) *KubernetesCluster {
+func (ecl *EtcdConfigLoader) GetKubernetesConfig(ctx context.Context, name string) (*KubernetesCluster, error) {
 	env := getK8SEnv(name)
 	key := fmt.Sprintf("%v/%v/%v", driver.CLUSTERS_KEY, env, name)
 	conf := &KubernetesCluster{}
-	err := driver.GetObjectWithSub(key, conf)
+	err := driver.GetObjectWithSub(ctx, key, conf)
 	if err != nil {
-		log.S().Errorf("Failed to load theliv config from etcd, error is %v\n", err)
-		return nil
+		log.SWithContext(ctx).Errorf("Failed to load theliv config from etcd, error is %v\n", err)
+		return nil, err
 	}
 	if len(conf.KubeConf) == 0 {
-		return nil
+		return nil, errors.New("empty KubeConf")
 	}
-	return conf
+	return conf, nil
 }
 
-func (ecl *EtcdConfigLoader) GetK8SClusterNames() []string {
-	keys, err := driver.GetKeys(driver.CLUSTERS_KEY)
+func (ecl *EtcdConfigLoader) GetK8SClusterNames(ctx context.Context) ([]string, error) {
+	keys, err := driver.GetKeys(ctx, driver.CLUSTERS_KEY)
 	if err != nil {
-		log.S().Error("Failed to load cluster keys")
-		return keys
+		log.SWithContext(ctx).Errorf("Failed to load cluster keys, error is %v.", err)
+		return keys, err
 	}
 	tmp := make(map[string]string)
 	result := make([]string, 0)
@@ -92,7 +94,7 @@ func (ecl *EtcdConfigLoader) GetK8SClusterNames() []string {
 			}
 		}
 	}
-	return result
+	return result, nil
 }
 
 func NewEtcdConfigLoader(ca, cert, key string, endpoints ...string) *EtcdConfigLoader {
@@ -138,7 +140,7 @@ func (ecl *EtcdConfigLoader) loadDatadogConfig() error {
 
 func (ecl *EtcdConfigLoader) loadAuthConfig() error {
 	conf := &AuthConfig{}
-	err := driver.GetObjectWithSub(driver.THELIV_AUTH_KEY, conf)
+	err := driver.GetObjectWithSub(context.Background(), driver.THELIV_AUTH_KEY, conf)
 	if err != nil {
 		return err
 	}
@@ -149,7 +151,7 @@ func (ecl *EtcdConfigLoader) loadAuthConfig() error {
 
 func (ecl *EtcdConfigLoader) loadPrometheusConfig() error {
 	conf := &PrometheusConfig{}
-	err := driver.GetObjectWithSub(driver.PROMETHEUS_GLOBAL_CONFIG_KEY, conf)
+	err := driver.GetObjectWithSub(context.Background(), driver.PROMETHEUS_GLOBAL_CONFIG_KEY, conf)
 	if err != nil {
 		return err
 	}
@@ -160,7 +162,7 @@ func (ecl *EtcdConfigLoader) loadPrometheusConfig() error {
 
 func (ecl *EtcdConfigLoader) loadThelivLevelConfig() error {
 	conf := &ProblemLevelConfig{}
-	err := driver.GetObjectWithSub(driver.THELIV_LEVEL_CONFIG_KEY, conf)
+	err := driver.GetObjectWithSub(context.Background(), driver.THELIV_LEVEL_CONFIG_KEY, conf)
 	if err != nil {
 		return err
 	}
@@ -176,7 +178,7 @@ func getLastPart(key string) string {
 
 func (ecl *EtcdConfigLoader) loadLdapConfig() error {
 	conf := &LdapConfig{}
-	err := driver.GetObjectWithSub(driver.LDAP_CONFIG_KEY, conf)
+	err := driver.GetObjectWithSub(context.Background(), driver.LDAP_CONFIG_KEY, conf)
 	if err != nil {
 		return err
 	}

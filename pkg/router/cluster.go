@@ -21,17 +21,21 @@ func Cluster(r chi.Router) {
 }
 
 func listClusters(w http.ResponseWriter, r *http.Request) {
-	clusters := service.GetClusters()
-	if empty := processEmpty(w, r, clusters); !empty {
+	clusters, err := service.GetClusters(r.Context())
+	if err != nil {
+		processError(w, r, err)
+	} else if empty := processEmpty(w, r, clusters); !empty {
 		render.Respond(w, r, clusters)
 	}
 }
 
 func listNamespaces(w http.ResponseWriter, r *http.Request) {
 	clusterName := chi.URLParam(r, "clusterName")
-	names := service.ListNs(clusterName)
+	names, err := service.ListNs(r.Context(), clusterName)
 
-	if empty := processEmpty(w, r, names); !empty {
+	if err != nil {
+		processError(w, r, err)
+	} else if empty := processEmpty(w, r, names); !empty {
 		render.Respond(w, r, names)
 	}
 }

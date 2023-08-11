@@ -17,17 +17,16 @@ import (
 
 const (
 	NotReadyAddressSolution = `
-There's NotReadyAddresses in the subsets.
-Please check the health of the selected pods.
+1. There's NotReadyAddresses in the subsets.
+2. Please check the health of the selected pods.
 `
 	NoPoSelectedSolution = `
-There's no Pod exists that match the service selector.
-Please set the service selector or add endpoint subsets properly.
+1. There's no Pod exists that match the service selector.
+2. Please set the service selector or add endpoint subsets properly.
 `
 	NoServiceFoundSolution = `
-No Service found for Endpoint {{ .Name}}. And this Endpoint has No subsets.
-Please check if this Endpoint is necessary.
-Cmd: kubectl get endpoints {{ .Name}} -n {{ .ObjectMeta.Namespace }}
+1. No Service found for Endpoint {{ .Name}}. And this Endpoint has No subsets.
+2. Please check if this Endpoint is necessary.
 `
 )
 
@@ -43,21 +42,21 @@ func EndpointAddressNotAvailableInvestigator(ctx context.Context,
 		Name:      endpoint.Name,
 	}
 	if input.KubeClient.Get(ctx, svc, namespace, metav1.GetOptions{}) == nil {
-		logChecking(com.Service + com.Blank + svc.Name)
+		logChecking(ctx, com.Service+com.Blank+svc.Name)
 		problem.AffectedResources.ResourceKind = com.Service
 		problem.AffectedResources.Resource = svc
 	} else {
-		logChecking(com.Endpoint + com.Blank + endpoint.Name)
+		logChecking(ctx, com.Endpoint+com.Blank+endpoint.Name)
 		appendSolution(problem,
-			GetSolutionsByTemplate(NoServiceFoundSolution, endpoint, true))
+			GetSolutionsByTemplate(ctx, NoServiceFoundSolution, endpoint, true), nil)
 	}
 
 	if len(endpoint.Subsets) != 0 {
-		solutions = GetSolutionsByTemplate(NotReadyAddressSolution, svc, true)
+		solutions = GetSolutionsByTemplate(ctx, NotReadyAddressSolution, svc, true)
 	} else {
-		solutions = GetSolutionsByTemplate(NoPoSelectedSolution, svc, true)
+		solutions = GetSolutionsByTemplate(ctx, NoPoSelectedSolution, svc, true)
 	}
 
-	appendSolution(problem, solutions)
+	appendSolution(problem, solutions, GetSolutionsByTemplate(ctx, GetEndpointsCmd, endpoint, true))
 
 }

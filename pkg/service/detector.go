@@ -7,6 +7,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/fidelity/theliv/internal/investigators"
@@ -14,6 +15,7 @@ import (
 	"github.com/fidelity/theliv/internal/problem"
 	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
+	theErr "github.com/fidelity/theliv/pkg/err"
 	"github.com/fidelity/theliv/pkg/eval"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	log "github.com/fidelity/theliv/pkg/log"
@@ -58,44 +60,51 @@ var alertInvestigatorMap = map[string][]investigatorFunc{
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
+	contact := fmt.Sprintf(com.Contact, config.GetThelivConfig().TeamName)
 	defer eval.Timer("service/detector - DetectAlerts")()
 	input := GetDetectorInput(ctx)
 
 	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
 	if err != nil {
-		return nil, err
+		return nil, theErr.NewCommonError(ctx, 4, com.LoadKubeConfigFailed+contact)
 	}
+	log.SWithContext(ctx).Infof("Kube client successfully created")
 	input.KubeClient = client
 
 	eventRetriever := k8s.NewK8sEventRetriever(client)
 	input.EventRetriever = eventRetriever
 
-	alerts, err := prometheus.GetAlerts(input)
+	alerts, err := prometheus.GetAlerts(ctx, input)
 	if err != nil {
-		return nil, err
+		return nil, theErr.NewCommonError(ctx, 6, com.PrometheusNotAvailable+contact)
 	}
+	log.SWithContext(ctx).Infof("%d prometheus alerts found", len(alerts.Alerts))
 
 	// build problems from  alerts, problem is investigator input
 	problems := buildProblemsFromAlerts(alerts.Alerts)
 	problems = filterProblems(ctx, problems, input)
+	log.SWithContext(ctx).Infof("Generated %d problems after filtering", len(problems))
 	if err = buildProblemAffectedResource(ctx, problems, input); err != nil {
-		return nil, err
+		return nil, theErr.NewCommonError(ctx, 4, com.LoadResourceFailed+contact)
 	}
 
 	problemresults := make([]problem.Problem, 0)
 	for _, p := range problems {
-		// check investigator func map or use common investigator for each problem
-		if funcs, ok := alertInvestigatorMap[p.Name]; ok {
-			for _, fc := range funcs {
-				fc(ctx, p, input)
+		if p.AffectedResources.Resource != nil {
+			// check investigator func map or use common investigator for each problem
+			if funcs, ok := alertInvestigatorMap[p.Name]; ok {
+				for _, fc := range funcs {
+					fc(ctx, p, input)
+				}
+			} else {
+				investigators.CommonInvestigator(ctx, p, input)
 			}
-		} else {
-			investigators.CommonInvestigator(ctx, p, input)
+			problemresults = append(problemresults, *p)
 		}
-		problemresults = append(problemresults, *p)
 	}
+	log.SWithContext(ctx).Infof("Generated %d problem results", len(problemresults))
 
-	// Aggregator
+	// Convert problems to report cards
 	return problem.Aggregate(ctx, problemresults, client)
 }
 
@@ -115,6 +124,7 @@ func buildProblemsFromAlerts(alerts []v1.Alert) []*problem.Problem {
 	return problems
 }
 
+// Classifies problems as cluster or namespace level, filters all other problems.
 func filterProblems(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) []*problem.Problem {
 	defer eval.Timer("service/detector - filterProblems")()
 	thelivcfg := config.GetThelivConfig()
@@ -152,45 +162,45 @@ func loadResourceByType(ctx context.Context, client *kubeclient.KubeClient, prob
 	switch problem.Tags[com.Resourcetype] {
 	case com.Pod:
 		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, "")
-		problem.CauseLevel = 1
+		problem.CauseLevel = 2
 	case com.Container:
 		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Container)
 		problem.CauseLevel = 1
 	case com.Initcontainer:
-		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Initcontainer)
+		loadNamespacedResource(client, ctx, problem, &corev1.Pod{}, com.Pod, com.Container)
 		problem.CauseLevel = 1
 	case com.Deployment:
 		loadNamespacedResource(client, ctx, problem, &appsv1.Deployment{}, com.Deployment, "")
-		problem.CauseLevel = 3
+		problem.CauseLevel = 4
 	case com.Replicaset:
 		loadNamespacedResource(client, ctx, problem, &appsv1.ReplicaSet{}, com.Replicaset, "")
-		problem.CauseLevel = 2
+		problem.CauseLevel = 3
 	case com.Statefulset:
 		loadNamespacedResource(client, ctx, problem, &appsv1.StatefulSet{}, com.Statefulset, "")
-		problem.CauseLevel = 2
+		problem.CauseLevel = 3
 	case com.Daemonset:
 		loadNamespacedResource(client, ctx, problem, &appsv1.DaemonSet{}, com.Daemonset, "")
-		problem.CauseLevel = 2
+		problem.CauseLevel = 3
 	case com.Node:
 		loadNamespacedResource(client, ctx, problem, &corev1.Node{}, com.Node, "")
 		problem.CauseLevel = 0
 	case com.Job:
 		loadNamespacedResource(client, ctx, problem, &batchv1.Job{}, com.Job, "")
-		problem.CauseLevel = 4
+		problem.CauseLevel = 5
 	case com.Cronjob:
 		loadNamespacedResource(client, ctx, problem, &batchv1.CronJob{}, com.Cronjob, "")
-		problem.CauseLevel = 4
+		problem.CauseLevel = 5
 	case com.Service:
 		loadNamespacedResource(client, ctx, problem, &corev1.Service{}, com.Service, "")
-		problem.CauseLevel = 5
+		problem.CauseLevel = 6
 	case com.Ingress:
 		loadNamespacedResource(client, ctx, problem, &networkv1.Ingress{}, com.Ingress, "")
-		problem.CauseLevel = 6
+		problem.CauseLevel = 7
 	case com.Endpoint:
 		loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, com.Endpoint, "")
-		problem.CauseLevel = 5
+		problem.CauseLevel = 6
 	default:
-		log.S().Warnf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
+		log.SWithContext(ctx).Warnf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
 	}
 	return nil
 }
@@ -210,7 +220,7 @@ func loadNamespacedResource(client *kubeclient.KubeClient, ctx context.Context,
 	if client.Get(ctx, obj, namespace, metav1.GetOptions{}) == nil {
 		buildAffectedResource(problem, buildName, buildType, obj)
 	} else {
-		log.S().Errorf("Not found affected resource for resource type %s: ", problem.Tags[com.Resourcetype])
+		log.SWithContext(ctx).Errorf("Not found affected resource for %s: %s", problem.Tags[com.Resourcetype], buildName)
 	}
 }
 

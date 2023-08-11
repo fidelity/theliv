@@ -9,6 +9,7 @@ import (
 	"github.com/fidelity/theliv/pkg/auth/authmiddleware"
 	"github.com/fidelity/theliv/pkg/auth/samlmethod"
 	"github.com/fidelity/theliv/pkg/err"
+	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/metrics"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -18,8 +19,8 @@ import (
 func NewRouter() *chi.Mux {
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
 	r.Use(middleware.RequestID)
+	r.Use(middleware.Logger)
 
 	//set content type as json by default
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
@@ -33,6 +34,9 @@ func NewRouter() *chi.Mux {
 	// Add panic handling middleware
 	r.Use(err.PanicHandler)
 
+	// Add request id to response header if present
+	r.Use(log.RequestIDHandler)
+
 	// api route
 	r.Route("/theliv-api/v1", Route)
 
@@ -45,7 +49,6 @@ func NewRouter() *chi.Mux {
 
 // Router for /thliev-api/v1
 func Route(r chi.Router) {
-
 	// health check
 	r.Route("/health", HealthCheck)
 

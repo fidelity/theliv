@@ -56,13 +56,15 @@ const (
 )
 
 const (
-	SecretMsg1 = `Run the following command to make sure your imagepull secret is correct. Make sure under 'auths', a entry corresponding to you registry hostname exists with the CORRECT username & password. Sometime incorrect imagepull secret might lead to this error as well.
-kubectl get secret {{ range .Spec.ImagePullSecrets }}{{ .Name }}{{ end }} -n {{ .ObjectMeta.Namespace }} --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
+	GetPoSecretCmd = `
+1. kubectl get pod {{ .ObjectMeta.Name }} -n {{ .ObjectMeta.Namespace }} --output="jsonpath={.spec.imagePullSecrets}"
+2. kubectl get secret {{ range .Spec.ImagePullSecrets }}{{ .Name }}{{ end }} -n {{ .ObjectMeta.Namespace }} --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
+`
+	SecretMsg1 = `Run the following command 1 to make sure your imagepull secret is correct. Make sure under 'auths', a entry corresponding to you registry hostname exists with the CORRECT username & password. Sometime incorrect imagepull secret might lead to this error as well.
 `
 	SecretMsg2NotExist = `We see that pod does not reference to any imagePullSecret. Kindly make sure this was intentional and not missed by mistake. Imagepullsecrets are mandatory in order to pull image from a registry that requires authentication and does not support anonymous pulls
 `
-	SecretMsg3 = `Run the following command to get the imagePullSecret name:
-kubectl get pod {{ .ObjectMeta.Name }} -n {{ .ObjectMeta.Namespace }} --output="jsonpath={.spec.imagePullSecrets}"
+	SecretMsg3 = `Run the following command 2 to get the imagePullSecret name:
 `
 )
 
@@ -71,7 +73,7 @@ type PodAndStatus struct {
 	Status *v1.ContainerStatus
 }
 
-var ImagePullBackOffSolutions = map[string]func(pod *v1.Pod, status *v1.ContainerStatus) []string{
+var ImagePullBackOffSolutions = map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) ([]string, []string){
 	UnknownManifestMsg:    getImagePullBackOffSolution(UnknownManifestSolution),
 	RepositoryNotExistMsg: getImagePullBackOffSolution(UnknownManifestSolution),
 	NoSuchHostMsg:         getImagePullBackOffSolution(NoSuchHostSolution),
@@ -103,34 +105,34 @@ func investigateContainerImgPullBackOff(ctx context.Context, problem *problem.Pr
 
 		if foundMsg == "" {
 			detail := status.State.Waiting.Message
-			solutions := ImagePullBackOffSolutions[UnknownManifestMsg](&pod, &status)
+			solutions, _ := ImagePullBackOffSolutions[UnknownManifestMsg](ctx, &pod, &status)
 			foundMsg = UnknownManifestMsg
-			appendSolution(problem, detail)
-			appendSolution(problem, solutions)
+			appendSolution(problem, detail, nil)
+			appendSolution(problem, solutions, nil)
 		}
 
-		secretmsg := checksecretmsg(foundMsg, pod)
-		appendSolution(problem, secretmsg)
+		secretmsg := checksecretmsg(ctx, foundMsg, pod)
+		appendSolution(problem, secretmsg, GetSolutionsByTemplate(ctx, GetPoSecretCmd, &pod, true))
 	}
 }
 
-func checksecretmsg(msg string, pod v1.Pod) []string {
+func checksecretmsg(ctx context.Context, msg string, pod v1.Pod) []string {
 	var secretmsg []string
 	if msg == UnknownManifestMsg || msg == RepositoryNotExistMsg || msg == NotFoundMsg {
 		if len(pod.Spec.ImagePullSecrets) == 0 {
 			s := "5. " + SecretMsg2NotExist
-			secretmsg = GetSolutionsByTemplate(s, &pod, true)
+			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
 		} else {
 			s := "5. " + SecretMsg1 + "6. " + SecretMsg3
-			secretmsg = GetSolutionsByTemplate(s, &pod, true)
+			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
 		}
 	} else if msg == UnauthorizedMsg {
 		if len(pod.Spec.ImagePullSecrets) == 0 {
 			s := "4. " + SecretMsg2NotExist
-			secretmsg = GetSolutionsByTemplate(s, &pod, true)
+			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
 		} else {
 			s := "4. " + SecretMsg1 + "5. " + SecretMsg3
-			secretmsg = GetSolutionsByTemplate(s, &pod, true)
+			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
 		}
 	}
 	return secretmsg
@@ -149,13 +151,14 @@ func checkImagePullBackOffReason(reason string) bool {
 	return false
 }
 
-func getImagePullBackOffSolution(solution string) func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-	return func(pod *v1.Pod, status *v1.ContainerStatus) []string {
-		return GetSolutionsByTemplate(solution,
+func getImagePullBackOffSolution(solution string) func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) ([]string, []string) {
+	return func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) ([]string, []string) {
+
+		s1 := GetSolutionsByTemplate(ctx, solution,
 			PodAndStatus{
 				Pod:    *pod,
 				Status: status,
-			},
-			true)
+			}, true)
+		return s1, nil
 	}
 }

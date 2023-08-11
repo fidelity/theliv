@@ -6,11 +6,24 @@
 package logging
 
 import (
+	"context"
+	"net/http"
+
+	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 var DefaultLogger *zap.Logger
+
+// Build a *zap.Logger from zap.Config
+func getLogger(config zap.Config) *zap.Logger {
+	loggerMgr, err := config.Build()
+	if err != nil {
+		panic("Error building Zap logger")
+	}
+	return loggerMgr
+}
 
 // Return a new *zap.Logger instance, accept a zap.Config
 func NewDefaultLogger(config zap.Config) *zap.Logger {
@@ -37,27 +50,36 @@ func L() *zap.Logger {
 	if DefaultLogger == nil {
 		NewDefaultLogger(DefaultLogConfig(0))
 	}
+
 	return DefaultLogger
 }
 
 // Return default Logger.Sugar instance.
 func S() *zap.SugaredLogger {
-	if DefaultLogger == nil {
-		NewDefaultLogger(DefaultLogConfig(0))
-	}
-	return DefaultLogger.Sugar()
+	return L().Sugar()
 }
 
-// Return a new *zap.Logger built from zap.Config
-func NewLogger(config zap.Config) *zap.Logger {
-	return getLogger(config)
+// Return Logger instance with request id from context
+func LWithContext(ctx context.Context) *zap.Logger {
+	l := L()
+	if reqID := middleware.GetReqID(ctx); reqID != "" {
+		l = DefaultLogger.With(zap.String("RequestId", reqID))
+	}
+	return l
 }
 
-// Build a *zap.Logger from zap.Config
-func getLogger(config zap.Config) *zap.Logger {
-	loggerMgr, err := config.Build()
-	if err != nil {
-		panic("Error building Zap logger")
+// Return Logger.Sugar instance with request id from context
+func SWithContext(ctx context.Context) *zap.SugaredLogger {
+	return LWithContext(ctx).Sugar()
+}
+
+// Used as middleware, to insert request id into the response header if present
+func RequestIDHandler(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if reqID := middleware.GetReqID(r.Context()); reqID != "" {
+			w.Header().Set("X-Request-Id", reqID)
+		}
+		next.ServeHTTP(w, r)
 	}
-	return loggerMgr
+	return http.HandlerFunc(fn)
 }

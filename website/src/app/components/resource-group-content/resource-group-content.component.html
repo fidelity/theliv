@@ -34,6 +34,85 @@
                 </div>
             </div>
         </div>
+
+        <div *ngIf="containerResource && containerResource.length > 0" class="pod-container block"
+            [class.flex-container]="containerResource.length > 1">
+            <div class="resource-detail-content" *ngFor="let resource of containerResource">
+                <div class="resource-detail-content-header">
+                    <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
+                    <div class="resource-detail-content-header-layout">
+                        <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}: 
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}  <fa-icon [icon]="faExternalLinkAlt"></fa-icon></a>
+                        </div>
+                        <div class="resource-detail-content-subtitle error-msg">
+                            {{resource.issue.name}}
+                            <span class="resource-detail-content-time">{{resource.issue.createdTime | date:'MMM d, y'}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-container">
+                    <table id="grid-table">
+                        <tr class="grid-head">
+                            <th>Container</th>
+                            <th>Pod</th>
+                        </tr>
+                        <tr class="grid-body animate-repeat">
+                            <td>{{resource.name}}</td>
+                            <td>{{resource.metadata.metadata.name}}</td>
+                        </tr>
+                    </table>
+                    <div class="detail-msg">
+                        <div class="detail-msg-issues">
+                            <div>
+                                <fa-icon [icon]="faExclamationTriangle"></fa-icon>Issues Found:
+                            </div>
+                            <p>{{resource.issue.description}}</p>
+                            <p *ngIf="resource.issue.reason">Reason: {{resource.reason}}</p>
+                        </div>
+                        <div class="detail-msg-solution">
+                            <div>
+                                <fa-icon [icon]="faLightbulb"></fa-icon>Recommend Solutions:
+                            </div>
+                            <p *ngIf="!resource.issue.solutions">No recommend solution</p>
+                            <ul *ngIf="resource.issue.solutions">
+                                <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div class="detail-msg-commands">
+                            <div>
+                                <fa-icon [icon]="faEdit"></fa-icon>Useful Commands:
+                            </div>
+                            <p *ngIf="!resource.issue.commands">No useful command</p>
+                            <ul *ngIf="resource.issue.commands">
+                                <li *ngFor="let command of resource.issue.commands">{{command}}</li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.deeplink" class="detail-msg-link">
+                            <div>
+                                <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
+                            </div>
+                            <ul *ngIf="resource.deeplink">
+                                <li *ngFor="let deeplink of resource.deeplink | keyvalue">
+                                    <a class="link" target="_blank" [href]="deeplink.value">{{deeplink.key}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.issue.documents" class="detail-msg-docs">
+                            <div *ngFor="let document of resource.issue.documents">
+                                <fa-icon [icon]="faBookReader"></fa-icon>
+                                <a class="link" target="_blank" [href]="document">Click here to view supporting
+                                    documentation</a>
+                            </div>
+                        </div>
+                        <div class="label-content">
+                            <label class="detail-label" *ngFor="let label of resource.labels | keyvalue">{{label.key}}:
+                                {{label.value}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div *ngIf="podResource && podResource.length > 0" class="pod-container block"
             [class.flex-container]="podResource.length > 1">
             <div class="resource-detail-content" *ngFor="let resource of podResource">
@@ -41,7 +120,7 @@
                     <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
                     <div class="resource-detail-content-header-layout">
                         <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}: 
-                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}  <fa-icon [icon]="faExternalLinkAlt"></fa-icon></a>
                         </div>
                         <div class="resource-detail-content-subtitle error-msg">
                             {{resource.issue.name}}
@@ -82,6 +161,15 @@
                                 <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
                             </ul>
                         </div>
+                        <div class="detail-msg-commands">
+                            <div>
+                                <fa-icon [icon]="faEdit"></fa-icon>Useful Commands:
+                            </div>
+                            <p *ngIf="!resource.issue.commands">No useful command</p>
+                            <ul *ngIf="resource.issue.commands">
+                                <li *ngFor="let command of resource.issue.commands">{{command}}</li>
+                            </ul>
+                        </div>
                         <div *ngIf="resource.deeplink" class="detail-msg-link">
                             <div>
                                 <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
@@ -108,13 +196,13 @@
             </div>
         </div>
 
-        <div *ngIf="deployResource && deployResource.length > 0" class="deployment-container block">
-            <div class="resource-detail-content" *ngFor="let resource of deployResource">
+        <div *ngIf="replicasetResource && replicasetResource.length > 0" class="other-container block">
+            <div class="resource-detail-content" *ngFor="let resource of replicasetResource">
                 <div class="resource-detail-content-header">
                     <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
                     <div class="resource-detail-content-header-layout">
                         <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}:
-                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}  <fa-icon [icon]="faExternalLinkAlt"></fa-icon></a>
                         </div>
                         <div class="resource-detail-content-subtitle error-msg">
                             {{resource.issue.name}}
@@ -138,6 +226,82 @@
                             <p *ngIf="!resource.issue.solutions">No recommend solution</p>
                             <ul *ngIf="resource.issue.solutions">
                                 <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div class="detail-msg-commands">
+                            <div>
+                                <fa-icon [icon]="faEdit"></fa-icon>Useful Commands:
+                            </div>
+                            <p *ngIf="!resource.issue.commands">No useful command</p>
+                            <ul *ngIf="resource.issue.commands">
+                                <li *ngFor="let command of resource.issue.commands">{{command}}</li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.deeplink" class="detail-msg-link">
+                            <div>
+                                <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
+                            </div>
+                            <ul *ngIf="resource.deeplink">
+                                <li *ngFor="let deeplink of resource.deeplink | keyvalue">
+                                    <a class="link" target="_blank" [href]="deeplink.value">{{deeplink.key}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div *ngIf="resource.issue.documents" class="detail-msg-docs">
+                            <div *ngFor="let document of resource.issue.documents">
+                                <fa-icon [icon]="faBookReader"></fa-icon>
+                                <a class="link" target="_blank" [href]="document">Check the reference document related
+                                    to this issue</a>
+                            </div>
+                        </div>
+                        <div class="label-content">
+                            <label class="detail-label" *ngFor="let label of resource.labels | keyvalue">{{label.key}}:
+                                {{label.value}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="deployResource && deployResource.length > 0" class="deployment-container block">
+            <div class="resource-detail-content" *ngFor="let resource of deployResource">
+                <div class="resource-detail-content-header">
+                    <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
+                    <div class="resource-detail-content-header-layout">
+                        <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}:
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}  <fa-icon [icon]="faExternalLinkAlt"></fa-icon></a>
+                        </div>
+                        <div class="resource-detail-content-subtitle error-msg">
+                            {{resource.issue.name}}
+                            <span class="resource-detail-content-time">{{resource.issue.createdTime | date:'MMM d, y'}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-container">
+                    <div class="detail-msg">
+                        <div class="detail-msg-issues">
+                            <div>
+                                <fa-icon [icon]="faExclamationTriangle"></fa-icon>Issues Found:
+                            </div>
+                            <p>{{resource.issue.description}}</p>
+                            <p *ngIf="resource.issue.reason">Reason: {{resource.reason}}</p>
+                        </div>
+                        <div class="detail-msg-solution">
+                            <div>
+                                <fa-icon [icon]="faLightbulb"></fa-icon>Recommend Solutions:
+                            </div>
+                            <p *ngIf="!resource.issue.solutions">No recommend solution</p>
+                            <ul *ngIf="resource.issue.solutions">
+                                <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div class="detail-msg-commands">
+                            <div>
+                                <fa-icon [icon]="faEdit"></fa-icon>Useful Commands:
+                            </div>
+                            <p *ngIf="!resource.issue.commands">No useful command</p>
+                            <ul *ngIf="resource.issue.commands">
+                                <li *ngFor="let command of resource.issue.commands">{{command}}</li>
                             </ul>
                         </div>
                         <div *ngIf="resource.deeplink" class="detail-msg-link">
@@ -173,7 +337,7 @@
                     <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
                     <div class="resource-detail-content-header-layout">
                         <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}:
-                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}  <fa-icon [icon]="faExternalLinkAlt"></fa-icon></a>
                         </div>
                         <div class="resource-detail-content-subtitle error-msg">
                             {{resource.issue.name}}
@@ -221,6 +385,15 @@
                                 <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
                             </ul>
                         </div>
+                        <div class="detail-msg-commands">
+                            <div>
+                                <fa-icon [icon]="faEdit"></fa-icon>Useful Commands:
+                            </div>
+                            <p *ngIf="!resource.issue.commands">No useful command</p>
+                            <ul *ngIf="resource.issue.commands">
+                                <li *ngFor="let command of resource.issue.commands">{{command}}</li>
+                            </ul>
+                        </div>
                         <div *ngIf="resource.deeplink" class="detail-msg-link">
                             <div>
                                 <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
@@ -254,7 +427,7 @@
                     <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
                     <div class="resource-detail-content-header-layout">
                         <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}:
-                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}  <fa-icon [icon]="faExternalLinkAlt"></fa-icon></a>
                         </div>
                         <div class="resource-detail-content-subtitle error-msg">
                             {{resource.issue.name}}
@@ -296,6 +469,15 @@
                                 <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
                             </ul>
                         </div>
+                        <div class="detail-msg-commands">
+                            <div>
+                                <fa-icon [icon]="faEdit"></fa-icon>Useful Commands:
+                            </div>
+                            <p *ngIf="!resource.issue.commands">No useful command</p>
+                            <ul *ngIf="resource.issue.commands">
+                                <li *ngFor="let command of resource.issue.commands">{{command}}</li>
+                            </ul>
+                        </div>
                         <div *ngIf="resource.deeplink" class="detail-msg-link">
                             <div>
                                 <fa-icon [icon]="faClipboard"></fa-icon>View Logs in Datadog:
@@ -329,7 +511,7 @@
                     <img class="kube-icon" src="assets/images/kube/{{resource.type.toLowerCase()}}.png" />
                     <div class="resource-detail-content-header-layout">
                         <div class="resource-detail-content-title">{{resource.type.toUpperCase()}}:
-                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}</a>
+                            <a title="Check resource yaml" (click)="showPopupItem(resource)" >{{resource.name}}  <fa-icon [icon]="faExternalLinkAlt"></fa-icon></a>
                         </div>
                         <div class="resource-detail-content-subtitle error-msg">
                             {{resource.issue.name}}
@@ -353,6 +535,15 @@
                             <p *ngIf="!resource.issue.solutions">No recommend solution</p>
                             <ul *ngIf="resource.issue.solutions">
                                 <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div class="detail-msg-commands">
+                            <div>
+                                <fa-icon [icon]="faEdit"></fa-icon>Useful Commands:
+                            </div>
+                            <p *ngIf="!resource.issue.commands">No useful command</p>
+                            <ul *ngIf="resource.issue.commands">
+                                <li *ngFor="let command of resource.issue.commands">{{command}}</li>
                             </ul>
                         </div>
                         <div *ngIf="resource.deeplink" class="detail-msg-link">

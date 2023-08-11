@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"sort"
+	"strings"
 	"sync"
 
 	com "github.com/fidelity/theliv/pkg/common"
@@ -26,24 +27,18 @@ var (
 	lock = sync.RWMutex{}
 )
 
+// Aggregate problems into report cards. Problems related to the same resource will be grouped together.
 func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) (interface{}, error) {
 	defer eval.Timer("problem/aggregate - Aggregate")()
 	cards := make([]*ReportCard, 0)
-	// cluster & managed namespace level NewProblems, report card only has the root cause
-	for _, p := range problems {
-		if p.Level != UserNamespace {
-			cards = append(cards, buildClusterReportCard(p))
-		}
-	}
-
-	// user level namespace
-	ucards := buildReportCards(ctx, problems, client)
-	for _, val := range ucards {
+	for _, val := range buildReportCards(ctx, problems, client) {
 		val.RootCause = rootCause(val.Resources)
 		// set ID
 		val.ID = hashcode(val.TopResourceType + "/" + val.Name)
 		cards = append(cards, val)
 	}
+	log.SWithContext(ctx).Infof("Generated %d report cards", len(cards))
+
 	// Sort makes sure the cluster level report card is the first one,
 	// then sort by id
 	sort.Slice(cards, func(i, j int) bool {
@@ -55,37 +50,10 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 	return cards, nil
 }
 
-// Build report card for cluster level or managed namespace level
-func buildClusterReportCard(p Problem) *ReportCard {
-	defer eval.Timer("problem/aggregate - buildClusterReportCard")()
-	resources := []*ReportCardResource{}
-	var kind string
-	var rootCause *ReportCardIssue
-
-	res := getReportCardResource(p, p.AffectedResources)
-	resources = append(resources, res)
-	if rootCause == nil {
-		kind = p.AffectedResources.Resource.GetObjectKind().GroupVersionKind().Kind
-		rootCause = res.Issue
-	}
-	return &ReportCard{
-		Name:            p.Description,
-		Level:           p.Level,
-		Resources:       resources,
-		TopResourceType: kind,
-		ID:              hashcode(kind + "/" + p.Description),
-		RootCause:       rootCause,
-	}
-}
-
 func buildReportCards(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
 	defer eval.Timer("problem/aggregate - buildReportCards")()
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
-		// ignore cluster & managed namespace level NewProblems
-		if p.Level != UserNamespace {
-			continue
-		}
 
 		wg.Add(1)
 		go buildCard(ctx, client, cards, p)
@@ -100,12 +68,13 @@ func buildCard(ctx context.Context, client *kubeclient.KubeClient, cards map[str
 	defer wg.Done()
 	switch v := p.AffectedResources.Resource.(type) {
 	case metav1.Object:
-		top, h, argo := getTopResource(ctx, v, client)
-		cr := getReportCardResource(p, p.AffectedResources)
+		// determine if root resource is an argo instance, helm chart, or k8s object
+		top, helm, argo := getTopResource(ctx, v, client)
+		cr := getReportCardResource(ctx, p, p.AffectedResources)
 		if argo != nil {
 			appendCards(cards, cr, p, argo.Instance, com.Argo)
-		} else if h != nil {
-			appendCards(cards, cr, p, h.toString(), com.Helm)
+		} else if helm != nil {
+			appendCards(cards, cr, p, helm.toString(), com.Helm)
 		} else {
 			topType := ""
 			if obj, ok := top.(runtime.Object); ok {
@@ -186,9 +155,10 @@ func getControlOwner(mo metav1.Object) *metav1.OwnerReference {
 	return nil
 }
 
-func getReportCardResource(p Problem, resource ResourceDetails) *ReportCardResource {
-	cr := createReportCardResource(p, resource.Resource.(metav1.Object), resource.Resource.GetObjectKind().GroupVersionKind().Kind)
+func getReportCardResource(ctx context.Context, p Problem, resource ResourceDetails) *ReportCardResource {
+	cr := createReportCardResource(ctx, p, resource.Resource.(metav1.Object), resource.ResourceKind)
 	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails...)
+	cr.Issue.Commands = append(cr.Issue.Commands, p.UsefulCommands...)
 
 	// cr.Issue.Documents = urlToStr(p.Docs)
 	// if resource.Deeplink != nil {
@@ -201,7 +171,7 @@ func getReportCardResource(p Problem, resource ResourceDetails) *ReportCardResou
 	return cr
 }
 
-func createReportCardResource(p Problem, v metav1.Object, kind string) *ReportCardResource {
+func createReportCardResource(ctx context.Context, p Problem, v metav1.Object, kind string) *ReportCardResource {
 	issue := ReportCardIssue{
 		Name:        p.Name,
 		Description: p.Description,
@@ -210,12 +180,16 @@ func createReportCardResource(p Problem, v metav1.Object, kind string) *ReportCa
 		CauseLevel:  p.CauseLevel,
 		CreatedTime: v.GetCreationTimestamp().String(),
 	}
+	name := v.GetName()
+	if strings.Contains(p.Name, "Container") {
+		name = p.Tags["container"]
+	}
 	return &ReportCardResource{
-		Name:        v.GetName(),
+		Name:        name,
 		Type:        kind,
 		Labels:      v.GetLabels(),
 		Annotations: v.GetAnnotations(),
-		Metadata:    convertMetadata(v),
+		Metadata:    convertMetadata(ctx, v),
 		Issue:       &issue,
 	}
 }
@@ -228,15 +202,15 @@ func hashcode(s string) string {
 	return fmt.Sprint(v)
 }
 
-func convertMetadata(obj metav1.Object) map[string]interface{} {
+func convertMetadata(ctx context.Context, obj metav1.Object) map[string]interface{} {
 	b, err := json.Marshal(obj)
 	if err != nil {
-		log.S().Errorf("Marshal json error: %s", err)
+		log.SWithContext(ctx).Errorf("Marshal json error: %s", err)
 	}
 	m := make(map[string]interface{})
 	err = json.Unmarshal(b, &m)
 	if err != nil {
-		log.S().Errorf("Unmarshal json error: %s", err)
+		log.SWithContext(ctx).Errorf("Unmarshal json error: %s", err)
 	}
 	return cleanFieldNotRequired(m)
 }

@@ -17,13 +17,6 @@ import (
 	"net/url"
 	"strings"
 
-	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
-	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
-
-	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"github.com/microsoftgraph/msgraph-sdk-go/users/item/memberof"
-
 	"github.com/fidelity/theliv/internal/rbac"
 	"github.com/fidelity/theliv/pkg/config"
 	log "github.com/fidelity/theliv/pkg/log"
@@ -34,14 +27,10 @@ import (
 )
 
 var sp *samlsp.Middleware
-var clientID string
-var clientSecret string
 
 func Init() {
 
 	authConfig := config.GetThelivConfig().Auth
-	clientID = authConfig.ClientID
-	clientSecret = authConfig.ClientSecret
 
 	keyPair, err1 := tls.X509KeyPair(authConfig.Cert, authConfig.Key)
 	if err1 != nil {
@@ -223,112 +212,15 @@ func (Samlinfo) GetUser(r *http.Request) (*rbac.User, error) {
 			Emailaddress: emailaddress[0],
 		}, nil
 	}
-	return nil, errors.New("Session is empty")
-}
-
-func (Samlinfo) GetADgroups0(r *http.Request, id string) ([]string, error) {
-	if session := samlsp.SessionFromContext(r.Context()); session != nil {
-		// this will panic if we have the wrong type of Session, and that is OK.
-		sessionWithAttributes := session.(samlsp.SessionWithAttributes)
-		attributes := sessionWithAttributes.GetAttributes()
-		adgroups, ok := attributes["http://schemas.microsoft.com/ws/2008/06/identity/claims/groups"]
-		if !ok {
-			adgrouplink, ok := attributes["http://schemas.microsoft.com/claims/groups.link"]
-			if !ok {
-				return nil, errors.New("do not get the AD group")
-			}
-			ads, err := GetADgroupsByLink(r.Context(), adgrouplink[0])
-			if err != nil {
-				return nil, err
-			}
-			return ads, nil
-		}
-
-		return adgroups, nil
-	}
-	return nil, errors.New("get wrong session")
-}
-
-func GetADgroupsByLink(ctx context.Context, link string) ([]string, error) {
-	//check whether link is recognized
-	//change client id and secret as input
-	url, err := url.Parse(link)
-	if err != nil {
-		return nil, err
-	}
-	if url.Host != "graph.windows.net" || strings.Split(url.Path, "/")[2] != "users" || strings.Split(url.Path, "/")[4] != "getMemberObjects" {
-		return nil, errors.New("unrecognized adgroup link")
-	}
-	tenantId := strings.Split(url.Path, "/")[1]
-	userId := strings.Split(url.Path, "/")[3]
-	//THE GO SDK IS IN PREVIEW. NON-PRODUCTION USE ONLY
-	cred, err := azidentity.NewClientSecretCredential(
-		tenantId,
-		clientID,
-		clientSecret,
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	graphClient, err := msgraphsdk.NewGraphServiceClientWithCredentials(cred, []string{"https://graph.microsoft.com/.default"})
-	if err != nil {
-		fmt.Printf("Error creating graphClient: %v\n", err)
-		return nil, err
-	}
-	requestParameters := &memberof.MemberOfRequestBuilderGetQueryParameters{
-		Select: []string{"displayName"},
-	}
-	options := &memberof.MemberOfRequestBuilderGetRequestConfiguration{
-		QueryParameters: requestParameters,
-	}
-	result, err := graphClient.UsersById(userId).MemberOf().Get(ctx, options)
-	if err != nil {
-		return nil, err
-	}
-	adgroups := []string{}
-	for _, value := range result.GetValue() {
-		dataMap := value.GetAdditionalData()
-		if d1, ok := dataMap["displayName"]; ok {
-			if d1 != nil {
-				if data, good := d1.(*string); good {
-					adgroups = append(adgroups, *data)
-				}
-			}
-		}
-	}
-
-	pageIterator, err := msgraphcore.NewPageIterator(result, graphClient.GetAdapter(), models.CreateUserCollectionResponseFromDiscriminatorValue)
-	if err != nil {
-		fmt.Printf("Error getting Adgroups: %v\n", err)
-		return nil, err
-	}
-	err = pageIterator.Iterate(context.Background(), func(pageItem interface{}) bool {
-		item := pageItem.(models.DirectoryObjectable)
-		dataMap := item.GetAdditionalData()
-		if d1, ok := dataMap["displayName"]; ok {
-			if d1 != nil {
-				if data, good := d1.(*string); good {
-					adgroups = append(adgroups, *data)
-				}
-			}
-		}
-		return true
-	})
-	if err != nil {
-		fmt.Printf("Error getting Adgroups: %v\n", err)
-		return nil, err
-	}
-	return adgroups, nil
+	return nil, errors.New("session is empty")
 }
 
 func (Samlinfo) GetADgroups(r *http.Request, userID string) ([]string, error) {
 
-	result := callLDAP(userID)
+	result := callLDAP(r.Context(), userID)
 	ads := []string{}
 	if result == nil || len(result.Entries) == 0 {
-		log.S().Warn("Response from LDAP is error or empty")
+		log.SWithContext(r.Context()).Warn("Response from LDAP is error or empty")
 		return ads, nil
 	}
 	memberOf := result.Entries[0].GetAttributeValues("memberOf")
@@ -341,7 +233,7 @@ func (Samlinfo) GetADgroups(r *http.Request, userID string) ([]string, error) {
 }
 
 // calls LDAP, connect to server each time
-func callLDAP(userID string) *ldap.SearchResult {
+func callLDAP(ctx context.Context, userID string) *ldap.SearchResult {
 
 	ldapCfg := config.GetThelivConfig().Ldap
 
@@ -349,7 +241,7 @@ func callLDAP(userID string) *ldap.SearchResult {
 		InsecureSkipVerify: true,
 	})
 	if err != nil {
-		log.S().Errorf("Unable to connect to LDAP server, error is %v", err)
+		log.SWithContext(ctx).Errorf("Unable to connect to LDAP server, error is %v", err)
 		return nil
 	}
 	defer conn.Close()
@@ -362,7 +254,7 @@ func callLDAP(userID string) *ldap.SearchResult {
 		nil,
 	))
 	if err != nil {
-		log.S().Errorf("Failed to search LDAP for user %v, error is %v", userID, err)
+		log.SWithContext(ctx).Errorf("Failed to search LDAP for user %v, error is %v", userID, err)
 	}
 	return result
 }

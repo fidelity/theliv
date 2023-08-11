@@ -6,6 +6,7 @@
 package service
 
 import (
+	"context"
 	"strings"
 
 	auth "github.com/fidelity/theliv/pkg/auth/authmiddleware"
@@ -22,7 +23,7 @@ func AddPath(roleName string, newPaths []string) (err error) {
 	var updatedValue []string
 	var value []byte
 	rolePath := auth.RolePrefix + roleName
-	value, err = etcd.Get(rolePath)
+	value, err = etcd.Get(context.Background(), rolePath)
 	if err != nil {
 		return
 	}
