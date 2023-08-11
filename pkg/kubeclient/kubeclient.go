@@ -33,6 +33,11 @@ type reader interface {
 	Get(context.Context, runtime.Object, NamespacedName, metav1.GetOptions) error
 }
 
+const (
+	QPS   = 50.0
+	BURST = 100
+)
+
 var _ reader = (*KubeClient)(nil)
 
 type KubeClient struct {
@@ -45,6 +50,8 @@ type KubeClient struct {
 const RetrieveErrorMessage = "unable retrieve the resource using dynamic client"
 
 func NewKubeClient(cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClient, error) {
+	cfg.Burst = BURST
+	cfg.QPS = QPS
 
 	kc := &KubeClient{}
 	dynamicClient, err := dynamic.NewForConfig(cfg)
