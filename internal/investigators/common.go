@@ -145,8 +145,6 @@ func appendSolution(problem *problem.Problem, solutions interface{}, commands in
 			problem.SolutionDetails.Append(v)
 		case []string:
 			problem.SolutionDetails.Append(v...)
-		default:
-			log.S().Warnf("wrong arg supplied to appendSolution(): %s", v)
 		}
 	}
 	if commands != nil {
@@ -155,8 +153,6 @@ func appendSolution(problem *problem.Problem, solutions interface{}, commands in
 			problem.UsefulCommands.Append(c)
 		case []string:
 			problem.UsefulCommands.Append(c...)
-		default:
-			log.S().Warnf("wrong arg supplied to appendSolution(): %s", c)
 		}
 	}
 }
