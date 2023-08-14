@@ -28,7 +28,7 @@ var (
 )
 
 // Aggregate problems into report cards. Problems related to the same resource will be grouped together.
-func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) (interface{}, error) {
+func Aggregate(ctx context.Context, problems []*Problem, client *kubeclient.KubeClient) (interface{}, error) {
 	defer eval.Timer("problem/aggregate - Aggregate")()
 	cards := make([]*ReportCard, 0)
 	for _, val := range buildReportCards(ctx, problems, client) {
@@ -50,7 +50,7 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 	return cards, nil
 }
 
-func buildReportCards(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
+func buildReportCards(ctx context.Context, problems []*Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
 	defer eval.Timer("problem/aggregate - buildReportCards")()
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
@@ -63,7 +63,7 @@ func buildReportCards(ctx context.Context, problems []Problem, client *kubeclien
 	return cards
 }
 
-func buildCard(ctx context.Context, client *kubeclient.KubeClient, cards map[string]*ReportCard, p Problem) {
+func buildCard(ctx context.Context, client *kubeclient.KubeClient, cards map[string]*ReportCard, p *Problem) {
 	defer eval.Timer("problem/aggregate - buildCard")()
 	defer wg.Done()
 	switch v := p.AffectedResources.Resource.(type) {
@@ -155,10 +155,10 @@ func getControlOwner(mo metav1.Object) *metav1.OwnerReference {
 	return nil
 }
 
-func getReportCardResource(ctx context.Context, p Problem, resource ResourceDetails) *ReportCardResource {
+func getReportCardResource(ctx context.Context, p *Problem, resource ResourceDetails) *ReportCardResource {
 	cr := createReportCardResource(ctx, p, resource.Resource.(metav1.Object), resource.ResourceKind)
-	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails...)
-	cr.Issue.Commands = append(cr.Issue.Commands, p.UsefulCommands...)
+	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails.GetStore()...)
+	cr.Issue.Commands = append(cr.Issue.Commands, p.UsefulCommands.GetStore()...)
 
 	// cr.Issue.Documents = urlToStr(p.Docs)
 	// if resource.Deeplink != nil {
@@ -171,7 +171,7 @@ func getReportCardResource(ctx context.Context, p Problem, resource ResourceDeta
 	return cr
 }
 
-func createReportCardResource(ctx context.Context, p Problem, v metav1.Object, kind string) *ReportCardResource {
+func createReportCardResource(ctx context.Context, p *Problem, v metav1.Object, kind string) *ReportCardResource {
 	issue := ReportCardIssue{
 		Name:        p.Name,
 		Description: p.Description,
@@ -253,7 +253,7 @@ func cleanFieldNotRequired(data map[string]interface{}) map[string]interface{} {
 }
 
 // If card exists, append to card.Resources, or append new card into whole cards.
-func appendCards(cards map[string]*ReportCard, cr *ReportCardResource, p Problem, name string, topType string) {
+func appendCards(cards map[string]*ReportCard, cr *ReportCardResource, p *Problem, name string, topType string) {
 	lock.Lock()
 	defer lock.Unlock()
 	if rd, ok := cards[name]; ok {

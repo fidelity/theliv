@@ -34,7 +34,6 @@ import (
 
 type investigatorFunc func(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput)
 
-var wg sync.WaitGroup
 var lock sync.RWMutex
 
 // modify this map when adding new investigator func for alert
@@ -61,6 +60,7 @@ var alertInvestigatorMap = map[string][]investigatorFunc{
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
+	var wg sync.WaitGroup
 	contact := fmt.Sprintf(com.Contact, config.GetThelivConfig().TeamName)
 	defer eval.Timer("service/detector - DetectAlerts")()
 	input := GetDetectorInput(ctx)
@@ -85,13 +85,14 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	problems := buildProblemsFromAlerts(alerts.Alerts)
 	problems = filterProblems(ctx, problems, input)
 	log.SWithContext(ctx).Infof("Generated %d problems after filtering", len(problems))
-	if err = buildProblemAffectedResource(ctx, problems, input); err != nil {
+	if err = buildProblemAffectedResource(ctx, &wg, problems, input); err != nil {
 		return nil, theErr.NewCommonError(ctx, 4, com.LoadResourceFailed+contact)
 	}
 
-	problemresults := make([]problem.Problem, 0)
+	problemresults := make([]*problem.Problem, 0)
 	for _, p := range problems {
 		if p.AffectedResources.Resource != nil {
+			problemresults = append(problemresults, p)
 			// check investigator func map or use common investigator for each problem
 			if funcs, ok := alertInvestigatorMap[p.Name]; ok {
 				for _, fc := range funcs {
@@ -102,9 +103,9 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 				wg.Add(1)
 				go investigators.CommonInvestigator(ctx, &wg, p, input)
 			}
-			problemresults = append(problemresults, *p)
 		}
 	}
+
 	wg.Wait()
 	log.SWithContext(ctx).Infof("Generated %d problem results", len(problemresults))
 
@@ -149,18 +150,18 @@ func filterProblems(ctx context.Context, problems []*problem.Problem, input *pro
 	return results
 }
 
-func buildProblemAffectedResource(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) error {
+func buildProblemAffectedResource(ctx context.Context, wg *sync.WaitGroup, problems []*problem.Problem, input *problem.DetectorCreationInput) error {
 	defer eval.Timer("service/detector - buildProblemAffectedResource (contains go routines)")()
 	client := input.KubeClient
 	wg.Add(len(problems))
 	for _, problem := range problems {
-		go loadResourceByType(ctx, client, problem)
+		go loadResourceByType(ctx, wg, client, problem)
 	}
 	wg.Wait()
 	return nil
 }
 
-func loadResourceByType(ctx context.Context, client *kubeclient.KubeClient, problem *problem.Problem) error {
+func loadResourceByType(ctx context.Context, wg *sync.WaitGroup, client *kubeclient.KubeClient, problem *problem.Problem) error {
 	defer eval.Timer("service/detector - loadResourceByType (go routine)")()
 	defer wg.Done()
 	switch problem.Tags[com.Resourcetype] {

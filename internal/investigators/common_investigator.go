@@ -58,8 +58,8 @@ kubectl describe no {{ .Name}}
 )
 
 func CommonInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	defer eval.Timer("investigators - CommonInvestigator")()
 	defer wg.Done()
+	defer eval.Timer("investigators - CommonInvestigator")()
 
 	switch problem.Tags[com.Resourcetype] {
 	case com.Pod:
@@ -212,7 +212,7 @@ func loadCronJobDetails(ctx context.Context, problem *problem.Problem) {
 	for _, job := range job.Status.Active {
 		if job.Name != "" && job.Namespace != "" {
 			detail := job.Name + "in " + job.Namespace + "is active."
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
+			problem.SolutionDetails.Append(detail)
 		}
 	}
 	appendSolution(problem, nil, GetSolutionsByTemplate(ctx, GetCronjobCmd, job, true))
