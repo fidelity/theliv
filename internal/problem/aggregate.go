@@ -21,15 +21,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var (
-	wg   sync.WaitGroup
-	lock = sync.RWMutex{}
-)
-
 // Aggregate problems into report cards. Problems related to the same resource will be grouped together.
 func Aggregate(ctx context.Context, problems []*Problem, client *kubeclient.KubeClient) (interface{}, error) {
+	var wg sync.WaitGroup
+	var lock sync.Mutex
+
 	cards := make([]*ReportCard, 0)
-	for _, val := range buildReportCards(ctx, problems, client) {
+	for _, val := range buildReportCards(ctx, &wg, &lock, problems, client) {
 		val.RootCause = rootCause(val.Resources)
 		// set ID
 		val.ID = hashcode(val.TopResourceType + "/" + val.Name)
@@ -48,19 +46,19 @@ func Aggregate(ctx context.Context, problems []*Problem, client *kubeclient.Kube
 	return cards, nil
 }
 
-func buildReportCards(ctx context.Context, problems []*Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
+func buildReportCards(ctx context.Context, wg *sync.WaitGroup, lock *sync.Mutex, problems []*Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
 
 		wg.Add(1)
-		go buildCard(ctx, client, cards, p)
+		go buildCard(ctx, wg, lock, client, cards, p)
 	}
 
 	wg.Wait()
 	return cards
 }
 
-func buildCard(ctx context.Context, client *kubeclient.KubeClient, cards map[string]*ReportCard, p *Problem) {
+func buildCard(ctx context.Context, wg *sync.WaitGroup, lock *sync.Mutex, client *kubeclient.KubeClient, cards map[string]*ReportCard, p *Problem) {
 	defer wg.Done()
 	switch v := p.AffectedResources.Resource.(type) {
 	case metav1.Object:
@@ -68,15 +66,15 @@ func buildCard(ctx context.Context, client *kubeclient.KubeClient, cards map[str
 		top, helm, argo := getTopResource(ctx, v, client)
 		cr := getReportCardResource(ctx, p, p.AffectedResources)
 		if argo != nil {
-			appendCards(cards, cr, p, argo.Instance, com.Argo)
+			appendCards(lock, cards, cr, p, argo.Instance, com.Argo)
 		} else if helm != nil {
-			appendCards(cards, cr, p, helm.toString(), com.Helm)
+			appendCards(lock, cards, cr, p, helm.toString(), com.Helm)
 		} else {
 			topType := ""
 			if obj, ok := top.(runtime.Object); ok {
 				topType = obj.GetObjectKind().GroupVersionKind().Kind
 			}
-			appendCards(cards, cr, p, top.GetName(), topType)
+			appendCards(lock, cards, cr, p, top.GetName(), topType)
 		}
 	default:
 		// TODO log
@@ -248,7 +246,7 @@ func cleanFieldNotRequired(data map[string]interface{}) map[string]interface{} {
 }
 
 // If card exists, append to card.Resources, or append new card into whole cards.
-func appendCards(cards map[string]*ReportCard, cr *ReportCardResource, p *Problem, name string, topType string) {
+func appendCards(lock *sync.Mutex, cards map[string]*ReportCard, cr *ReportCardResource, p *Problem, name string, topType string) {
 	lock.Lock()
 	defer lock.Unlock()
 	if rd, ok := cards[name]; ok {

@@ -33,8 +33,6 @@ import (
 
 type investigatorFunc func(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput)
 
-var lock sync.RWMutex
-
 // modify this map when adding new investigator func for alert
 // for each alert, you can define one or more func to call to build details or solutions
 var alertInvestigatorMap = map[string][]investigatorFunc{
