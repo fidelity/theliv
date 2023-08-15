@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
-	"github.com/fidelity/theliv/pkg/eval"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -90,7 +89,6 @@ var ImagePullBackOffReasons = []string{"ImagePullBackOff", "ErrImagePull", "ErrI
 
 func ContainerImagePullBackoffInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
-	defer eval.Timer("investigators - ContainerImagePullBackoffInvestigator")()
 	defer wg.Done()
 
 	pod := *problem.AffectedResources.Resource.(*v1.Pod)

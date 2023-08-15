@@ -15,7 +15,6 @@ import (
 	"sync"
 
 	com "github.com/fidelity/theliv/pkg/common"
-	"github.com/fidelity/theliv/pkg/eval"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	log "github.com/fidelity/theliv/pkg/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,7 +28,6 @@ var (
 
 // Aggregate problems into report cards. Problems related to the same resource will be grouped together.
 func Aggregate(ctx context.Context, problems []*Problem, client *kubeclient.KubeClient) (interface{}, error) {
-	defer eval.Timer("problem/aggregate - Aggregate")()
 	cards := make([]*ReportCard, 0)
 	for _, val := range buildReportCards(ctx, problems, client) {
 		val.RootCause = rootCause(val.Resources)
@@ -51,7 +49,6 @@ func Aggregate(ctx context.Context, problems []*Problem, client *kubeclient.Kube
 }
 
 func buildReportCards(ctx context.Context, problems []*Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
-	defer eval.Timer("problem/aggregate - buildReportCards")()
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
 
@@ -64,7 +61,6 @@ func buildReportCards(ctx context.Context, problems []*Problem, client *kubeclie
 }
 
 func buildCard(ctx context.Context, client *kubeclient.KubeClient, cards map[string]*ReportCard, p *Problem) {
-	defer eval.Timer("problem/aggregate - buildCard")()
 	defer wg.Done()
 	switch v := p.AffectedResources.Resource.(type) {
 	case metav1.Object:
@@ -117,7 +113,6 @@ func getHelmChart(meta metav1.Object) *helmChart {
 // if any level of resource has Argo Instance info, then returns Argo Instance.
 // if any level of resource has helm chart info, then returns helm
 func getTopResource(ctx context.Context, mo metav1.Object, client *kubeclient.KubeClient) (metav1.Object, *helmChart, *ArgoInstance) {
-	defer eval.Timer("problem/aggregate - getTopResource")()
 	argo := getArgoInstance(mo)
 	if argo.Instance != "" {
 		return nil, nil, argo

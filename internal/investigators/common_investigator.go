@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	com "github.com/fidelity/theliv/pkg/common"
-	"github.com/fidelity/theliv/pkg/eval"
 	log "github.com/fidelity/theliv/pkg/log"
 
 	"github.com/fidelity/theliv/internal/problem"
@@ -59,7 +58,6 @@ kubectl describe no {{ .Name}}
 
 func CommonInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput) {
 	defer wg.Done()
-	defer eval.Timer("investigators - CommonInvestigator")()
 
 	switch problem.Tags[com.Resourcetype] {
 	case com.Pod:

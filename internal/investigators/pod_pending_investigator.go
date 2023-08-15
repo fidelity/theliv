@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
-	"github.com/fidelity/theliv/pkg/eval"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -116,7 +115,6 @@ var PendingPodsSolutions = map[string]func(ctx context.Context, pod *v1.Pod, sta
 }
 
 func PodNotRunningInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	defer eval.Timer("investigators - PodNotRunningInvestigator")()
 	defer wg.Done()
 
 	pod := *problem.AffectedResources.Resource.(*v1.Pod)
@@ -129,7 +127,6 @@ func PodNotRunningInvestigator(ctx context.Context, wg *sync.WaitGroup, problem 
 }
 
 func PodNotRunningSolutionsInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput) {
-	defer eval.Timer("investigators - PodNotRunningSolutionsInvestigator")()
 	defer wg.Done()
 	// Generate solutions
 	// detail := "do something to provide solutions"

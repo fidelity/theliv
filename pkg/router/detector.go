@@ -17,8 +17,6 @@ import (
 	"github.com/fidelity/theliv/pkg/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-
-	"github.com/fidelity/theliv/pkg/eval"
 )
 
 func Detector(r chi.Router) {
@@ -27,7 +25,6 @@ func Detector(r chi.Router) {
 }
 
 func detectPrometheusAlerts(w http.ResponseWriter, r *http.Request) {
-	defer eval.Timer("router - detectPrometheusAlerts")()
 
 	ctx, err := createDetectorInputWithContext(r)
 	if err != nil {
@@ -57,7 +54,6 @@ func getK8sNsEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 func createDetectorInputWithContext(r *http.Request) (context.Context, error) {
-	defer eval.Timer("router - createDetectorInputWithContext")()
 	ctx := r.Context()
 	// namespace
 	cluster := chi.URLParam(r, "cluster")
