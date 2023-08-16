@@ -117,7 +117,7 @@ func GetSolutionsByTemplate(ctx context.Context, template string, object interfa
 // Execute Go Template parse
 func ExecGoTemplate(ctx context.Context, template string, object interface{}) (s string, err error) {
 	lock.Lock()
-	lock.Unlock()
+	defer lock.Unlock()
 
 	t, err := solutionTemp.Parse(template)
 	if err != nil {
