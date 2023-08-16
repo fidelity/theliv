@@ -34,8 +34,8 @@ type reader interface {
 }
 
 const (
-	QPS   = 50.0
-	BURST = 100
+	QPS   = 200.0
+	BURST = 400
 )
 
 var _ reader = (*KubeClient)(nil)
