@@ -3,8 +3,15 @@ package common
 import "sync"
 
 type LockedSlice struct {
-	mx    sync.Mutex
+	mx    *sync.Mutex
 	store []string
+}
+
+func InitLockedSlice() *LockedSlice {
+	return &LockedSlice{
+		mx:    &sync.Mutex{},
+		store: make([]string, 0),
+	}
 }
 
 func (l *LockedSlice) GetStore() []string {

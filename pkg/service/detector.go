@@ -13,6 +13,7 @@ import (
 	"github.com/fidelity/theliv/internal/investigators"
 	in "github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/internal/problem"
+	"github.com/fidelity/theliv/pkg/common"
 	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
 	theErr "github.com/fidelity/theliv/pkg/err"
@@ -112,7 +113,16 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 func buildProblemsFromAlerts(alerts []v1.Alert) []*problem.Problem {
 	problems := make([]*problem.Problem, 0)
 	for _, alert := range alerts {
-		p := problem.Problem{}
+		p := problem.Problem{
+			Name:              "",
+			Description:       "",
+			Tags:              make(map[string]string),
+			Level:             0,
+			CauseLevel:        0,
+			SolutionDetails:   common.InitLockedSlice(),
+			UsefulCommands:    common.InitLockedSlice(),
+			AffectedResources: problem.ResourceDetails{},
+		}
 		p.Name = string(alert.Labels[model.LabelName("alertname")])
 		p.Description = string(alert.Annotations[model.LabelName("description")])
 		p.Tags = make(map[string]string)

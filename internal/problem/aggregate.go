@@ -23,11 +23,11 @@ import (
 
 // Aggregate problems into report cards. Problems related to the same resource will be grouped together.
 func Aggregate(ctx context.Context, problems []*Problem, client *kubeclient.KubeClient) (interface{}, error) {
-	var wg sync.WaitGroup
-	var lock sync.Mutex
+	var wg = &sync.WaitGroup{}
+	var lock = &sync.Mutex{}
 
 	cards := make([]*ReportCard, 0)
-	for _, val := range buildReportCards(ctx, &wg, &lock, problems, client) {
+	for _, val := range buildReportCards(ctx, wg, lock, problems, client) {
 		val.RootCause = rootCause(val.Resources)
 		// set ID
 		val.ID = hashcode(val.TopResourceType + "/" + val.Name)

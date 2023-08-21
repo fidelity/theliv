@@ -23,7 +23,7 @@ import (
 	"github.com/fidelity/theliv/internal/problem"
 )
 
-var lock sync.Mutex
+var lock = &sync.Mutex{}
 
 // Default Timespan, used in Event Filtering.
 var DefaultTimespan = problem.TimeSpan{
