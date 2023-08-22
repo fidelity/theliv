@@ -76,6 +76,8 @@ func NewKubeClient(cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClie
 		}
 	}
 
+	log.S().Infof("Client-go configured with QPS = %f, Burst = %d", cfg.QPS, cfg.Burst)
+
 	kc := &KubeClient{}
 	dynamicClient, err := dynamic.NewForConfig(cfg)
 	if err != nil {
