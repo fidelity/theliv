@@ -55,9 +55,6 @@ type KubeClient struct {
 const RetrieveErrorMessage = "unable retrieve the resource using dynamic client"
 
 func NewKubeClient(cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClient, error) {
-	cfg.QPS = QPS_DEFAULT
-	cfg.Burst = BURST_DEFAULT
-
 	// get qps from env varaible
 	if val, ok := os.LookupEnv(QPS_KEY); ok {
 		if valFloat, err := strconv.ParseFloat(val, 32); err != nil {
@@ -65,17 +62,20 @@ func NewKubeClient(cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClie
 		} else {
 			cfg.QPS = float32(valFloat)
 		}
+	} else {
+		cfg.QPS = QPS_DEFAULT
 	}
 
 	// get burst from env varaible
 	if val, ok := os.LookupEnv(BURST_KEY); ok {
-		if valFloat, err := strconv.ParseFloat(val, 32); err != nil {
-			log.S().Warnf("Error parsing environment variable '%s' to float: %s", BURST_KEY, err.Error())
+		if valInt, err := strconv.Atoi(val); err != nil {
+			log.S().Warnf("Error parsing environment variable '%s' to int: %s", BURST_KEY, err.Error())
 		} else {
-			cfg.QPS = float32(valFloat)
+			cfg.Burst = valInt
 		}
+	} else {
+		cfg.Burst = BURST_DEFAULT
 	}
-
 	log.S().Infof("Client-go configured with QPS = %f, Burst = %d", cfg.QPS, cfg.Burst)
 
 	kc := &KubeClient{}
