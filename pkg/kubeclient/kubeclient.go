@@ -9,8 +9,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
+	log "github.com/fidelity/theliv/pkg/log"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -34,8 +37,10 @@ type reader interface {
 }
 
 const (
-	QPS   = 200.0
-	BURST = 400
+	QPS_KEY       = "CLIENTGO_QPS"
+	BURST_KEY     = "CLIENTGO_BURST"
+	QPS_DEFAULT   = 50.0
+	BURST_DEFAULT = 100
 )
 
 var _ reader = (*KubeClient)(nil)
@@ -50,8 +55,26 @@ type KubeClient struct {
 const RetrieveErrorMessage = "unable retrieve the resource using dynamic client"
 
 func NewKubeClient(cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClient, error) {
-	cfg.Burst = BURST
-	cfg.QPS = QPS
+	cfg.QPS = QPS_DEFAULT
+	cfg.Burst = BURST_DEFAULT
+
+	// get qps from env varaible
+	if val, ok := os.LookupEnv(QPS_KEY); ok {
+		if valFloat, err := strconv.ParseFloat(val, 32); err != nil {
+			log.S().Warnf("Error parsing environment variable '%s' to float: %s", QPS_KEY, err.Error())
+		} else {
+			cfg.QPS = float32(valFloat)
+		}
+	}
+
+	// get burst from env varaible
+	if val, ok := os.LookupEnv(BURST_KEY); ok {
+		if valFloat, err := strconv.ParseFloat(val, 32); err != nil {
+			log.S().Warnf("Error parsing environment variable '%s' to float: %s", BURST_KEY, err.Error())
+		} else {
+			cfg.QPS = float32(valFloat)
+		}
+	}
 
 	kc := &KubeClient{}
 	dynamicClient, err := dynamic.NewForConfig(cfg)
