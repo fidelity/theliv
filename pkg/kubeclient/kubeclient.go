@@ -9,10 +9,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"strconv"
 	"strings"
 
+	"github.com/fidelity/theliv/pkg/config"
 	log "github.com/fidelity/theliv/pkg/log"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,24 +54,15 @@ type KubeClient struct {
 const RetrieveErrorMessage = "unable retrieve the resource using dynamic client"
 
 func NewKubeClient(cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClient, error) {
-	// get qps from env varaible
-	if val, ok := os.LookupEnv(QPS_KEY); ok {
-		if valFloat, err := strconv.ParseFloat(val, 32); err != nil {
-			log.S().Warnf("Error parsing environment variable '%s' to float: %s", QPS_KEY, err.Error())
-		} else {
-			cfg.QPS = float32(valFloat)
-		}
+	thelivConfig := config.GetThelivConfig()
+	if thelivConfig.QPS != 0.0 {
+		cfg.QPS = thelivConfig.QPS
 	} else {
 		cfg.QPS = QPS_DEFAULT
 	}
 
-	// get burst from env varaible
-	if val, ok := os.LookupEnv(BURST_KEY); ok {
-		if valInt, err := strconv.Atoi(val); err != nil {
-			log.S().Warnf("Error parsing environment variable '%s' to int: %s", BURST_KEY, err.Error())
-		} else {
-			cfg.Burst = valInt
-		}
+	if thelivConfig.Burst != 0 {
+		cfg.Burst = thelivConfig.Burst
 	} else {
 		cfg.Burst = BURST_DEFAULT
 	}
