@@ -62,7 +62,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	contact := fmt.Sprintf(com.Contact, config.GetThelivConfig().TeamName)
 	input := GetDetectorInput(ctx)
 
-	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
+	client, err := kubeclient.NewKubeClient(ctx, input.Kubeconfig)
 	if err != nil {
 		return nil, theErr.NewCommonError(ctx, 4, com.LoadKubeConfigFailed+contact)
 	}

@@ -53,7 +53,7 @@ type KubeClient struct {
 
 const RetrieveErrorMessage = "unable retrieve the resource using dynamic client"
 
-func NewKubeClient(cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClient, error) {
+func NewKubeClient(ctx context.Context, cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClient, error) {
 	thelivConfig := config.GetThelivConfig()
 	if thelivConfig.QPS != 0.0 {
 		cfg.QPS = thelivConfig.QPS
@@ -66,7 +66,7 @@ func NewKubeClient(cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClie
 	} else {
 		cfg.Burst = BURST_DEFAULT
 	}
-	log.S().Infof("Client-go configured with QPS = %f, Burst = %d", cfg.QPS, cfg.Burst)
+	log.SWithContext(ctx).Infof("Client-go configured with QPS = %f, Burst = %d", cfg.QPS, cfg.Burst)
 
 	kc := &KubeClient{}
 	dynamicClient, err := dynamic.NewForConfig(cfg)
