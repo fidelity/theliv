@@ -3,7 +3,7 @@ module github.com/fidelity/theliv
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.20.3
+	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.34
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.14.14
 	github.com/go-chi/chi/v5 v5.0.10
