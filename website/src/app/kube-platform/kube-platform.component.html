@@ -10,7 +10,7 @@
         <div class="search-items">
             <div *ngIf="selectedClusters" class="search item">
                 <span>{{selectedClusters}}</span>
-                <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedClusters=''; selectedNs=''; namespaces=[]; resourceGroups=[]; resourceTypes=[]; proDomains=[]"></fa-icon>
+                <fa-icon class="close-icon" [icon]="faTimes" (click)="selectedClusters=''; selectedNs=''; namespaces=[]; resourceGroups=[]; resourceTypes=[]; proDomains=[]; resourceNames=[]"></fa-icon>
             </div>
             <div *ngIf="selectedNs" class="search item">
                 <span>{{selectedNs}}</span>
@@ -64,6 +64,17 @@
                     [(ngModel)]="type.isChecked" (change)="changeSelection($event, 'type')">
                     <label for="{{type.name.toLowerCase()}}">{{type.name}}</label>
                     <span class="resource-number">{{type.count}}</span>
+                </div>
+            </div>
+        </div>
+        <div class="resource-filter" *ngIf="resourceNames">
+            <div class="resource-filter-title">Resource Name</div>
+            <div class="resource-wrapper">
+                <div class="type-container" *ngFor="let issue of resourceNames">
+                    <input type="checkbox" id="{{issue.name.toLowerCase()}}" class="resource-style" [value]="issue.name"
+                    [(ngModel)]="issue.isChecked" (change)="changeSelection($event, 'name')">
+                    <label for="{{issue.name.toLowerCase()}}">{{issue.name}}</label>
+                    <span class="resource-number">{{issue.count}}</span>
                 </div>
             </div>
         </div>
