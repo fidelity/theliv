@@ -23,7 +23,7 @@ func GetEvents(ctx context.Context) (interface{}, error) {
 
 	contact := fmt.Sprintf(com.Contact, config.GetThelivConfig().TeamName)
 
-	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
+	client, err := kubeclient.NewKubeClient(ctx, input.Kubeconfig)
 	if err != nil {
 		return nil, errors.NewCommonError(ctx, 4, com.LoadKubeConfigFailed+contact)
 	}

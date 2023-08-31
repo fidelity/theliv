@@ -7,13 +7,15 @@ package investigators
 
 import (
 	"context"
+	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
 	v1 "k8s.io/api/core/v1"
 )
 
-func InitContainerImagePullBackoffInvestigator(ctx context.Context, problem *problem.Problem,
+func InitContainerImagePullBackoffInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer wg.Done()
 	// Load kubernetes resource details
 	pod := *problem.AffectedResources.Resource.(*v1.Pod)
 

@@ -51,8 +51,10 @@ func GetThelivConfig() *ThelivConfig {
 // ThelivConfig is the configuration for Theliv system,
 // Such as port for web service
 type ThelivConfig struct {
-	Port     int `json:"port"`
-	LogLevel int `json:"loglevel"`
+	Port     int     `json:"port"`
+	LogLevel int     `json:"loglevel"`
+	QPS      float32 `json:"qps,omitempty"`
+	Burst    int     `json:"burst,omitempty"`
 	// Only for file configs
 	ClusterDir          string              `json:"clusterDir,omitempty"`
 	Datadog             *DatadogConfig      `json:"datadog,omitempty"`

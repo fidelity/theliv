@@ -13,6 +13,7 @@ import (
 	"github.com/fidelity/theliv/internal/investigators"
 	in "github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/internal/problem"
+	"github.com/fidelity/theliv/pkg/common"
 	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
 	theErr "github.com/fidelity/theliv/pkg/err"
@@ -31,9 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-type investigatorFunc func(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput)
-
-var wg sync.WaitGroup
+type investigatorFunc func(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput)
 
 // modify this map when adding new investigator func for alert
 // for each alert, you can define one or more func to call to build details or solutions
@@ -59,10 +58,11 @@ var alertInvestigatorMap = map[string][]investigatorFunc{
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
+	var wg sync.WaitGroup
 	contact := fmt.Sprintf(com.Contact, config.GetThelivConfig().TeamName)
 	input := GetDetectorInput(ctx)
 
-	client, err := kubeclient.NewKubeClient(input.Kubeconfig)
+	client, err := kubeclient.NewKubeClient(ctx, input.Kubeconfig)
 	if err != nil {
 		return nil, theErr.NewCommonError(ctx, 4, com.LoadKubeConfigFailed+contact)
 	}
@@ -82,24 +82,28 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	problems := buildProblemsFromAlerts(alerts.Alerts)
 	problems = filterProblems(ctx, problems, input)
 	log.SWithContext(ctx).Infof("Generated %d problems after filtering", len(problems))
-	if err = buildProblemAffectedResource(ctx, problems, input); err != nil {
+	if err = buildProblemAffectedResource(ctx, &wg, problems, input); err != nil {
 		return nil, theErr.NewCommonError(ctx, 4, com.LoadResourceFailed+contact)
 	}
 
-	problemresults := make([]problem.Problem, 0)
+	problemresults := make([]*problem.Problem, 0)
 	for _, p := range problems {
 		if p.AffectedResources.Resource != nil {
+			problemresults = append(problemresults, p)
 			// check investigator func map or use common investigator for each problem
 			if funcs, ok := alertInvestigatorMap[p.Name]; ok {
 				for _, fc := range funcs {
-					fc(ctx, p, input)
+					wg.Add(1)
+					go fc(ctx, &wg, p, input)
 				}
 			} else {
-				investigators.CommonInvestigator(ctx, p, input)
+				wg.Add(1)
+				go investigators.CommonInvestigator(ctx, &wg, p, input)
 			}
-			problemresults = append(problemresults, *p)
 		}
 	}
+
+	wg.Wait()
 	log.SWithContext(ctx).Infof("Generated %d problem results", len(problemresults))
 
 	// Convert problems to report cards
@@ -109,7 +113,16 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 func buildProblemsFromAlerts(alerts []v1.Alert) []*problem.Problem {
 	problems := make([]*problem.Problem, 0)
 	for _, alert := range alerts {
-		p := problem.Problem{}
+		p := problem.Problem{
+			Name:              "",
+			Description:       "",
+			Tags:              make(map[string]string),
+			Level:             0,
+			CauseLevel:        0,
+			SolutionDetails:   common.InitLockedSlice(),
+			UsefulCommands:    common.InitLockedSlice(),
+			AffectedResources: problem.ResourceDetails{},
+		}
 		p.Name = string(alert.Labels[model.LabelName("alertname")])
 		p.Description = string(alert.Annotations[model.LabelName("description")])
 		p.Tags = make(map[string]string)
@@ -141,17 +154,17 @@ func filterProblems(ctx context.Context, problems []*problem.Problem, input *pro
 	return results
 }
 
-func buildProblemAffectedResource(ctx context.Context, problems []*problem.Problem, input *problem.DetectorCreationInput) error {
+func buildProblemAffectedResource(ctx context.Context, wg *sync.WaitGroup, problems []*problem.Problem, input *problem.DetectorCreationInput) error {
 	client := input.KubeClient
 	wg.Add(len(problems))
 	for _, problem := range problems {
-		go loadResourceByType(ctx, client, problem)
+		go loadResourceByType(ctx, wg, client, problem)
 	}
 	wg.Wait()
 	return nil
 }
 
-func loadResourceByType(ctx context.Context, client *kubeclient.KubeClient, problem *problem.Problem) error {
+func loadResourceByType(ctx context.Context, wg *sync.WaitGroup, client *kubeclient.KubeClient, problem *problem.Problem) error {
 	defer wg.Done()
 	switch problem.Tags[com.Resourcetype] {
 	case com.Pod:

@@ -12,6 +12,7 @@ import (
 	"hash/crc32"
 	"sort"
 	"strings"
+	"sync"
 
 	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/kubeclient"
@@ -21,9 +22,12 @@ import (
 )
 
 // Aggregate problems into report cards. Problems related to the same resource will be grouped together.
-func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) (interface{}, error) {
+func Aggregate(ctx context.Context, problems []*Problem, client *kubeclient.KubeClient) (interface{}, error) {
+	var wg = &sync.WaitGroup{}
+	var lock = &sync.Mutex{}
+
 	cards := make([]*ReportCard, 0)
-	for _, val := range buildReportCards(ctx, problems, client) {
+	for _, val := range buildReportCards(ctx, wg, lock, problems, client) {
 		val.RootCause = rootCause(val.Resources)
 		// set ID
 		val.ID = hashcode(val.TopResourceType + "/" + val.Name)
@@ -42,30 +46,39 @@ func Aggregate(ctx context.Context, problems []Problem, client *kubeclient.KubeC
 	return cards, nil
 }
 
-func buildReportCards(ctx context.Context, problems []Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
+func buildReportCards(ctx context.Context, wg *sync.WaitGroup, lock *sync.Mutex, problems []*Problem, client *kubeclient.KubeClient) map[string]*ReportCard {
 	cards := make(map[string]*ReportCard)
 	for _, p := range problems {
-		switch v := p.AffectedResources.Resource.(type) {
-		case metav1.Object:
-			// determine if root resource is an argo instance, helm chart, or k8s object
-			top, helm, argo := getTopResource(ctx, v, client)
-			cr := getReportCardResource(ctx, p, p.AffectedResources)
-			if argo != nil {
-				appendCards(cards, cr, p, argo.Instance, com.Argo)
-			} else if helm != nil {
-				appendCards(cards, cr, p, helm.toString(), com.Helm)
-			} else {
-				topType := ""
-				if obj, ok := top.(runtime.Object); ok {
-					topType = obj.GetObjectKind().GroupVersionKind().Kind
-				}
-				appendCards(cards, cr, p, top.GetName(), topType)
-			}
-		default:
-			// TODO log
-		}
+
+		wg.Add(1)
+		go buildCard(ctx, wg, lock, client, cards, p)
 	}
+
+	wg.Wait()
 	return cards
+}
+
+func buildCard(ctx context.Context, wg *sync.WaitGroup, lock *sync.Mutex, client *kubeclient.KubeClient, cards map[string]*ReportCard, p *Problem) {
+	defer wg.Done()
+	switch v := p.AffectedResources.Resource.(type) {
+	case metav1.Object:
+		// determine if root resource is an argo instance, helm chart, or k8s object
+		top, helm, argo := getTopResource(ctx, v, client)
+		cr := getReportCardResource(ctx, p, p.AffectedResources)
+		if argo != nil {
+			appendCards(lock, cards, cr, p, argo.Instance, com.Argo)
+		} else if helm != nil {
+			appendCards(lock, cards, cr, p, helm.toString(), com.Helm)
+		} else {
+			topType := ""
+			if obj, ok := top.(runtime.Object); ok {
+				topType = obj.GetObjectKind().GroupVersionKind().Kind
+			}
+			appendCards(lock, cards, cr, p, top.GetName(), topType)
+		}
+	default:
+		// TODO log
+	}
 }
 
 func rootCause(res []*ReportCardResource) *ReportCardIssue {
@@ -135,10 +148,10 @@ func getControlOwner(mo metav1.Object) *metav1.OwnerReference {
 	return nil
 }
 
-func getReportCardResource(ctx context.Context, p Problem, resource ResourceDetails) *ReportCardResource {
+func getReportCardResource(ctx context.Context, p *Problem, resource ResourceDetails) *ReportCardResource {
 	cr := createReportCardResource(ctx, p, resource.Resource.(metav1.Object), resource.ResourceKind)
-	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails...)
-	cr.Issue.Commands = append(cr.Issue.Commands, p.UsefulCommands...)
+	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails.GetStore()...)
+	cr.Issue.Commands = append(cr.Issue.Commands, p.UsefulCommands.GetStore()...)
 
 	// cr.Issue.Documents = urlToStr(p.Docs)
 	// if resource.Deeplink != nil {
@@ -151,7 +164,7 @@ func getReportCardResource(ctx context.Context, p Problem, resource ResourceDeta
 	return cr
 }
 
-func createReportCardResource(ctx context.Context, p Problem, v metav1.Object, kind string) *ReportCardResource {
+func createReportCardResource(ctx context.Context, p *Problem, v metav1.Object, kind string) *ReportCardResource {
 	issue := ReportCardIssue{
 		Name:        p.Name,
 		Description: p.Description,
@@ -233,7 +246,9 @@ func cleanFieldNotRequired(data map[string]interface{}) map[string]interface{} {
 }
 
 // If card exists, append to card.Resources, or append new card into whole cards.
-func appendCards(cards map[string]*ReportCard, cr *ReportCardResource, p Problem, name string, topType string) {
+func appendCards(lock *sync.Mutex, cards map[string]*ReportCard, cr *ReportCardResource, p *Problem, name string, topType string) {
+	lock.Lock()
+	defer lock.Unlock()
 	if rd, ok := cards[name]; ok {
 		rd.Resources = append(rd.Resources, cr)
 	} else {

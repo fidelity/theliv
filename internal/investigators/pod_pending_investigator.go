@@ -7,6 +7,7 @@ package investigators
 
 import (
 	"context"
+	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
 	v1 "k8s.io/api/core/v1"
@@ -113,7 +114,8 @@ var PendingPodsSolutions = map[string]func(ctx context.Context, pod *v1.Pod, sta
 	PendingNoHostPort:         getPendingPodCommonSolution(PendingNoHostPortSolution, GetPoCmd+GetNoLabelCmd+GetNoTaintCmd),
 }
 
-func PodNotRunningInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
+func PodNotRunningInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput) {
+	defer wg.Done()
 
 	pod := *problem.AffectedResources.Resource.(*v1.Pod)
 	container := &v1.ContainerStatus{}
@@ -122,10 +124,10 @@ func PodNotRunningInvestigator(ctx context.Context, problem *problem.Problem, in
 		solution, commands := getPendingPodCommonSolution(PendingUnknownSolution, KubeDescribePoCmd)(ctx, &pod, container)
 		appendSolution(problem, solution, commands)
 	}
-
 }
 
-func PodNotRunningSolutionsInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
+func PodNotRunningSolutionsInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput) {
+	defer wg.Done()
 	// Generate solutions
 	// detail := "do something to provide solutions"
 	// problem.SolutionDetails = append(problem.SolutionDetails, detail)

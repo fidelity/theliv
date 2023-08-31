@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fidelity/theliv/pkg/config"
+	log "github.com/fidelity/theliv/pkg/log"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,6 +35,13 @@ type reader interface {
 	Get(context.Context, runtime.Object, NamespacedName, metav1.GetOptions) error
 }
 
+const (
+	QPS_KEY       = "CLIENTGO_QPS"
+	BURST_KEY     = "CLIENTGO_BURST"
+	QPS_DEFAULT   = 50.0
+	BURST_DEFAULT = 100
+)
+
 var _ reader = (*KubeClient)(nil)
 
 type KubeClient struct {
@@ -44,7 +53,20 @@ type KubeClient struct {
 
 const RetrieveErrorMessage = "unable retrieve the resource using dynamic client"
 
-func NewKubeClient(cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClient, error) {
+func NewKubeClient(ctx context.Context, cfg *restclient.Config, opts ...func(*KubeClient)) (*KubeClient, error) {
+	thelivConfig := config.GetThelivConfig()
+	if thelivConfig.QPS != 0.0 {
+		cfg.QPS = thelivConfig.QPS
+	} else {
+		cfg.QPS = QPS_DEFAULT
+	}
+
+	if thelivConfig.Burst != 0 {
+		cfg.Burst = thelivConfig.Burst
+	} else {
+		cfg.Burst = BURST_DEFAULT
+	}
+	log.SWithContext(ctx).Infof("Client-go configured with QPS = %f, Burst = %d", cfg.QPS, cfg.Burst)
 
 	kc := &KubeClient{}
 	dynamicClient, err := dynamic.NewForConfig(cfg)
