@@ -10,6 +10,7 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -21,6 +22,8 @@ import (
 
 	"github.com/fidelity/theliv/internal/problem"
 )
+
+var lock = &sync.Mutex{}
 
 // Default Timespan, used in Event Filtering.
 var DefaultTimespan = problem.TimeSpan{
@@ -66,15 +69,13 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 			for msg := range solutions {
 				matched, err := regexp.MatchString(strings.ToLower(msg), strings.ToLower(event.Message))
 				if err == nil && matched {
-					log.SWithContext(ctx).Infof("Found event with error '%s'", msg)
+					l.Infof("Found event with error '%s'", msg)
 					addSolutionFromMap(ctx, problem, pod, status, msg, solutions)
 					return msg
 				}
 			}
 		}
 	}
-
-	log.SWithContext(ctx).Infof("Can not find event details")
 
 	return ""
 }
@@ -113,6 +114,9 @@ func GetSolutionsByTemplate(ctx context.Context, template string, object interfa
 
 // Execute Go Template parse
 func ExecGoTemplate(ctx context.Context, template string, object interface{}) (s string, err error) {
+	lock.Lock()
+	defer lock.Unlock()
+
 	t, err := solutionTemp.Parse(template)
 	if err != nil {
 		log.SWithContext(ctx).Errorf("Parse template got error: %s", err)
@@ -136,17 +140,17 @@ func appendSolution(problem *problem.Problem, solutions interface{}, commands in
 	if solutions != nil {
 		switch v := solutions.(type) {
 		case string:
-			problem.SolutionDetails = append(problem.SolutionDetails, v)
+			problem.SolutionDetails.Append(v)
 		case []string:
-			problem.SolutionDetails = append(problem.SolutionDetails, v...)
+			problem.SolutionDetails.Append(v...)
 		}
 	}
 	if commands != nil {
 		switch c := commands.(type) {
 		case string:
-			problem.UsefulCommands = append(problem.UsefulCommands, c)
+			problem.UsefulCommands.Append(c)
 		case []string:
-			problem.UsefulCommands = append(problem.UsefulCommands, c...)
+			problem.UsefulCommands.Append(c...)
 		}
 	}
 }

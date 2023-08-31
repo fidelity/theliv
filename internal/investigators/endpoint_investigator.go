@@ -7,6 +7,7 @@ package investigators
 
 import (
 	"context"
+	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
 	com "github.com/fidelity/theliv/pkg/common"
@@ -30,8 +31,9 @@ const (
 `
 )
 
-func EndpointAddressNotAvailableInvestigator(ctx context.Context,
+func EndpointAddressNotAvailableInvestigator(ctx context.Context, wg *sync.WaitGroup,
 	problem *problem.Problem, input *problem.DetectorCreationInput) {
+	defer wg.Done()
 
 	var solutions []string
 
@@ -58,5 +60,4 @@ func EndpointAddressNotAvailableInvestigator(ctx context.Context,
 	}
 
 	appendSolution(problem, solutions, GetSolutionsByTemplate(ctx, GetEndpointsCmd, endpoint, true))
-
 }

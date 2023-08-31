@@ -8,6 +8,7 @@ package investigators
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/fidelity/theliv/internal/problem"
 	v1 "k8s.io/api/core/v1"
@@ -119,8 +120,9 @@ var CrashLoopBackOffSolutions = map[string]func(ctx context.Context, pod *v1.Pod
 	ExitCode129To255:      getCrushLoopBackOffCommonSolution(SolutionExitCode129To255, nil),
 }
 
-func ContainerCrashLoopBackoffInvestigator(ctx context.Context, problem *problem.Problem,
+func ContainerCrashLoopBackoffInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
 	input *problem.DetectorCreationInput) {
+	defer wg.Done()
 
 	pod := *problem.AffectedResources.Resource.(*v1.Pod)
 

@@ -7,6 +7,7 @@ package investigators
 
 import (
 	"context"
+	"sync"
 
 	com "github.com/fidelity/theliv/pkg/common"
 	log "github.com/fidelity/theliv/pkg/log"
@@ -55,7 +56,9 @@ kubectl describe no {{ .Name}}
 `
 )
 
-func CommonInvestigator(ctx context.Context, problem *problem.Problem, input *problem.DetectorCreationInput) {
+func CommonInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput) {
+	defer wg.Done()
+
 	switch problem.Tags[com.Resourcetype] {
 	case com.Pod:
 		loadPodDetails(ctx, problem)
@@ -207,7 +210,7 @@ func loadCronJobDetails(ctx context.Context, problem *problem.Problem) {
 	for _, job := range job.Status.Active {
 		if job.Name != "" && job.Namespace != "" {
 			detail := job.Name + "in " + job.Namespace + "is active."
-			problem.SolutionDetails = append(problem.SolutionDetails, detail)
+			problem.SolutionDetails.Append(detail)
 		}
 	}
 	appendSolution(problem, nil, GetSolutionsByTemplate(ctx, GetCronjobCmd, job, true))
