@@ -160,7 +160,12 @@ export class KubePlatformComponent implements OnInit {
       if (!list.find((item: any) => item.name === r.topResourceType)) {
         var n = r.topResourceType;
         var c = 1;
-        var resource = {name: n, count: c}
+        var check = false;
+        if (n == this.selectedType) {
+          check = true;
+          this.typeFilter.push(n)
+        }
+        var resource = {name: n, count: c, isChecked: check}
         list.push(resource)
       } else{
         var obj = list.find((item: any) => item.name === r.topResourceType)
@@ -204,7 +209,12 @@ export class KubePlatformComponent implements OnInit {
       if (!list.find((item: any) => item.name === r.name)) {
         var n = r.name;
         var c = 1;
-        var resource = {name: n, count: c}
+        var check = false;
+        if (n == this.selectedName) {
+          this.nameFilter.push(n);
+          check = true;
+        }
+        var resource = {name: n, count: c, isChecked: check}
         list.push(resource)
       } else{
         var obj = list.find((item: any) => item.name === r.name)
