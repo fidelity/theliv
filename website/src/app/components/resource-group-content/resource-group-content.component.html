@@ -20,7 +20,7 @@
     <div class="group-container">
         <div class="resource-group-header"> 
             <div class="resource-group-header-title" >
-                <div class="resource-group-header-title-layout" >
+                <div class="resource-group-header-title-layout" *ngIf="selectedResource">
                     <div class="resource-group-header-title-layout-title" >
                         {{selectedResource.topResourceType.toUpperCase()}}
                         <div class="resource-group-header-title-icon" [routerLink]="['../../overview']" [queryParams]="{cluster: cluster, namespace: ns}">
@@ -30,6 +30,14 @@
                     </div>
                     <div class="resource-group-header-title-layout-subtitle" >
                         {{selectedResource.name}}
+                    </div>
+                </div>
+                <div class="resource-group-header-title-layout" *ngIf="!selectedResource">
+                    <div class="resource-group-header-title-layout-title">
+                        <div class="resource-group-header-title-icon" [routerLink]="['../../overview']" [queryParams]="{cluster: cluster, namespace: ns}">
+                            <fa-icon [icon]="faArrowLeft"></fa-icon>
+                            <span>Back</span>
+                        </div>
                     </div>
                 </div>
             </div>

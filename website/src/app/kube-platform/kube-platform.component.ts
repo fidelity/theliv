@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache
  */
 import { Component, OnInit } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { faSearch, faTimes, faSpinner, faBell, faCheck, faPencilAlt, faAngleDown, faAngleUp, faVideo} from '@fortawesome/free-solid-svg-icons';
 import { KubernetesService } from '../services/kubernetes.service';
-import { debounceTime, delay, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
+import { map, startWith } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { UserFeedbackComponent } from '../components/user-feedback/user-feedback.component';
@@ -36,10 +36,14 @@ export class KubePlatformComponent implements OnInit {
   loading = false;
   public resourceTypes: any;
   public proDomains: any;
+  public resourceNames: any;
   public senLevels: any;
   public resourceStatus: any;
   resourceGroups: any;
   allResources: any;
+  typeFilter: any[] = [];
+  nameFilter: any[] = [];
+  domainFilter: any[] = [];
   isGroupContent = false;
   count = -1;
   sortBy = 'time';
@@ -48,6 +52,8 @@ export class KubePlatformComponent implements OnInit {
   type: any;
   selectedNs = '';
   selectedClusters = '';
+  selectedType = '';
+  selectedName = '';
   //namespaces: any;
   clusters: any;
 
@@ -101,6 +107,12 @@ export class KubePlatformComponent implements OnInit {
       if (params.get('namespace')) {
         this.selectedNs = params.get('namespace');
       }
+      if (params.get('type')) {
+        this.selectedType = params.get('type').charAt(0).toUpperCase() + params.get('type').slice(1);
+      }
+      if (params.get('name')) {
+        this.selectedName = params.get('name');
+      }
       this.kubeService.selectedNs$.next(this.selectedNs);
 
       this.getNamespaces()
@@ -130,9 +142,10 @@ export class KubePlatformComponent implements OnInit {
           this.isGroupContent = true;
           this.count = res.length;
           this.loading = false;
-
+          this.getProblemNameFilter()
           this.getResourceTypeFilter()
           this.getProblemDomainFilter()
+          this.filterByQuery()
         }
       },
       (err: any) => {
@@ -144,10 +157,15 @@ export class KubePlatformComponent implements OnInit {
   getResourceTypeFilter(): void {
     var list: any[] = [];
     this.allResources.forEach((r: any) => {
-      if (!list.find((item: any) => item.name.includes(r.topResourceType))) {
+      if (!list.find((item: any) => item.name === r.topResourceType)) {
         var n = r.topResourceType;
         var c = 1;
-        var resource = {name: n, count: c}
+        var check = false;
+        if (n == this.selectedType) {
+          check = true;
+          this.typeFilter.push(n)
+        }
+        var resource = {name: n, count: c, isChecked: check}
         list.push(resource)
       } else{
         var obj = list.find((item: any) => item.name === r.topResourceType)
@@ -166,7 +184,7 @@ export class KubePlatformComponent implements OnInit {
   getProblemDomainFilter(): void {
     var list: any[] = [];
     this.allResources.forEach((r: any) => {
-      if (!list.find((item: any) => item.name.includes(r.rootCause.name))) {
+      if (!list.find((item: any) => item.name === r.rootCause.name)) {
         var n = r.rootCause.name;
         var c = 1;
         var resource = {name: n, count: c}
@@ -185,46 +203,83 @@ export class KubePlatformComponent implements OnInit {
     this.proDomains = list;
   }
 
+  getProblemNameFilter(): void {
+    var list: any[] = [];
+    this.allResources.forEach((r: any) => {
+      if (!list.find((item: any) => item.name === r.name)) {
+        var n = r.name;
+        var c = 1;
+        var check = false;
+        if (n == this.selectedName) {
+          this.nameFilter.push(n);
+          check = true;
+        }
+        var resource = {name: n, count: c, isChecked: check}
+        list.push(resource)
+      } else{
+        var obj = list.find((item: any) => item.name === r.name)
+        obj.count = obj.count + 1;
+      }
+    });
+    var totalCount = 0;
+    list.forEach((item: any)=>{
+      totalCount = totalCount+ item.count;
+    })
+    list.push({name: 'All', count: totalCount })
+    this.resourceNames = list;
+  }
+
+  filterByQuery(): void {
+    if (this.selectedType) {
+      this.resourceTypes.forEach((r: any) => {
+        if (r.name == this.selectedType) {
+          this.resourceGroups = this.resourceGroups.filter((r: any) => r.topResourceType == this.selectedType)
+        }
+      })
+    }
+    if (this.selectedName) {
+      this.resourceNames.forEach((r: any) => {
+        if (r.name == this.selectedName) {
+          this.resourceGroups = this.resourceGroups.filter((r: any) => r.name == this.selectedName)
+        }
+      })
+    }
+    this.kubeService.resourceList$.next(this.resourceGroups);
+  }
 
   filter: any[] = [];
   changeSelection(e: any, cat: string): void {
     if (e.target.checked && e.target.value) {
       console.log('checked: ', e.target.value);
-      if (e.target.value!=="All Domains" && e.target.value!=="All Types" ) {
-        this.filter.push(e.target.value);
-        switch (cat) {
-          case 'type':
-            this.filterRescourceByType(this.filter);
-            break;
-          case 'domain':
-            this.filterRescourceByDomain(this.filter);
-            break;
-          default:
-            break;
-        }
-      } else {
-        this.resourceGroups = this.allResources;
-        this.count = this.resourceGroups.length;
+      switch (cat) {
+        case 'type':
+          this.typeFilter.push(e.target.value);
+          break;
+        case 'domain':
+          this.domainFilter.push(e.target.value);
+          break;
+        case 'name':
+          this.nameFilter.push(e.target.value);
+          break;
+        default:
+          break;
       }
     } else if (!e.target.checked && e.target.value) {
-      this.filter.splice(this.filter.findIndex((element) => element == e.target.value), 1);
-      console.log('unchecked: ', e.target.value);
-      if (this.filter.length>0){
-        switch (cat) {
-          case 'type':
-              this.filterRescourceByType(this.filter);
-            break;
-          case 'domain':
-            this.filterRescourceByDomain(this.filter);
-            break;
-          default:
-            break;
-          }
-      } else{
-        this.resourceGroups = this.allResources;
-        this.count = this.resourceGroups.length;
-      }
+      switch (cat) {
+        case 'type':
+          this.typeFilter.splice(this.typeFilter.findIndex((element) => element == e.target.value), 1);
+          break;
+        case 'domain':
+          this.domainFilter.splice(this.domainFilter.findIndex((element) => element == e.target.value), 1);
+          break;
+        case 'name':
+          this.nameFilter.splice(this.nameFilter.findIndex((element) => element == e.target.value), 1);
+          break;
+        default:
+          break;
+        }
     }
+    this.filterResource();
     this.kubeService.resourceList$.next(this.resourceGroups);
     // else if (this.type.indexOf(e.target.value) > -1) {
     //   const index = this.type.indexOf(e.target.value, 0);
@@ -232,16 +287,18 @@ export class KubePlatformComponent implements OnInit {
     // }
   }
 
-
-  filterRescourceByDomain(filter: string[]): void {
+  filterResource(): void {
     var resultList: any;
-    resultList=this.allResources.filter((r: any) => filter.includes(r.rootCause.name));
-    this.resourceGroups = resultList;
-  }
-
-  filterRescourceByType(filter: string[]): void {
-    var resultList: any;
-    resultList=this.allResources.filter((r: any) => filter.includes(r.topResourceType));
+    resultList=this.allResources;
+    if (this.nameFilter.length > 0 && !this.nameFilter.includes("All")) {
+      resultList=resultList.filter((r: any) => this.nameFilter.includes(r.name));
+    }
+    if (this.typeFilter.length > 0 && !this.typeFilter.includes("All Types")) {
+      resultList=resultList.filter((r: any) =>  this.typeFilter.includes(r.topResourceType))
+    }
+    if (this.domainFilter.length > 0 && !this.domainFilter.includes("All Domains")) {
+      resultList=resultList.filter((r: any) =>  this.domainFilter.includes(r.rootCause.name))
+    }
     this.resourceGroups = resultList;
   }
 
@@ -249,10 +306,16 @@ export class KubePlatformComponent implements OnInit {
     this.clusterInputing = true
     if (this.selectedClusters == '') {
       this.selectedNs = ''
+      this.selectedType = ''
+      this.selectedName = ''
       this.namespaces = []
       this.resourceGroups = []
       this.resourceTypes = []
       this.proDomains = []
+      this.resourceNames = []
+      this.typeFilter = []
+      this.nameFilter = []
+      this.domainFilter = []
       this.events = []
     }
   }
