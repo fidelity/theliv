@@ -133,6 +133,9 @@ export class KubePlatformComponent implements OnInit {
 
   getKubeResourceInfo(): void {
     this.loading = true;
+    this.nameFilter = [];
+    this.typeFilter = [];
+    this.domainFilter = [];
     this.kubeService.getDetects(this.selectedClusters, this.selectedNs).subscribe(
       (res: any) => {
         if (res) {
@@ -237,6 +240,7 @@ export class KubePlatformComponent implements OnInit {
         }
       })
     }
+    this.selectedType = ''
     if (this.selectedName) {
       this.resourceNames.forEach((r: any) => {
         if (r.name == this.selectedName) {
@@ -244,6 +248,7 @@ export class KubePlatformComponent implements OnInit {
         }
       })
     }
+    this.selectedName = ''
     this.kubeService.resourceList$.next(this.resourceGroups);
   }
 
