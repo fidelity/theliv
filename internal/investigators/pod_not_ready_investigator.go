@@ -17,16 +17,16 @@ import (
 )
 
 const (
-	ReadinessProbeFailedSolution = `1. Why the pod is not ready is because of the reason: ContainersNotReady.
-2. It appears that your readiness probe is having trouble in this instance.
+	ReadinessProbeFailedSolution = `1. Pod has status 'ContainersNotReady'.
+2. It appears there is an issue with your readiness probe.
 3. {{.}}.
-4. For more details, you can refer to the Events section. You can click on the pod name above to see the Pod configurations.
+4. For more details, please refer to the Events section. Click on the pod name above to see the Pod configuration.
 `
 
-	ReadinessGateFailedSolution = `1. Why the pod is not ready is because of the reason: ReadinessGatesNotReady.
-2. It appears that your readiness Gates are having trouble in this instance.
+	ReadinessGateFailedSolution = `1. Pod has status 'ReadinessGatesNotReady'.
+2. It appears there is an issue with your readiness gates.
 3. Message: {{.}}.
-4. Please check the readiness gate configurations for your pod. You can click on the pod name above to see the Pod configurations.
+4. Please check the readiness gate configurations for your pod. Click on the pod name above to see the Pod configurations.
 `
 
 	UsefulCommands = `
