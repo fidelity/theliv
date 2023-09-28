@@ -21,6 +21,8 @@ import (
 )
 
 const (
+	FoundMsg = "Please check below resource status, you can get possible root cause from messages."
+
 	GetPoCmd = `
 1. kubectl describe po {{.ObjectMeta.Name}} -n {{.ObjectMeta.Namespace}}
 `
@@ -110,11 +112,11 @@ func loadContainerDetails(ctx context.Context, problem *problem.Problem) {
 	for _, status := range pod.Status.InitContainerStatuses {
 		if status.Name == containerName {
 			if status.State.Terminated != nil {
-				appendDetail(problem, "", status.State.Terminated.Message,
+				appendDetail(problem, []string{}, status.State.Terminated.Message,
 					status.State.Terminated.Reason)
 			}
 			if status.State.Waiting != nil {
-				appendDetail(problem, "", status.State.Waiting.Message,
+				appendDetail(problem, []string{}, status.State.Waiting.Message,
 					status.State.Waiting.Reason)
 			}
 			break
@@ -125,11 +127,11 @@ func loadContainerDetails(ctx context.Context, problem *problem.Problem) {
 	for _, status := range pod.Status.ContainerStatuses {
 		if status.Name == containerName {
 			if status.State.Terminated != nil {
-				appendDetail(problem, "", status.State.Terminated.Message,
+				appendDetail(problem, []string{}, status.State.Terminated.Message,
 					status.State.Terminated.Reason)
 			}
 			if status.State.Waiting != nil {
-				appendDetail(problem, "", status.State.Waiting.Message,
+				appendDetail(problem, []string{}, status.State.Waiting.Message,
 					status.State.Waiting.Reason)
 			}
 			break
@@ -269,17 +271,16 @@ func buildReasonMsg(reason string, message string) []string {
 	return detail
 }
 
-func appendDetail(problem *problem.Problem, detail string,
+func appendDetail(problem *problem.Problem, detail []string,
 	msg string, reason string) {
-	details := []string{detail}
-	details = append(details, buildReasonMsg(reason, msg)...)
+	details := append(detail, buildReasonMsg(reason, msg)...)
 	appendSolution(problem, details, nil)
 }
 
 func appendNonEmptyDetail(problem *problem.Problem, conType string,
 	conMsg, msg string, reason string) {
+	detail := []string{FoundMsg, "Found Status: " + conType + "=" + conMsg + "."}
 	if msg != "" || reason != "" {
-		detail := "Found Status: " + conType + "=" + conMsg + ". "
 		appendDetail(problem, detail, msg, reason)
 	}
 }

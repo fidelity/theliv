@@ -43,59 +43,50 @@ const (
 	DescribePoCmd = `
 1. kubectl describe po {{.Pod.Name}} -n {{.Pod.ObjectMeta.Namespace}}
 2. kubectl logs {{.Pod.Name}} -p -c {{.ContainerName}} -n {{.Pod.ObjectMeta.Namespace}}
+3. kubectl get events --field-selector involvedObject.name={{.Pod.Name}}
 `
 
-	SolutionExitCode1 = `
-2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (1). General exit with errors.
-3. Check your command or application logs.
+	SolutionExitCode1 = `2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (1). General exit with errors.
+3. Check your command or application logs using below useful commands.
 `
-	SolutionExitCode126 = `
-2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (126). Command invoked cannot execute.
-3. Check your command, may be Permission problem or command is not an executable.
+	SolutionExitCode126 = `2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (126). Command invoked cannot execute.
+3. Check your command and logs using below useful commands, may be Permission problem or command is not an executable.
 `
-	SolutionExitCode127 = `
-2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (127). Command not found.
-3. Check your command, maybe executable not in $PATH, or file not found.
+	SolutionExitCode127 = `2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (127). Command not found.
+3. Check your command and logs using below useful commands, maybe executable not in $PATH, or file not found.
 `
-	SolutionExitCode2To128 = `
-2. Container {{.ContainerName}} has EXITED with with a non-zero exit code {{.ExitCode}}. May caused by application in container.
-3. Check your command or application logs.
+	SolutionExitCode2To128 = `2. Container {{.ContainerName}} has EXITED with with a non-zero exit code {{.ExitCode}}. May caused by application in container.
+3. Check your command or application logs using below useful commands.
 `
-	SolutionExitCode137 = `
-2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (137). Container was killed.
-3. Generally caused by OOM.
+	SolutionExitCode137 = `2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (137). Container was killed.
+3. Generally caused by OOM, try to reset your Memory request may solve this problem.
 `
-	SolutionExitCode139 = `
-2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (139). Errors in container.
+	SolutionExitCode139 = `2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (139). Errors in container.
 3. Issues can be in your application codes or the base image, Check your dockerFile or application logs.
 `
-	SolutionExitCode129To255 = `
-2. Container {{.ContainerName}} has EXITED with with a non-zero exit code {{.ExitCode}}. Container was terminated from external.
+	SolutionExitCode129To255 = `2. Container {{.ContainerName}} has EXITED with with a non-zero exit code {{.ExitCode}}. Container was terminated from external.
 3. Check your application logs or system configurations.
 `
-	SolutionOOM = `
-2. Container {{.ContainerName}} has EXITED with reason OOMKilled (1). Check the resource limits of the container.
+	SolutionOOM = `2. Container {{.ContainerName}} has EXITED with reason OOMKilled (1). Check the resource limits of the container.
 `
-	SolutionReadinessProbeFail = `
-2. Following readiness probe has failed for the container {{.ContainerName}}.
+	SolutionReadinessProbeFail = `2. Following readiness probe has failed for the container {{.ContainerName}}.
 `
-	SolutionLivenessProbeFail = `
-2. Following liveliness probe has failed for the container {{.ContainerName}}.
+	SolutionLivenessProbeFail = `2. Following liveliness probe has failed for the container {{.ContainerName}}.
 `
-	SolutionStartupProbeFailMsg = `
-2. Following startup probe has failed for the container {{.ContainerName}}.
+	SolutionStartupProbeFailMsg = `2. Following startup probe has failed for the container {{.ContainerName}}.
 `
-	SolutionExecutableNotFoundMsg = `
-2. Container {{.ContainerName}} has EXITED with a non-zero exit code (127). Check your command or application startup logs.
+	SolutionExecutableNotFoundMsg = `2. Container {{.ContainerName}} has EXITED with a non-zero exit code (127). Check your command or application startup logs.
 3. Give more insights in the UI based on this https://intl.cloud.tencent.com/document/product/457/35758. E.g if exit code is 127, then look at your \"command\" and make sure it is correct. Problem is there.
-4. Container {{.ContainerName}} was unable to start, logs can be retrieved by 1 of the following 2 steps.
+4. Container {{.ContainerName}} was unable to start, logs can be retrieved by 1 of the following useful commands.
 `
-	SolutionNoSuchFile = `
-2. Container {{.ContainerName}} has EXITED with a non-zero exit code (127). Check your commands or application startup logs.
+	SolutionNoSuchFile = `2. Container {{.ContainerName}} has EXITED with a non-zero exit code (127). Check your commands or application startup logs.
 3. Give more insights in the UI based on this https://intl.cloud.tencent.com/document/product/457/35758. E.g if exit code is 127, then look at your \"command\" and make sure it is correct. Problem is there.
-4. Container {{.ContainerName}} was unable to start, logs can be retrieved by 1 of the following 2 steps.
+4. Container {{.ContainerName}} was unable to start, logs can be retrieved by 1 of the following useful commands.
 `
-	DefaultSolution = CrushLoopBackOffMsg + CrashLoopBackOffDocLink
+	DefaultSolution = `2. This may due to container resource request not enough, readiness probe or liveness probe failed. Not enough initial delay.
+3. Or may due to commands inside container failed, command not found in path, readonly file system, missing configurations or dependencies.
+4. Use the commands below to check logs or events can help found the root cause.
+5. Below docs can help understand this issue:` + CrashLoopBackOffDocLink
 )
 
 type CrushLoopPodInfo struct {
