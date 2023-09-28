@@ -17,11 +17,19 @@ import (
 
 const (
 	NotAvailableSolution = `
-1. Deployment {{.Name}} is not available.
+1. Deployment '{{.Name}}' is not available.
 2. Please check the replica(s) status in this deployment.
 `
+	MemoryQuotaSolution = `
+1. Deployment '{{.Name}}' has exceeded memory quotas.
+2. Please check the memory requests/limits of your deployment.
+`
+	CPUQuotaSolution = `
+1. Deployment '{{.Name}}' has exceeded CPU quotas.
+2. Please check the CPU requests/limits of your deployment.
+`
 	ResourceQuotaSolution = `
-1. Deployment {{.Name}} has Insufficient quota.
+1. Deployment '{{.Name}}' has exceeded resource quotas.
 2. Please check the requests/limits of your deployment.
 `
 	DescribeCmd = `
@@ -58,12 +66,15 @@ func getDeployCommonSolution(ctx context.Context, problem *problem.Problem) {
 }
 
 func getDeploySolution(ctx context.Context, deploy v1.Deployment) []string {
-
 	if ok, cd := containsCdt(deploy.Status.Conditions, "ReplicaFailure"); ok {
 		if cd.Status == "True" {
-			if strings.Contains(strings.ToLower(cd.Message), "cpu") ||
-				strings.Contains(strings.ToLower(cd.Message), "memory") ||
-				strings.Contains(strings.ToLower(cd.Message), "exceeded quota") {
+			msg := strings.ToLower(cd.Message)
+			switch {
+			case strings.Contains(msg, "cpu"):
+				return GetSolutionsByTemplate(ctx, CPUQuotaSolution, deploy, true)
+			case strings.Contains(msg, "memory"):
+				return GetSolutionsByTemplate(ctx, MemoryQuotaSolution, deploy, true)
+			case strings.Contains(msg, "exceeded quota"):
 				return GetSolutionsByTemplate(ctx, ResourceQuotaSolution, deploy, true)
 			}
 		}
