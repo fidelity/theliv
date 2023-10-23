@@ -31,7 +31,7 @@ const (
 
 	UsefulCommands = `
 1. kubectl get pod {{.Name}} -n {{.ObjectMeta.Namespace}} -o yaml
-2. kubectl get events --field-selector involvedObject.name={{.Name}}`
+2. kubectl get events --field-selector involvedObject.name={{.Name}} -n {{.ObjectMeta.Namespace}}`
 )
 
 type PodNotReady struct {

@@ -1,0 +1,106 @@
+run:
+linters-settings:
+  cyclop:
+    max-complexity: 14
+  exhaustive:
+    default-signifies-exhaustive: true
+  funlen:
+    lines: 150
+    statements: 75
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/Fidelity-Green)
+  gofumpt:
+    extra-rules: true
+  goimports:
+    local-prefixes: github.com/Fidelity-Green
+  govet:
+    check-shadowing: true
+    fieldalignment: true
+  lll:
+    line-length: 120
+  misspell:
+    locale: US
+  nolintlint:
+    require-explanation: false # don't require an explanation for nolint directives
+    require-specific: false # don't require nolint directives to be specific about which linter is being skipped
+  prealloc:
+    range-loops: false
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+linters:
+  disable-all: true
+  enable:
+  - asciicheck # Non ascci identifier check
+  - bodyclose # HTTP response body close check
+  - cyclop # Checks function and package cyclomatic complexity
+  - dogsled # Assignments with too many blank identifiers
+  - durationcheck # Check for two durations multiplied together
+  - errcheck # Unchecked errors
+  - errorlint # Find issues with error wrapping
+  - exhaustive # Check exhaustiveness of enum switch statements
+  - exportloopref # Checks for pointers to enclosing loop variables
+  - forbidigo # Forbids identifiers
+  - funlen # Tool for detection of long functions
+  - gci # Gci controls Go package import order and makes it always deterministic
+  - gochecknoinits # Checks that no init functions are present in Go code
+  - gocognit # Computes and checks the cognitive complexity of functions
+  - gocritic # Provides diagnostics that check for bugs, performance and style issues.
+  - gofmt # or gofumpt if we can get away with it
+  - goimports # Check import statements are formatted according to the 'goimport' command. Reformat imports in autofix mode
+  - goprintffuncname # Checks that printf-like functions are named with f at the end
+  - gosec # Inspects source code for security problems
+  - gosimple # Code simplifier
+  - govet # Reports suspicious calls
+  - importas # Enforces consistent import aliases
+  - ineffassign # Unused assigments
+  - lll # Reports long lines
+  - makezero # Finds slice declarations with non-zero initial length
+  - misspell # Finds commonly misspelled English words in comments
+  - nakedret # Finds naked returns in functions greater than a specified function length
+  - nestif # Reports deeply nested if statements
+  - nilerr # Finds the code that returns nil even if it checks that the error is not nil
+  - noctx # Noctx finds sending http request without context.Context
+  - nolintlint # Reports ill-formed or insufficient nolint directives
+  - prealloc # Finds slice declarations that could potentially be pre-allocated
+  - predeclared # Find code that shadows one of Go's predeclared identifiers
+  - promlinter # Check Prometheus metrics naming via promlint
+  - revive # Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint
+  - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed
+  - staticcheck # It's a set of rules from staticcheck
+  - thelper # Thelper detects Go test helpers without t.Helper() call and checks the consistency of test helpers
+  - tparallel # Tparallel detects inappropriate usage of t.Parallel() method in your Go test codes
+  - unconvert # Remove unnecessary type conversions
+  - unparam # Reports unused function parameters
+  - unused # Checks Go code for unused constants, variables, functions and types
+  - whitespace # Tool for detection of leading and trailing whitespace
+issues:
+  exclude-rules:
+    - linters:
+        - lll
+      source: "// "
+    # Exclude some linters from running on tests files.
+    - path: '(.+)_test\.go'
+      linters: &disabled_for_test
+        - cyclop
+        - lll
+        - exhaustive
+        - funlen
+        - errorlint
+        - gocritic
+        - gocognit
+        - gosec
+        - errcheck
+        - govet
+        - revive
+        - unused
+    - path: fixtures
+      linters: *disabled_for_test
+    - path: testhelper
+      linters: *disabled_for_test
+    - text: declaration of "err" shadows declaration at
+      linters: [govet]

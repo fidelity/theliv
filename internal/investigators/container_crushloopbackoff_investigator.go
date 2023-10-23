@@ -43,7 +43,7 @@ const (
 	DescribePoCmd = `
 1. kubectl describe po {{.Pod.Name}} -n {{.Pod.ObjectMeta.Namespace}}
 2. kubectl logs {{.Pod.Name}} -p -c {{.ContainerName}} -n {{.Pod.ObjectMeta.Namespace}}
-3. kubectl get events --field-selector involvedObject.name={{.Pod.Name}}
+3. kubectl get events --field-selector involvedObject.name={{.Pod.Name}} -n {{.Pod.ObjectMeta.Namespace}}
 `
 
 	SolutionExitCode1 = `2. Container {{.ContainerName}} has EXITED with with a non-zero exit code (1). General exit with errors.
