@@ -35,23 +35,17 @@ const (
 
 const (
 	FailedSchedulingMessage          = "%d. Pod failed scheduling, message is: %s."
-	NodeUnavailableSolution          = "%d. No node is available for the Pod, you may need to fix the issue in NotReady Node, or add new Node."
-	NodeUnavailableRef               = "%d. Refer to: https://kubernetes.io/docs/tasks/debug-application-cluster/debug-cluster/"
+	NodeUnavailableSolution          = "%d. No node is available for the Pod, you may need to add new Node. Refer to: https://kubernetes.io/docs/tasks/debug-application-cluster/debug-cluster/"
 	PendingNodeUnschedulableSolution = "%d. Some nodes are unschedulable, try to uncordon these nodes may fix this."
 
-	PendingNodeSelectorSolution = "%d. Some nodes don't match the Pod node-selector/affinity, can check and adjust Pod node-selector/affinity."
-	PendingNodeSelectorRef      = "%d. Refer to: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity"
-	PendingNodeTaintSolution    = "%d. Some node(s) had taints, that the pod didn't tolerate. Try to modify the pod to tolerate 1 of them."
-	PendingNodeTaintRef         = "%d. Refer to: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/"
+	PendingNodeSelectorSolution = "%d. Some nodes don't match the Pod node-selector/affinity, can check and adjust Pod node-selector/affinity. Refer to: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity"
+	PendingNodeTaintSolution    = "%d. Some node(s) had taints, that the pod didn't tolerate. Try to modify the pod to tolerate 1 of them. Refer to: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/"
 
 	PendingInsufficientSolution = "%d. Some available node(s) has insufficient resources, check the resources that the pod requests or limits, try to modify them to applicable quota."
 	PendingNoHostPortSolution   = "%d. Available node(s) didn't have free ports for the requested pod ports. Please check the HostPort used in the Pod, change/remove it is suggested."
 	PVCNotFoundSolution         = "2. Pod {{ .ObjectMeta.Name }} is pending, used PVC not found." + KubectlPodAndPVC
 	PVCUnboundSolution          = "2. Pod {{ .ObjectMeta.Name }} is pending, due to use an unbound PVC." + KubectlPodAndPVC
-	KubectlPodAndPVC            = `
-3. Please check PVC used by the pod, create new or choose an existing PVC may solve this problem.
-4. Reference link: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
-`
+	KubectlPodAndPVC            = "3. Please check PVC used by the pod, create new or choose an existing PVC may solve this problem. Refer to: https://kubernetes.io/docs/concepts/storage/persistent-volumes/"
 
 	ContainerFailMount         = "%d. Container failed mount, message is: %s."
 	ContainerFailMountSolution = "%d. Please check your volumes of the Pod, try to change to correct and existing resources may fix this problem."
@@ -104,7 +98,6 @@ func PodNotRunningInvestigator(ctx context.Context, wg *sync.WaitGroup, problem 
 			solutions, commands = appendPVSolution(ctx, pod, solutions, PVCUnboundSolution)
 		} else if msgMatch(NodesNotAvailable, failSchedule) {
 			solutions = appendSeq(solutions, NodeUnavailableSolution)
-			solutions = appendSeq(solutions, NodeUnavailableRef)
 			commands = appendSeq(commands, GetNoAllCmd)
 			commands = appendSeq(commands, GetNoAllocatableCmd)
 			if msgMatch(PendingNodeUnschedulable, failSchedule) {
@@ -113,12 +106,10 @@ func PodNotRunningInvestigator(ctx context.Context, wg *sync.WaitGroup, problem 
 			}
 			if msgMatch(PendingNodeSelector, failSchedule) || msgMatch(PendingNodeAffinity, failSchedule) {
 				solutions = appendSeq(solutions, PendingNodeSelectorSolution)
-				solutions = appendSeq(solutions, PendingNodeSelectorRef)
 				commands = appendSeq(commands, GetNoLabelCmd)
 			}
 			if msgMatch(PendingNodeTaint, failSchedule) {
 				solutions = appendSeq(solutions, PendingNodeTaintSolution)
-				solutions = appendSeq(solutions, PendingNodeTaintRef)
 				commands = appendSeq(commands, GetNoTaintCmd)
 			}
 			if msgMatch(PendingInsufficient, failSchedule) {
