@@ -18,36 +18,36 @@ const (
 	NotReadySolution = `
 1. Node {{ .ObjectMeta.Name }} is not Ready.
 2. NotReady message is: {{ range $index, $value := .Status.Conditions }}{{- if eq $value.Type "Ready" }}{{$value.Message}}{{- end}}{{end}}.
-3. Please wait for sometime, if issue persists, you may need to ssh to the Node and check.
-4. To restart Kubelet service, please refer to below UsefulCommands.
+3. Please wait for some time, if the issue persists, you may need to ssh to the Node and check.
+4. To restart Kubelet service, please refer to Useful Commands section below.
 `
 
 	MemPressSolution = `
-1. Node {{ .ObjectMeta.Name }} is reporting memory pressure issue.
+1. Node {{ .ObjectMeta.Name }} is reporting a memory pressure issue.
 2. MemoryPressure message is: {{ range $index, $value := .Status.Conditions }}{{- if eq $value.Type "MemoryPressure" }}{{$value.Message}}{{- end}}{{end}}.
-3. You may need to ssh to the Node, kill unnecessary processes.
-4. You can find Pods running on this Node, re-allocate them to other Nodes.
-5. To get pods running on the Node, refer to below command 1.
+3. You may need to ssh to the Node and kill unnecessary processes.
+4. You can find Pods running on this Node and re-allocate them to other Nodes.
+5. To get pods running on the Node, refer to the Useful Commands section below.
 `
 
 	DiskPressSolution = `
-1. Node {{ .ObjectMeta.Name }} is reporting disk pressure issue.
+1. Node {{ .ObjectMeta.Name }} is reporting a disk pressure issue.
 2. DiskPressure message is: {{ range $index, $value := .Status.Conditions }}{{- if eq $value.Type "DiskPressure" }}{{$value.Message}}{{- end}}{{end}}.
-3. You may need to ssh to the Node, delete unnecessary files, or add more storage resources.
+3. You may need to ssh into the Node, delete unnecessary files, or add more storage resources.
 `
 
 	PidPressSolution = `
-1. Node {{ .ObjectMeta.Name }} is reporting Pid pressure issue.
+1. Node {{ .ObjectMeta.Name }} is reporting a Pid pressure issue.
 2. PIDPressure message is: {{ range $index, $value := .Status.Conditions }}{{- if eq $value.Type "PIDPressure" }}{{$value.Message}}{{- end}}{{end}}.
-3. You may need to ssh to the Node, kill unnecessary processes.
-4. You can find Pods running on this Node, re-allocate them to other Nodes. Refer to below command 1.
+3. You may need to ssh into the Node, kill unnecessary processes.
+4. You can find Pods running on this Node, re-allocate them to other Nodes. Refer to the Useful Commands section below.
 `
 
 	NetUnAvailableSolution = `
-1. Node {{ .ObjectMeta.Name }} is reporting network unavailable issue.
+1. Node {{ .ObjectMeta.Name }} is reporting a network unavailable issue.
 2. NetworkUnavailable message is: {{ range $index, $value := .Status.Conditions }}{{- if eq $value.Type "NetworkUnavailable" }}{{$value.Message}}{{- end}}{{end}}.
-3. Please check if Kubelet service in node is started, and there's no network connection issue.
-4. You may need to ssh to the Node and check the Kubelet service. Refer to below UsefulCommands.
+3. Please confirm that the Kubelet service on the node is running, and there is no network connection issues.
+4. You may need to ssh into the Node and check the Kubelet service. Refer to the Useful Commands section below.
 `
 
 	FindPoOnNoCmd = `

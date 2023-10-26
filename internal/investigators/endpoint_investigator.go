@@ -18,15 +18,16 @@ import (
 
 const (
 	NotReadyAddressSolution = `
-1. There's NotReadyAddresses in the subsets.
+1. At least one subset has 'NotReadyAddresses' status.
 2. Please check the health of the selected pods.
 `
-	NoPoSelectedSolution = `
-1. There's no Pod exists that match the service selector.
+	NoPodSelectedSolution = `
+1. There are no pods that match the service selector(s):{{range $index, $value := .Spec.Selector}}
+- {{$index}}: {{$value}}{{end}}
 2. Please set the service selector or add endpoint subsets properly.
 `
 	NoServiceFoundSolution = `
-1. No Service found for Endpoint {{ .Name}}. And this Endpoint has No subsets.
+1. No Service or subsets found for Endpoint {{.Name}}.
 2. Please check if this Endpoint is necessary.
 `
 )
@@ -56,7 +57,7 @@ func EndpointAddressNotAvailableInvestigator(ctx context.Context, wg *sync.WaitG
 	if len(endpoint.Subsets) != 0 {
 		solutions = GetSolutionsByTemplate(ctx, NotReadyAddressSolution, svc, true)
 	} else {
-		solutions = GetSolutionsByTemplate(ctx, NoPoSelectedSolution, svc, true)
+		solutions = GetSolutionsByTemplate(ctx, NoPodSelectedSolution, svc, true)
 	}
 
 	appendSolution(problem, solutions, GetSolutionsByTemplate(ctx, GetEndpointsCmd, endpoint, true))

@@ -21,6 +21,7 @@ const (
 	NotFoundMsg           = "failed to pull and unpack image .* not found"
 	ConnectionRefused     = "Connection refused"
 	UnauthorizedMsg       = "Unauthorized or access denied or authentication required"
+	AuthorizeFailed       = "failed to authorize"
 	QuotaRateLimitMsg     = "Quota exceeded or Too Many Requests or rate limit"
 	RepositoryNotExistMsg = "Repository does not exist or may require 'docker login'"
 )
@@ -49,6 +50,11 @@ const (
 1. Unable to pull image {{ .Status.Image }} for the container {{ .Status.Name}}. The root cause could be one of the following.
 2. ImagePullSecret is either incorrect or expired.
 3. Repository does not exist.
+`
+	AuthorizeFailedSolution = `
+1. Unable to pull image {{ .Status.Image }} for the container {{ .Status.Name}}. The root cause could be one of the following.
+2. ImagePullSecret is either incorrect or expired.
+3. Change ImagePullSecret to valid credential can fix this problem.
 `
 	QuotaRateLimitSolution = `
 1. Unable to pull image {{ .Status.Image }} for the container {{ .Status.Name}}. The root cause could be one of the following.
@@ -81,6 +87,7 @@ var ImagePullBackOffSolutions = map[string]func(ctx context.Context, pod *v1.Pod
 	IOTimeoutMsg:          getImagePullBackOffSolution(IOTimeoutSolution),
 	ConnectionRefused:     getImagePullBackOffSolution(ConnectionRefusedSolution),
 	UnauthorizedMsg:       getImagePullBackOffSolution(UnauthorizedSolution),
+	AuthorizeFailed:       getImagePullBackOffSolution(AuthorizeFailedSolution),
 	QuotaRateLimitMsg:     getImagePullBackOffSolution(QuotaRateLimitSolution),
 	NotFoundMsg:           getImagePullBackOffSolution(UnknownManifestSolution),
 }
@@ -128,7 +135,7 @@ func checksecretmsg(ctx context.Context, msg string, pod v1.Pod) []string {
 			s := "5. " + SecretMsg1 + "6. " + SecretMsg3
 			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
 		}
-	} else if msg == UnauthorizedMsg {
+	} else if msg == UnauthorizedMsg || msg == AuthorizeFailed {
 		if len(pod.Spec.ImagePullSecrets) == 0 {
 			s := "4. " + SecretMsg2NotExist
 			secretmsg = GetSolutionsByTemplate(ctx, s, &pod, true)
