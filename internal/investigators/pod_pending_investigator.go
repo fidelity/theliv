@@ -45,7 +45,8 @@ const (
 	PendingNoHostPortSolution   = "%d. Available node(s) didn't have free ports for the requested pod ports. Please check the HostPort used in the Pod, change/remove it is suggested."
 	PVCNotFoundSolution         = "2. Pod {{ .ObjectMeta.Name }} is pending, used PVC not found." + KubectlPodAndPVC
 	PVCUnboundSolution          = "2. Pod {{ .ObjectMeta.Name }} is pending, due to use an unbound PVC." + KubectlPodAndPVC
-	KubectlPodAndPVC            = "3. Please check PVC used by the pod, create new or choose an existing PVC may solve this problem. Refer to: https://kubernetes.io/docs/concepts/storage/persistent-volumes/"
+	KubectlPodAndPVC            = `
+3. Please check PVC used by the pod, create new or choose an existing PVC may solve this problem. Refer to: https://kubernetes.io/docs/concepts/storage/persistent-volumes/`
 
 	ContainerFailMount         = "%d. Container failed mount, message is: %s."
 	ContainerFailMountSolution = "%d. Please check your volumes of the Pod, try to change to correct and existing resources may fix this problem."
