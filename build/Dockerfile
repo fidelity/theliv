@@ -53,16 +53,6 @@ RUN chown -R nginx:nginx /usr/share/ca-certificates && \
         chown nginx:nginx /etc/ca-certificates.conf && \
         chown -R nginx:nginx /etc/ssl/certs
 
-# modify nginx related file permissions
-RUN chown -R nginx:nginx /var/log/nginx
-RUN mkdir -p /var/cache/nginx && \
-        chown -R nginx:nginx /var/cache/nginx 
-RUN touch /var/run/nginx.pid && \
-        chown -R nginx:nginx /var/run/nginx.pid
-
-# modify nginx file permissions
-RUN chown -R nginx:nginx /etc/nginx/
-
 COPY --from=build-go /go-service/main /app/server/
 COPY --from=build-node /app/dist/theliv /app/client/theliv
 
