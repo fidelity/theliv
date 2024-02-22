@@ -76,6 +76,9 @@ func Route(r chi.Router) {
 	// config for UI
 	r.Route("/configinfo", ConfigInfo)
 
+	// export ai
+	r.Route("/ai", Ai)
+
 	// export prometheus metrics
 	r.Handle("/metrics", promhttp.Handler())
 

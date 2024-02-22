@@ -34,6 +34,8 @@ const (
 	PROMETHEUS_GLOBAL_CONFIG_KEY string = "/theliv/config/prometheus"
 	THELIV_LEVEL_CONFIG_KEY      string = "/theliv/config/levelconf"
 	LDAP_CONFIG_KEY              string = "/theliv/config/ldap"
+	AZURE_CONFIG_KEY             string = "/theliv/config/azure"
+	AI_CONFIG_KEY                string = "/theliv/config/ai"
 )
 
 // Init client config, could be called only once, before any other functions

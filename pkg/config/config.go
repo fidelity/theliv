@@ -61,16 +61,41 @@ type ThelivConfig struct {
 	Auth                *AuthConfig         `json:"auth,omitempty"`
 	Prometheus          *PrometheusConfig   `json:"prometheus,omitempty"`
 	ProblemLevel        *ProblemLevelConfig `json:"problemlevel,omitempty"`
-	Ldap                *LdapConfig
-	LogDriver           LogDriverType `json:"logDriver,omitempty"`
-	EventDriver         LogDriverType `json:"eventDriver,omitempty"`
-	LogDeeplinkDriver   LogDriverType `json:"logDeeplinkDriver,omitempty"`
-	EventDeeplinkDriver LogDriverType `json:"eventDeeplinkDriver,omitempty"`
+	Ldap                *LdapConfig         `json:"ldap,omitempty"`
+	Azure               *AzureConfig        `json:"azure,omitempty"`
+	Ai                  *AiConfig           `json:"ai,omitempty"`
+	LogDriver           LogDriverType       `json:"logDriver,omitempty"`
+	EventDriver         LogDriverType       `json:"eventDriver,omitempty"`
+	LogDeeplinkDriver   LogDriverType       `json:"logDeeplinkDriver,omitempty"`
+	EventDeeplinkDriver LogDriverType       `json:"eventDeeplinkDriver,omitempty"`
 	// Only for UI usage
 	EmailAddr       string `json:"emailAddr,omitempty"`
 	DevelopedByTeam string `json:"developedByTeam,omitempty"`
 	VideoLink       string `json:"videoLink,omitempty"`
 	TeamName        string `json:"teamName,omitempty"`
+}
+
+type AzureConfig struct {
+	Endpoint  string `json:"endpoint,omitempty"`
+	ClientID  string `json:"clientid,omitempty"`
+	Scope     string `json:"scope,omitempty"`
+	UserName  string `json:"username,omitempty"`
+	Password  string `json:"password,omitempty"`
+	GrantType string `json:"granttype,omitempty"`
+}
+
+type AiConfig struct {
+	Name           string  `json:"name,omitempty"`
+	Model          string  `json:"model,omitempty"`
+	ApiType        string  `json:"apitype,omitempty"`
+	ApiVersion     string  `json:"apiversion,omitempty"`
+	BaseURL        string  `json:"baseurl,omitempty"`
+	EndpointName   string  `json:"endpointname,omitempty"`
+	Engine         string  `json:"engine,omitempty"`
+	Temperature    float32 `json:"temperature,omitempty"`
+	ProviderRegion string  `json:"providerregion,omitempty"`
+	TopP           float32 `json:"topp,omitempty"`
+	MaxTokens      int     `json:"maxtokens,omitempty"`
 }
 
 func (c *ThelivConfig) ToMaskString() string {
