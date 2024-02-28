@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/fidelity/theliv/pkg/ai"
 	"github.com/fidelity/theliv/pkg/kubeclient"
 	"github.com/fidelity/theliv/pkg/observability"
 	"k8s.io/client-go/rest"
@@ -28,4 +29,5 @@ type DetectorCreationInput struct {
 	AwsConfig      aws.Config
 	KubeClient     *kubeclient.KubeClient
 	EventRetriever observability.EventRetriever
+	AiClient       ai.AzureAIClient
 }

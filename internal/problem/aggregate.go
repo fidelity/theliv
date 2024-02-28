@@ -152,6 +152,8 @@ func getReportCardResource(ctx context.Context, p *Problem, resource ResourceDet
 	cr := createReportCardResource(ctx, p, resource.Resource.(metav1.Object), resource.ResourceKind)
 	cr.Issue.Solutions = append(cr.Issue.Solutions, p.SolutionDetails.GetStore()...)
 	cr.Issue.Commands = append(cr.Issue.Commands, p.UsefulCommands.GetStore()...)
+	cr.Issue.AiKnowledge = append(cr.Issue.AiKnowledge, p.AiKnowledge.GetStore()...)
+	cr.Issue.AiSuggestions = append(cr.Issue.AiSuggestions, p.AiSuggestions.GetStore()...)
 
 	// cr.Issue.Documents = urlToStr(p.Docs)
 	// if resource.Deeplink != nil {

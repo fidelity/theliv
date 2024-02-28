@@ -122,6 +122,11 @@ func PodNotRunningInvestigator(ctx context.Context, wg *sync.WaitGroup, problem 
 		} else {
 			solutions, commands = getPendingPodUnknownSolution(ctx, pod)
 		}
+		var wg2 sync.WaitGroup
+		wg2.Add(2)
+		callAiSuggestion(ctx, &wg2, problem, input, "PodFailedScheduled, "+failSchedule)
+		callAiKnowledge(ctx, &wg2, problem, input, "PodFailedScheduled")
+		wg2.Wait()
 	} else if len(failMount) > 0 {
 		commands = appendSeq(commands, GetSolutionsByTemplate(ctx, KubeDescribePoCmd, pod, true)[0])
 		commands = appendSeq(commands, GetSolutionsByTemplate(ctx, GetEventsCmd, pod, true)[0])
@@ -146,6 +151,18 @@ func PodNotRunningInvestigator(ctx context.Context, wg *sync.WaitGroup, problem 
 		solutions, commands = getPendingPodUnknownSolution(ctx, pod)
 	}
 	appendSolution(problem, solutions, commands)
+}
+
+func callAiKnowledge(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput, prompt string) {
+	defer wg.Done()
+	knowledge, _ := input.AiClient.GetCompletion(ctx, getAiKnowledge(prompt))
+	problem.AiKnowledge.Append(strings.Split(knowledge, "\n")...)
+}
+
+func callAiSuggestion(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem, input *problem.DetectorCreationInput, prompt string) {
+	defer wg.Done()
+	suggestions, _ := input.AiClient.GetCompletion(ctx, getAiSuggestion(prompt))
+	problem.AiSuggestions.Append(strings.Split(suggestions, "\n")...)
 }
 
 func appendPVSolution(ctx context.Context, po v1.Pod, solutions []string, solution string) ([]string, []string) {

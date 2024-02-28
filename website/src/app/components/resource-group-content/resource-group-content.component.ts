@@ -5,7 +5,7 @@
  */
 import { Component, OnInit } from '@angular/core';
 import { faExclamationTriangle, faLightbulb, faTimes, faThumbsUp, faExternalLinkAlt, 
-  faClipboard, faShareAlt, faCopy, faDownload, faBookReader, faArrowLeft, faEdit } from '@fortawesome/free-solid-svg-icons';
+  faClipboard, faShareAlt, faCopy, faDownload, faBookReader, faArrowLeft, faEdit, faEnvelope, faComment } from '@fortawesome/free-solid-svg-icons';
 import { ActivatedRoute } from '@angular/router';
 import { KubernetesService } from 'src/app/services/kubernetes.service';
 import { SocialUtil } from '../../shared/util/social-util';
@@ -42,6 +42,8 @@ export class ResourceGroupContentComponent implements OnInit {
   faClipboard = faClipboard;
   faBookReader = faBookReader;
   faArrowLeft = faArrowLeft;
+  faEnvelope = faEnvelope;
+  faComment = faComment;
 
   ns: any;
   cluster: any;

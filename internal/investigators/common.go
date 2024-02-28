@@ -8,6 +8,7 @@ package investigators
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"sync"
@@ -16,6 +17,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/fidelity/theliv/pkg/ai"
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/observability"
 	v1 "k8s.io/api/core/v1"
@@ -153,4 +155,12 @@ func appendSolution(problem *problem.Problem, solutions interface{}, commands in
 			problem.UsefulCommands.Append(c...)
 		}
 	}
+}
+
+func getAiSuggestion(issue string) string {
+	return fmt.Sprintf(ai.DefaultPrompt, issue)
+}
+
+func getAiKnowledge(issue string) string {
+	return fmt.Sprintf(ai.KnowledgePrompt, issue)
 }

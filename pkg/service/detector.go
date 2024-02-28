@@ -13,6 +13,7 @@ import (
 	"github.com/fidelity/theliv/internal/investigators"
 	in "github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/internal/problem"
+	"github.com/fidelity/theliv/pkg/ai"
 	"github.com/fidelity/theliv/pkg/common"
 	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
@@ -72,6 +73,15 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	eventRetriever := k8s.NewK8sEventRetriever(client)
 	input.EventRetriever = eventRetriever
 
+	token, err := ai.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+	aiConfig := GetAiConfig(token.AccessToken)
+	var azClient = ai.AzureAIClient{}
+	azClient.Configure(&aiConfig)
+	input.AiClient = azClient
+
 	alerts, err := prometheus.GetAlerts(ctx, input)
 	if err != nil {
 		return nil, theErr.NewCommonError(ctx, 6, com.PrometheusNotAvailable+contact)
@@ -121,6 +131,8 @@ func buildProblemsFromAlerts(alerts []v1.Alert) []*problem.Problem {
 			CauseLevel:        0,
 			SolutionDetails:   common.InitLockedSlice(),
 			UsefulCommands:    common.InitLockedSlice(),
+			AiSuggestions:     common.InitLockedSlice(),
+			AiKnowledge:       common.InitLockedSlice(),
 			AffectedResources: problem.ResourceDetails{},
 		}
 		p.Name = string(alert.Labels[model.LabelName("alertname")])
