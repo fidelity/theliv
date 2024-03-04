@@ -361,6 +361,38 @@ li {
             //     flex-shrink: 0;
             // }
         }
+        &-suggestion {
+            div {
+                font-weight: 600;
+                color: var(--alter);
+            }
+            li {
+                white-space: pre-line;
+                list-style: none;
+                color: var(--subtitle-color);
+                margin-top: -0.5em;
+            }
+            p {
+                margin-top: 0.2em;
+                margin-bottom: 1.2em;
+            }
+        }
+        &-knowledge {
+            div {
+                font-weight: 600;
+                color: var(--color-summary-3-highlight);
+            }
+            li {
+                white-space: pre-line;
+                list-style: none;
+                color: var(--subtitle-color);
+                margin-top: -0.5em;
+            }
+            p {
+                margin-top: 0.2em;
+                margin-bottom: 1.2em;
+            }
+        }
         &-commands {
             div {
                 font-weight: 600;

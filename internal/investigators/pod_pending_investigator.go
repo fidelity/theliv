@@ -122,6 +122,7 @@ func PodNotRunningInvestigator(ctx context.Context, wg *sync.WaitGroup, problem 
 		} else {
 			solutions, commands = getPendingPodUnknownSolution(ctx, pod)
 		}
+		getAiResults(ctx, problem, input, "PodFailedScheduled, "+failSchedule, "PodFailedScheduled")
 	} else if len(failMount) > 0 {
 		commands = appendSeq(commands, GetSolutionsByTemplate(ctx, KubeDescribePoCmd, pod, true)[0])
 		commands = appendSeq(commands, GetSolutionsByTemplate(ctx, GetEventsCmd, pod, true)[0])

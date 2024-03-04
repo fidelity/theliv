@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/fidelity/theliv/pkg/ai"
 	"github.com/fidelity/theliv/pkg/auth/samlmethod"
 	"github.com/fidelity/theliv/pkg/config"
 	log "github.com/fidelity/theliv/pkg/log"
@@ -43,6 +44,7 @@ func main() {
 
 	conf.LoadConfigs()
 	samlmethod.Init()
+	ai.Init()
 
 	r := router.NewRouter()
 

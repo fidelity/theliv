@@ -39,7 +39,9 @@ type Problem struct {
 	CauseLevel        int
 	SolutionDetails   *common.LockedSlice // output field after detetor. It contains solutions details to show in UI.
 	UsefulCommands    *common.LockedSlice // output field after detetor. It contains solutions details to show in UI.
-	AffectedResources ResourceDetails     // output field after detetor. It contains the resources affected by this problem that to show in UI.
+	AiSuggestions     *common.LockedSlice
+	AiKnowledge       *common.LockedSlice
+	AffectedResources ResourceDetails // output field after detetor. It contains the resources affected by this problem that to show in UI.
 }
 
 type ResourceDetails struct {

@@ -8,6 +8,7 @@ package investigators
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"sync"
@@ -16,6 +17,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/fidelity/theliv/pkg/ai"
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/observability"
 	v1 "k8s.io/api/core/v1"
@@ -153,4 +155,35 @@ func appendSolution(problem *problem.Problem, solutions interface{}, commands in
 			problem.UsefulCommands.Append(c...)
 		}
 	}
+}
+
+func callAiKnowledge(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
+	input *problem.DetectorCreationInput, prompt string) {
+	defer wg.Done()
+	knowledge, err := input.AiClient.GetCompletion(ctx, fmt.Sprintf(ai.KnowledgePrompt, prompt))
+	if err != nil {
+		return
+	}
+	problem.AiKnowledge.Append(strings.Split(knowledge, "\n\n")...)
+}
+
+func callAiSuggestion(ctx context.Context, wg *sync.WaitGroup, problem *problem.Problem,
+	input *problem.DetectorCreationInput, prompt string) {
+	defer wg.Done()
+	suggestions, err := input.AiClient.GetCompletion(ctx, fmt.Sprintf(ai.DefaultPrompt, prompt))
+	if err != nil {
+		return
+	}
+	problem.AiSuggestions.Append(strings.Split(suggestions, "\n")...)
+}
+
+func getAiResults(ctx context.Context, problem *problem.Problem,
+	input *problem.DetectorCreationInput, issue string, knowledge string) {
+	var wg sync.WaitGroup
+	t1 := time.Now()
+	wg.Add(2)
+	go callAiSuggestion(ctx, &wg, problem, input, issue)
+	go callAiKnowledge(ctx, &wg, problem, input, knowledge)
+	wg.Wait()
+	log.SWithContext(ctx).Infof("Calling OpenAi for %v.", time.Since(t1))
 }

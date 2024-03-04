@@ -169,6 +169,24 @@
                                 <li *ngFor="let solution of resource.issue.solutions">{{solution}}</li>
                             </ul>
                         </div>
+                        <div class="detail-msg-suggestion">
+                            <div>
+                                <fa-icon [icon]="faEnvelope"></fa-icon>AI Suggestions:
+                            </div>
+                            <p *ngIf="!resource.issue.AiSuggestions">No AI Suggestions</p>
+                            <ul *ngIf="resource.issue.AiSuggestions">
+                                <li *ngFor="let solution of resource.issue.AiSuggestions">{{solution}}</li>
+                            </ul>
+                        </div>
+                        <div class="detail-msg-knowledge">
+                            <div>
+                                <fa-icon [icon]="faComment"></fa-icon>AI knowledge:
+                            </div>
+                            <p *ngIf="!resource.issue.AiKnowledge">No AI knowledge</p>
+                            <ul *ngIf="resource.issue.AiKnowledge">
+                                <li *ngFor="let solution of resource.issue.AiKnowledge">{{solution}}</li>
+                            </ul>
+                        </div>
                         <div class="detail-msg-commands">
                             <div>
                                 <fa-icon [icon]="faEdit"></fa-icon>Useful Commands:

@@ -50,6 +50,14 @@ func (ecl *EtcdConfigLoader) LoadConfigs() {
 	if err := ecl.loadLdapConfig(); err != nil {
 		log.S().Errorf("Failed to load ldap config, error is %v\n", err)
 	}
+
+	if err := ecl.loadAzureConfig(); err != nil {
+		log.S().Errorf("Failed to load azure config, error is %v\n", err)
+	}
+
+	if err := ecl.loadAiConfig(); err != nil {
+		log.S().Errorf("Failed to load ai config, error is %v\n", err)
+	}
 }
 
 func (ecl *EtcdConfigLoader) GetKubernetesConfig(ctx context.Context, name string) (*KubernetesCluster, error) {
@@ -184,5 +192,27 @@ func (ecl *EtcdConfigLoader) loadLdapConfig() error {
 	}
 	thelivConfig.Ldap = conf
 	log.S().Infof("Successfully load ldap config")
+	return nil
+}
+
+func (ecl *EtcdConfigLoader) loadAzureConfig() error {
+	conf := &AzureConfig{}
+	err := driver.GetObjectWithSub(context.Background(), driver.AZURE_CONFIG_KEY, conf)
+	if err != nil {
+		return err
+	}
+	thelivConfig.Azure = conf
+	log.S().Infof("Successfully load azure config")
+	return nil
+}
+
+func (ecl *EtcdConfigLoader) loadAiConfig() error {
+	conf := &AiConfig{}
+	err := driver.GetObjectWithSub(context.Background(), driver.AI_CONFIG_KEY, conf)
+	if err != nil {
+		return err
+	}
+	thelivConfig.Ai = conf
+	log.S().Infof("Successfully load Ai config")
 	return nil
 }
