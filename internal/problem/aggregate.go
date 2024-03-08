@@ -111,28 +111,29 @@ func getHelmChart(meta metav1.Object) *helmChart {
 // if any level of resource has Argo Instance info, then returns Argo Instance.
 // if any level of resource has helm chart info, then returns helm
 func getTopResource(ctx context.Context, mo metav1.Object, client *kubeclient.KubeClient) (metav1.Object, *helmChart, *ArgoInstance) {
-	argo := getArgoInstance(mo)
-	if argo.Instance != "" {
-		return nil, nil, argo
-	}
-	if argo.RolloutTemplate == "" {
-		chart := getHelmChart(mo)
-		if !chart.isEmpty() {
-			return nil, chart, nil
-		}
-	}
 	oref := getControlOwner(mo)
 	// if there is no parent resource
-	if oref == nil {
+	if oref != nil {
+		owner, err := client.GetOwner(ctx, *oref, mo.GetNamespace())
+		if err != nil {
+			fmt.Printf("Failed to get owner resource from owner reference, %v", err)
+			// return the resource itself if cannot get its owner
+			return mo, nil, nil
+		}
+		return getTopResource(ctx, owner, client)
+	} else {
+		argo := getArgoInstance(mo)
+		if argo.Instance != "" {
+			return nil, nil, argo
+		}
+		if argo.RolloutTemplate == "" {
+			chart := getHelmChart(mo)
+			if !chart.isEmpty() {
+				return nil, chart, nil
+			}
+		}
 		return mo, nil, nil
 	}
-	owner, err := client.GetOwner(ctx, *oref, mo.GetNamespace())
-	if err != nil {
-		fmt.Printf("Failed to get owner resource from owner reference, %v", err)
-		// return the resource itself if cannot get its owner
-		return mo, nil, nil
-	}
-	return getTopResource(ctx, owner, client)
 }
 
 // Assume only 1 owner which controls the resource
