@@ -451,12 +451,6 @@
                             <th>Hosts</th>
                             <th>Address</th>
                         </tr>
-                        <tr class="grid-body animate-repeat">
-                            <td *ngIf="resource.metadata.spec.backend">{{resource.metadata.spec.backend.serviceName}}:{{resource.metadata.spec.backend.servicePort}}</td>
-                            <td *ngIf="resource.metadata.spec.defaultBackend && resource.metadata.spec.defaultBackend.service">{{resource.metadata.spec.defaultBackend.service.name}}:{{resource.metadata.spec.defaultBackend.service.port.number ? resource.metadata.spec.defaultBackend.service.port.number : resource.metadata.spec.defaultBackend.service.port.name}}</td>
-                            <td *ngFor="let rule of resource.metadata.spec.rules">{{rule.host}}</td>
-                            <td>{{resource.metadata.status.loadBalancer.ingress[0].hostname}}</td>
-                        </tr>
                     </table>
                 </div>
                 <div class="grid-container">

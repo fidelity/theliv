@@ -19,7 +19,7 @@ COPY internal/. internal
 
 ENV GOPROXY=direct
 # Build the application
-RUN go mod tidy -compat=1.17
+RUN go mod tidy
 RUN go build -o main .
 
 
