@@ -6,6 +6,8 @@
 package common
 
 const (
+	SkipTlsVerify = true
+
 	Name          = "name"
 	Namespace     = "namespace"
 	Pod           = "pod"
@@ -36,4 +38,6 @@ const (
 	UncaughtApiErr         = "error occurred in Theliv API, we will track and fix it soon," + Thanks
 	Contact                = " please contact %s for help." + Thanks
 	Thanks                 = " Thanks for using Theliv!!"
+
+	IngressMisconfigured = "IngressConfigurationError"
 )

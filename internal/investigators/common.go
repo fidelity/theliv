@@ -59,7 +59,7 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 		zap.String("container", status.Name),
 	)
 
-	events, err := GetPodEvents(ctx, input, pod)
+	events, err := GetResourceEvents(ctx, input, pod.Name, pod.Namespace)
 	if err != nil {
 		l.Error("Got error when calling Kubernetes event API, error is %s", err)
 	}
@@ -80,9 +80,9 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 	return ""
 }
 
-func GetPodEvents(ctx context.Context, input *problem.DetectorCreationInput, pod *v1.Pod) ([]observability.EventRecord, error) {
+func GetResourceEvents(ctx context.Context, input *problem.DetectorCreationInput, name string, namespace string) ([]observability.EventRecord, error) {
 
-	filter := CreateEventFilterCriteria(DefaultTimespan, input.EventRetriever.AddFilters(pod.Name, pod.Namespace))
+	filter := CreateEventFilterCriteria(DefaultTimespan, input.EventRetriever.AddFilters(name, namespace))
 	eventDataRef := input.EventRetriever.Retrieve(filter)
 	return eventDataRef.GetEvents(ctx)
 }

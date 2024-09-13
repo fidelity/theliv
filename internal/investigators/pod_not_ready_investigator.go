@@ -58,7 +58,7 @@ func PodNotReadyInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *p
 			if con.Reason == "ReadinessGatesNotReady" {
 				solution = GetSolutionsByTemplate(ctx, ReadinessGateFailedSolution, con.Message, true)
 			} else {
-				events, err := GetPodEvents(ctx, input, &pod)
+				events, err := GetResourceEvents(ctx, input, pod.Name, pod.Namespace)
 				if err != nil {
 					log.SWithContext(ctx).Error("Got error when calling Kubernetes event API, error is %s", err)
 				}

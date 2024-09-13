@@ -27,7 +27,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	networkv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -55,6 +54,8 @@ var alertInvestigatorMap = map[string][]investigatorFunc{
 	"DeploymentNotAvailable":       {in.DeploymentNotAvailableInvestigator},
 	"DeploymentGenerationMismatch": {in.DeploymentGenerationMismatchInvestigator},
 	"DeploymentReplicasMismatch":   {in.DeploymentReplicasMismatchInvestigator},
+
+	com.IngressMisconfigured: {in.IngressMisconfiguredInvestigator},
 }
 
 func DetectAlerts(ctx context.Context) (interface{}, error) {
@@ -72,6 +73,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 	eventRetriever := k8s.NewK8sEventRetriever(client)
 	input.EventRetriever = eventRetriever
 
+	ingress := getUnhealthyIngress(ctx, input)
 	alerts, err := prometheus.GetAlerts(ctx, input)
 	if err != nil {
 		return nil, theErr.NewCommonError(ctx, 6, com.PrometheusNotAvailable+contact)
@@ -80,6 +82,9 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 
 	// build problems from  alerts, problem is investigator input
 	problems := buildProblemsFromAlerts(alerts.Alerts)
+	if len(ingress) > 0 {
+		problems = append(problems, ingress...)
+	}
 	problems = filterProblems(ctx, problems, input)
 	log.SWithContext(ctx).Infof("Generated %d problems after filtering", len(problems))
 	if err = buildProblemAffectedResource(ctx, &wg, problems, input); err != nil {
@@ -113,16 +118,7 @@ func DetectAlerts(ctx context.Context) (interface{}, error) {
 func buildProblemsFromAlerts(alerts []v1.Alert) []*problem.Problem {
 	problems := make([]*problem.Problem, 0)
 	for _, alert := range alerts {
-		p := problem.Problem{
-			Name:              "",
-			Description:       "",
-			Tags:              make(map[string]string),
-			Level:             0,
-			CauseLevel:        0,
-			SolutionDetails:   common.InitLockedSlice(),
-			UsefulCommands:    common.InitLockedSlice(),
-			AffectedResources: problem.ResourceDetails{},
-		}
+		p := initProblem()
 		p.Name = string(alert.Labels[model.LabelName("alertname")])
 		p.Description = string(alert.Annotations[model.LabelName("description")])
 		p.Tags = make(map[string]string)
@@ -132,6 +128,19 @@ func buildProblemsFromAlerts(alerts []v1.Alert) []*problem.Problem {
 		problems = append(problems, &p)
 	}
 	return problems
+}
+
+func initProblem() problem.Problem {
+	return problem.Problem{
+		Name:              "",
+		Description:       "",
+		Tags:              make(map[string]string),
+		Level:             0,
+		CauseLevel:        0,
+		SolutionDetails:   common.InitLockedSlice(),
+		UsefulCommands:    common.InitLockedSlice(),
+		AffectedResources: problem.ResourceDetails{},
+	}
 }
 
 // Classifies problems as cluster or namespace level, filters all other problems.
@@ -201,7 +210,6 @@ func loadResourceByType(ctx context.Context, wg *sync.WaitGroup, client *kubecli
 		loadNamespacedResource(client, ctx, problem, &corev1.Service{}, com.Service, "")
 		problem.CauseLevel = 6
 	case com.Ingress:
-		loadNamespacedResource(client, ctx, problem, &networkv1.Ingress{}, com.Ingress, "")
 		problem.CauseLevel = 7
 	case com.Endpoint:
 		loadNamespacedResource(client, ctx, problem, &corev1.Endpoints{}, com.Endpoint, "")

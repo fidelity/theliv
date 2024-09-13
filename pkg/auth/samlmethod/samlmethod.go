@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/fidelity/theliv/internal/rbac"
+	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/go-ldap/ldap/v3"
@@ -238,7 +239,7 @@ func callLDAP(ctx context.Context, userID string) *ldap.SearchResult {
 	ldapCfg := config.GetThelivConfig().Ldap
 
 	conn, err := ldap.DialTLS("tcp", ldapCfg.Address, &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: com.SkipTlsVerify,
 	})
 	if err != nil {
 		log.SWithContext(ctx).Errorf("Unable to connect to LDAP server, error is %v", err)
