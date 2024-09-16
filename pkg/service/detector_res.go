@@ -49,8 +49,17 @@ func getUnhealthyIngress(ctx context.Context, input *problem.DetectorCreationInp
 	wg.Wait()
 	for _, ingress := range list {
 		if len(ingress.events) > 0 {
-			if ingress.events[len(ingress.events)-1].Type != "Normal" {
-				ingress.events = []observability.EventRecord{ingress.events[len(ingress.events)-1]}
+			latest := observability.EventRecord{}
+			for index, event := range ingress.events {
+				if index == 0 {
+					latest = event
+				}
+				if event.LastTimestamp.After(latest.LastTimestamp) {
+					latest = event
+				}
+			}
+			if latest.Type != "Normal" {
+				ingress.events = []observability.EventRecord{latest}
 				problems = append(problems, buildIngressProblem(ingress))
 			}
 		}

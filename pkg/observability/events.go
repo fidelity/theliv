@@ -20,6 +20,7 @@ type EventRecord struct {
 	Source         map[string]string
 	DateHappened   time.Time
 	Type           string
+	LastTimestamp  time.Time
 }
 
 type EventFilterCriteria struct {
