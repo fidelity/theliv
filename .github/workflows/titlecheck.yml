@@ -11,7 +11,7 @@
 
 # permissions:
 #   pull-requests: read
-
+ 
 # jobs:
 #   titlecheck:
 #     name: PR title follows coventional commit
