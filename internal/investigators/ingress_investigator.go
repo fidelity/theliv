@@ -17,22 +17,24 @@ import (
 )
 
 const (
-	S3Conflicts    = "conflicting attributes access_logs.s3.bucket"
-	BucketNotExist = "S3Bucket.* does not exist"
-	NoCertFound    = "no certificate found"
-	CertNotFound   = "CertificateNotFound"
-	Protocol       = "protocol"
-	SecurityGroup  = "securityGroups"
+	S3Conflicts       = "conflicting attributes access_logs.s3.bucket"
+	S3PrefixConflicts = "conflicting attributes access_logs.s3.prefix"
+	BucketNotExist    = "S3Bucket.* does not exist"
+	NoCertFound       = "no certificate found"
+	CertNotFound      = "CertificateNotFound"
+	Protocol          = "protocol"
+	SecurityGroup     = "securityGroups"
 
 	Description        = "Ingress {{.Name}} has incorrect configuration detected by Ingress Controller."
 	IngDefaultSolution = "1. Ingress configuration Error: %s"
 	FixIngSolution     = "%d. Fix above issue then deploy again, could possibly make Ingress work."
 
-	ProtocolSolution      = "%d. Check protocol config in Ingress annotations, correct protocol includes http, https."
-	S3ConflictsSolution   = "%d. Check s3.backet config in Ingress annotations, make sure S3 bucket exists and is accessible. And no conflicts with other ingress within same group.name is using."
-	S3Solution            = "%d. Check s3.backet config in Ingress annotations, make sure S3 bucket exists and is accessible."
-	SecurityGroupSolution = "%d. Check securityGroups config in Ingress annotations, pass the correct securityGroup associated with the cluster."
-	CertNotFoundSolution  = "%d. Check certificate config in Ingress annotations, make sure the cert you passed exists with correct name and path. Or use some cert-manager to create one."
+	ProtocolSolution          = "%d. Check protocol config in Ingress annotations, correct protocol includes http, https."
+	S3ConflictsSolution       = "%d. Check s3.bucket config in Ingress annotations, make sure S3 bucket exists. And no conflicts with other ingress within same group.name is using."
+	S3PrefixConflictsSolution = "%d. Check s3.prefix config in Ingress annotations, make sure set it the same with other ingress within same group.name is using."
+	S3Solution                = "%d. Check s3.bucket config in Ingress annotations, make sure S3 bucket exists and is accessible."
+	SecurityGroupSolution     = "%d. Check securityGroups config in Ingress annotations, pass the correct securityGroup associated with the cluster."
+	CertNotFoundSolution      = "%d. Check certificate config in Ingress annotations, make sure the cert you passed exists with correct name and path. Or use some cert-manager to create one."
 
 	IngressCommands = `
 1. kubectl describe ing {{.Name}} -n {{.ObjectMeta.Namespace}}
@@ -40,12 +42,13 @@ const (
 )
 
 var ingSolutions = map[string]string{
-	BucketNotExist: S3Solution,
-	S3Conflicts:    S3ConflictsSolution,
-	NoCertFound:    CertNotFoundSolution,
-	CertNotFound:   CertNotFoundSolution,
-	Protocol:       ProtocolSolution,
-	SecurityGroup:  SecurityGroupSolution,
+	BucketNotExist:    S3Solution,
+	S3Conflicts:       S3ConflictsSolution,
+	S3PrefixConflicts: S3PrefixConflictsSolution,
+	NoCertFound:       CertNotFoundSolution,
+	CertNotFound:      CertNotFoundSolution,
+	Protocol:          ProtocolSolution,
+	SecurityGroup:     SecurityGroupSolution,
 }
 
 func IngressMisconfiguredInvestigator(ctx context.Context, wg *sync.WaitGroup,
