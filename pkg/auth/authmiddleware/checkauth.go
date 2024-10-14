@@ -6,10 +6,10 @@
 package authmiddleware
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
-	"context"
 
 	"github.com/fidelity/theliv/pkg/config"
 	"github.com/fidelity/theliv/pkg/database/etcd"
@@ -42,7 +42,7 @@ func getPath(ctx context.Context, role string) ([]string, error) {
 }
 
 func checkRBAC(r *http.Request) (bool, error) {
-	user, err := GetUser(r)
+	user, err := GetUser(r, true)
 	if err != nil {
 		return false, err
 	}
@@ -64,10 +64,8 @@ func checkRBAC(r *http.Request) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	adgroups, err := GetADgroups(r, user.UID)
-	if err != nil {
-		return false, err
-	}
+	adgroups := user.AdGroups
+
 	roles = append(roles, adgroups...)
 	var grantPath []string
 	for _, role := range roles {

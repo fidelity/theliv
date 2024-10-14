@@ -178,7 +178,7 @@ func getRedirectUrl(url string) (redirect string) {
 type Samlinfo struct {
 }
 
-func (Samlinfo) GetUser(r *http.Request) (*rbac.User, error) {
+func (Samlinfo) GetUser(r *http.Request, getAds bool) (*rbac.User, error) {
 	if session := samlsp.SessionFromContext(r.Context()); session != nil {
 		// this will panic if we have the wrong type of Session, and that is OK.
 		emptyResult := []string{""}

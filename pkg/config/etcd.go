@@ -39,6 +39,10 @@ func (ecl *EtcdConfigLoader) LoadConfigs() {
 		log.S().Errorf("Failed to load auth config, error is %v\n", err)
 	}
 
+	if err := ecl.loadOidcConfig(); err != nil {
+		log.S().Errorf("Failed to load oidc config, error is %v\n", err)
+	}
+
 	if err := ecl.loadPrometheusConfig(); err != nil {
 		log.S().Errorf("Failed to load prometheus config, error is %v\n", err)
 	}
@@ -135,6 +139,17 @@ func (ecl *EtcdConfigLoader) loadDatadogConfig() error {
 	}
 	thelivConfig.Datadog = conf
 	log.S().Infof("Successfully load Datadog config %v\n", conf.ToMaskString())
+	return nil
+}
+
+func (ecl *EtcdConfigLoader) loadOidcConfig() error {
+	conf := &OidcConfig{}
+	err := driver.GetObjectWithSub(context.Background(), driver.OIDC_KEY, conf)
+	if err != nil {
+		return err
+	}
+	thelivConfig.Oidc = conf
+	log.S().Infof("Successfully load oidc config, provider is: %s.\n", conf.OidcProvider)
 	return nil
 }
 
