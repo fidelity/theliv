@@ -33,7 +33,7 @@ func CheckAuthorization(r *http.Request) (*http.Request, error) {
 type Localinfo struct {
 }
 
-func (Localinfo) GetUser(r *http.Request) (*rbac.User, error) {
+func (Localinfo) GetUser(r *http.Request, getAd bool) (*rbac.User, error) {
 	userinfo := &rbac.User{}
 	accesskey := r.Header.Get("ACCESSKEY")
 	err := etcd.GetObject(accesskeyPrefix+accesskey, userinfo)
@@ -41,11 +41,4 @@ func (Localinfo) GetUser(r *http.Request) (*rbac.User, error) {
 		return userinfo, nil
 	}
 	return nil, err
-}
-
-func (Localinfo) GetADgroups(r *http.Request, id string) ([]string, error) {
-	if true {
-		return nil, nil
-	}
-	return nil, errors.New("not Authorized")
 }

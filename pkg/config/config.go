@@ -59,6 +59,7 @@ type ThelivConfig struct {
 	ClusterDir          string              `json:"clusterDir,omitempty"`
 	Datadog             *DatadogConfig      `json:"datadog,omitempty"`
 	Auth                *AuthConfig         `json:"auth,omitempty"`
+	Oidc                *OidcConfig         `json:"oidc,omitempty"`
 	Prometheus          *PrometheusConfig   `json:"prometheus,omitempty"`
 	ProblemLevel        *ProblemLevelConfig `json:"problemlevel,omitempty"`
 	Ldap                *LdapConfig
@@ -108,6 +109,13 @@ type AuthConfig struct {
 	WhitelistPath   []string `json:"whitelistpath"`
 	ClientID        string   `json:"clientID"`
 	ClientSecret    string   `json:"clientSecret"`
+}
+
+type OidcConfig struct {
+	OidcProvider string `json:"oidcProvider"`
+	CallBack     string `json:"callBack"`
+	ClientID     string `json:"clientID"`
+	ClientSecret string `json:"clientSecret"`
 }
 
 func (c *AuthConfig) ToMaskString() string {

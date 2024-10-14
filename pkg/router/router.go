@@ -7,7 +7,7 @@ package router
 
 import (
 	"github.com/fidelity/theliv/pkg/auth/authmiddleware"
-	"github.com/fidelity/theliv/pkg/auth/samlmethod"
+	"github.com/fidelity/theliv/pkg/auth/oidcmethod"
 	"github.com/fidelity/theliv/pkg/err"
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/metrics"
@@ -41,7 +41,7 @@ func NewRouter() *chi.Mux {
 	r.Route("/theliv-api/v1", Route)
 
 	// saml route
-	r.Handle("/auth/saml/*", samlmethod.GetSP())
+	r.Route("/auth/", oidcmethod.SSO)
 
 	return r
 
