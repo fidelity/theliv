@@ -34,10 +34,17 @@ func callback(w http.ResponseWriter, r *http.Request) {
 		processError(w, r, err)
 		return
 	}
+<<<<<<< HEAD
 	oicdConfig := config.GetThelivConfig().Oidc
 	host := oicdConfig.CallBackHost
 	// redirect, by default to /
 	state := r.URL.Query().Get("state")
+=======
+	// redirect, by default to /
+	state := r.URL.Query().Get("state")
+	host := r.Referer()[:len(r.Referer())-1]
+	log.S().Infof("Call back endpoint is %s", host)
+>>>>>>> a2bcfd2 (feat: use oidc)
 	http.Redirect(w, r, host+state, http.StatusFound)
 }
 
