@@ -172,7 +172,7 @@ func msgMatch(msg1 string, msg2 string) bool {
 }
 
 func getPoEventMsg(ctx context.Context, input *problem.DetectorCreationInput, pod *v1.Pod, reason string) (msg []string) {
-	events, err := GetPodEvents(ctx, input, pod)
+	events, err := GetResourceEvents(ctx, input, pod.Name, pod.Namespace)
 	if err != nil {
 		return
 	}

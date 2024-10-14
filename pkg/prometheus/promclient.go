@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/fidelity/theliv/internal/problem"
+	com "github.com/fidelity/theliv/pkg/common"
 	"github.com/fidelity/theliv/pkg/config"
 	errors "github.com/fidelity/theliv/pkg/err"
 	log "github.com/fidelity/theliv/pkg/log"
@@ -29,7 +30,7 @@ var TLSRoundTripper http.RoundTripper = &http.Transport{
 	}).DialContext,
 	TLSHandshakeTimeout: 10 * time.Second,
 	TLSClientConfig: (&tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: com.SkipTlsVerify,
 	}),
 }
 
