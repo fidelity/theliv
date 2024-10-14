@@ -116,6 +116,7 @@ type OidcConfig struct {
 	CallBack     string `json:"callBack"`
 	ClientID     string `json:"clientID"`
 	ClientSecret string `json:"clientSecret"`
+	CallBackHost string `json:"callBackHost"`
 }
 
 func (c *AuthConfig) ToMaskString() string {
