@@ -12,9 +12,8 @@ import (
 
 	"github.com/fidelity/theliv/internal/rbac"
 	"github.com/fidelity/theliv/pkg/auth/localmethod"
-	"github.com/fidelity/theliv/pkg/auth/samlmethod"
+	"github.com/fidelity/theliv/pkg/auth/oidcmethod"
 	"github.com/fidelity/theliv/pkg/config"
-	"github.com/wangli1030/saml/samlsp"
 )
 
 var ErrNotThisAuth = errors.New("not this Auth method")
@@ -23,8 +22,8 @@ var authMethod rbac.RBACInfo
 func StartAuth(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//whitelist path
-		auth := config.GetThelivConfig().Auth
-		if r.URL.Path == "/theliv-api/v1/health" || r.URL.Path == "/theliv-api/v1/metrics" || r.URL.Path == getUrlPath(auth.AcrURL) || r.URL.Path == getUrlPath(auth.MetadataURL) {
+		oidc := config.GetThelivConfig().Oidc
+		if r.URL.Path == "/theliv-api/v1/health" || r.URL.Path == "/theliv-api/v1/metrics" || r.URL.Path == getUrlPath(oidc.CallBack) {
 			handler.ServeHTTP(w, r)
 			return
 		}
@@ -45,10 +44,10 @@ func StartAuth(handler http.Handler) http.Handler {
 			return
 		}
 		if err.Error() == ErrNotThisAuth.Error() {
-			//saml auth
-			r, err = samlmethod.CheckAuthorization(r)
+			//oidc auth
+			r, err = oidcmethod.CheckAuthorization(r)
 			if err == nil {
-				authMethod = samlmethod.Samlinfo{}
+				authMethod = oidcmethod.OIDC{}
 				ok, err := checkRBAC(r)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -61,8 +60,8 @@ func StartAuth(handler http.Handler) http.Handler {
 				}
 				return
 			}
-			if err == samlsp.ErrNoSession {
-				samlmethod.HandleStartAuthFlow(w, r)
+			if err == oidcmethod.ErrNoIDFound {
+				oidcmethod.HandleStartAuthFlow(w, r)
 				return
 			}
 		}
@@ -70,12 +69,8 @@ func StartAuth(handler http.Handler) http.Handler {
 	})
 }
 
-func GetUser(r *http.Request) (*rbac.User, error) {
-	return authMethod.GetUser(r)
-}
-
-func GetADgroups(r *http.Request, id string) ([]string, error) {
-	return authMethod.GetADgroups(r, id)
+func GetUser(r *http.Request, getAds bool) (*rbac.User, error) {
+	return authMethod.GetUser(r, getAds)
 }
 
 func getUrlPath(p string) string {

@@ -16,7 +16,7 @@ import (
 
 func Userinfo(r chi.Router) {
 	r.Get("/", func(w http.ResponseWriter, req *http.Request) {
-		user, err := authmiddleware.GetUser(req)
+		user, err := authmiddleware.GetUser(req, false)
 		if err != nil {
 			http.Error(w, com.NoUserInfo, http.StatusInternalServerError)
 		} else if empty := processEmpty(w, req, user); !empty {

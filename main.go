@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fidelity/theliv/pkg/auth/samlmethod"
+	"github.com/fidelity/theliv/pkg/auth/oidcmethod"
 	"github.com/fidelity/theliv/pkg/config"
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/router"
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	conf.LoadConfigs()
-	samlmethod.Init()
+	oidcmethod.InitAuth()
 
 	r := router.NewRouter()
 
