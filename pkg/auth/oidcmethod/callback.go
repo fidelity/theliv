@@ -7,7 +7,6 @@ package oidcmethod
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -105,7 +104,7 @@ func getOauthConfig(r *http.Request) *oauth2.Config {
 	oicdConfig := config.GetThelivConfig().Oidc
 	log.SWithContext(ctx).Infof("oauth-config for host %s does not exist, create new one", host)
 	// create new one
-	callback := GetHost(r) + oicdConfig.CallBack
+	callback := oicdConfig.CallBackHost + oicdConfig.CallBack
 	oauthConfigs[host] = &oauth2.Config{
 		ClientID:     oicdConfig.ClientID,
 		ClientSecret: oicdConfig.ClientSecret,
@@ -142,14 +141,6 @@ func userJwt(ctx context.Context, user *rbac.UserInfo) (string, error) {
 		return "", theliverr.NewCommonError(ctx, 1, msg)
 	}
 	return jwt, nil
-}
-
-func GetHost(req *http.Request) string {
-	proto := "https"
-	if req.TLS == nil {
-		proto = "http"
-	}
-	return fmt.Sprintf("%s://%s", proto, req.Host)
 }
 
 var verify = func(ctx context.Context, rawIDToken string) (*oidc.IDToken, error) {

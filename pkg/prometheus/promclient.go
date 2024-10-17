@@ -43,7 +43,7 @@ func GetAlerts(ctx context.Context, input *problem.DetectorCreationInput) (resul
 	client, err := api.NewClient(api.Config{
 		Address: address,
 		RoundTripper: promconfig.NewAuthorizationCredentialsRoundTripper("Bearer",
-			promconfig.Secret(input.Kubeconfig.BearerToken),
+			promconfig.NewInlineSecret(input.Kubeconfig.BearerToken),
 			TLSRoundTripper),
 	})
 	if err != nil {
