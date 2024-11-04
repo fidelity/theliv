@@ -12,7 +12,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/render v1.0.3
 	github.com/go-ldap/ldap/v3 v3.4.8
-	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/prometheus/client_golang v1.20.4
 	github.com/prometheus/common v0.60.0
 	github.com/stretchr/testify v1.9.0
