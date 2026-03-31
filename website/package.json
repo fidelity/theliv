@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --baseHref=\"/theliv/\"",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider ng serve --baseHref=\"/theliv/\" --proxy-config proxy.conf.json",
     "build": "ng build --configuration production --base-href /theliv/ --deploy-url /theliv/static/ --output-hashing=all",
     "test": "npm run lint && ng test --code-coverage",
     "test-headless": "npm run lint && ng test --code-coverage --watch=false",
@@ -51,5 +51,8 @@
     "ts-node": "~8.3.0",
     "tslint": "~6.1.0",
     "typescript": "~4.3.5"
+  },
+  "overrides": {
+    "path-to-regexp": "0.1.12"
   }
 }

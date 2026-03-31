@@ -142,7 +142,7 @@ func getControlOwner(mo metav1.Object) *metav1.OwnerReference {
 		return nil
 	}
 	for _, owner := range mo.GetOwnerReferences() {
-		if *owner.Controller {
+		if owner.Controller != nil && *owner.Controller {
 			return &owner
 		}
 	}
