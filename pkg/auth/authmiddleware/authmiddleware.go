@@ -23,7 +23,11 @@ func StartAuth(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//whitelist path
 		oidc := config.GetThelivConfig().Oidc
-		if r.URL.Path == "/theliv-api/v1/health" || r.URL.Path == "/theliv-api/v1/metrics" || r.URL.Path == getUrlPath(oidc.CallBack) {
+		callBackPath := ""
+		if oidc != nil {
+			callBackPath = getUrlPath(oidc.CallBack)
+		}
+		if r.URL.Path == "/theliv-api/v1/health" || r.URL.Path == "/theliv-api/v1/metrics" || (callBackPath != "" && r.URL.Path == callBackPath) {
 			handler.ServeHTTP(w, r)
 			return
 		}
@@ -43,7 +47,7 @@ func StartAuth(handler http.Handler) http.Handler {
 			}
 			return
 		}
-		if err.Error() == ErrNotThisAuth.Error() {
+		if err.Error() == ErrNotThisAuth.Error() && oidc != nil {
 			//oidc auth
 			r, err = oidcmethod.CheckAuthorization(r)
 			if err == nil {
@@ -65,7 +69,7 @@ func StartAuth(handler http.Handler) http.Handler {
 				return
 			}
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 	})
 }
 

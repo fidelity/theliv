@@ -41,6 +41,10 @@ func InitAuth() error {
 		return nil
 	}
 	oicdConfig := config.GetThelivConfig().Oidc
+	if oicdConfig == nil {
+		log.S().Info("OIDC config not provided, skipping OIDC initialization")
+		return nil
+	}
 	p, err := oidc.NewProvider(context.Background(), oicdConfig.OidcProvider)
 	if err != nil {
 		log.S().Errorf("Unable to initialize oidc config: %v", err)

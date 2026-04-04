@@ -6,8 +6,6 @@
 package common
 
 const (
-	SkipTlsVerify = true
-
 	Name          = "name"
 	Namespace     = "namespace"
 	Pod           = "pod"
