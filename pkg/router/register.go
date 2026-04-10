@@ -11,6 +11,7 @@ import (
 	"github.com/fidelity/theliv/pkg/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"go.uber.org/zap"
 )
 
 const Registered = "Registered"
@@ -35,7 +36,14 @@ func clusterRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	basic.Name = cluster
-	if err := service.RegisterCluster(r.Context(), basic); err != nil {
+
+	l := log.SWithContext(r.Context()).With(
+		zap.String("cluster", basic.Name),
+		zap.String("clusterUrl", basic.Url),
+		zap.String("account", basic.Account),
+		zap.String("region", basic.Region),
+	)
+	if err := service.RegisterCluster(r.Context(), l, basic); err != nil {
 		http.Error(w, SERVICE_UNAVAILABLE, http.StatusServiceUnavailable)
 		return
 	}

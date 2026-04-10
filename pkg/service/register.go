@@ -11,7 +11,6 @@ import (
 
 	invest "github.com/fidelity/theliv/internal/investigators"
 	"github.com/fidelity/theliv/pkg/database/etcd"
-	log "github.com/fidelity/theliv/pkg/log"
 	"go.uber.org/zap"
 )
 
@@ -58,18 +57,15 @@ type ClusterBasic struct {
 }
 
 // Insert or update 1 record, to /theliv/clusters/{name}/kubeconf.
-func RegisterCluster(ctx context.Context, basic ClusterBasic) error {
+func RegisterCluster(ctx context.Context, l *zap.SugaredLogger, basic ClusterBasic) error {
 	clusterType := basic.Name[:3]
 	etcdBaseKey := KeyPath + clusterType + "/" + basic.Name
 
-	l := log.SWithContext(ctx).With(
-		zap.String("cluster", basic.Name),
-	)
 	l.Info("Registering cluster with Theliv")
 
 	// if aws account id present, convert to json and insert in db
 	if basic.Account != "" {
-		l.Infof("AWS config found with account ID: %s", basic.Account)
+		l.Info("AWS account provided, persist detail to db")
 		if urlSlice := strings.Split(basic.Url, "."); len(urlSlice) > 5 {
 			basic.Region = urlSlice[len(urlSlice)-4]
 		}
