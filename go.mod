@@ -17,7 +17,7 @@ require (
 	github.com/wangli1030/saml v0.4.7
 	go.etcd.io/etcd/client/v3 v3.6.10
 	go.uber.org/zap v1.27.0
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.36.0
 	k8s.io/api v0.30.0
 	k8s.io/apimachinery v0.30.0
 	k8s.io/client-go v0.30.0
