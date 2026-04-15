@@ -60,7 +60,7 @@ func PodNotReadyInvestigator(ctx context.Context, wg *sync.WaitGroup, problem *p
 			} else {
 				events, err := GetResourceEvents(ctx, input, pod.Name, pod.Namespace)
 				if err != nil {
-					log.SWithContext(ctx).Error("Got error when calling Kubernetes event API, error is %s", err)
+					log.SWithContext(ctx).Errorf("Got error when calling Kubernetes event API, error is %s", err)
 				}
 
 				var msg []string

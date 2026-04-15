@@ -7,46 +7,122 @@ package logging
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
-var DefaultLogger *zap.Logger
+var DefaultLogger *slog.Logger
 
-// Build a *zap.Logger from zap.Config
-func getLogger(config zap.Config) *zap.Logger {
-	loggerMgr, err := config.Build()
-	if err != nil {
-		panic("Error building Zap logger")
-	}
-	return loggerMgr
+// SugaredSlogLogger wraps slog.Logger to provide Printf-style methods
+type SugaredSlogLogger struct {
+	logger *slog.Logger
 }
 
-// Return a new *zap.Logger instance, accept a zap.Config
-func NewDefaultLogger(config zap.Config) *zap.Logger {
-	loggerMgr := getLogger(config)
-	DefaultLogger = loggerMgr
-	return loggerMgr
+// Infof logs an info message with Printf-style formatting
+func (s *SugaredSlogLogger) Infof(format string, args ...interface{}) {
+	s.logger.Info(fmt.Sprintf(format, args...))
 }
 
-// default zap.Config. accept level of int type, vaule between -1 and 5
-func DefaultLogConfig(level int) zap.Config {
-	logConfig := zap.NewProductionConfig()
-	logConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+// Info logs an info message without formatting
+func (s *SugaredSlogLogger) Info(msg string) {
+	s.logger.Info(msg)
+}
 
-	if level < -1 || level > 5 {
-		logConfig.Level.SetLevel(zapcore.InfoLevel)
-	} else {
-		logConfig.Level.SetLevel(zapcore.Level(level))
+// Errorf logs an error message with Printf-style formatting
+func (s *SugaredSlogLogger) Errorf(format string, args ...interface{}) {
+	s.logger.Error(fmt.Sprintf(format, args...))
+}
+
+// Error logs an error message without formatting
+func (s *SugaredSlogLogger) Error(msg string) {
+	s.logger.Error(msg)
+}
+
+// Warnf logs a warning message with Printf-style formatting
+func (s *SugaredSlogLogger) Warnf(format string, args ...interface{}) {
+	s.logger.Warn(fmt.Sprintf(format, args...))
+}
+
+// Warn logs a warning message without formatting
+func (s *SugaredSlogLogger) Warn(msg string) {
+	s.logger.Warn(msg)
+}
+
+// Debugf logs a debug message with Printf-style formatting
+func (s *SugaredSlogLogger) Debugf(format string, args ...interface{}) {
+	s.logger.Debug(fmt.Sprintf(format, args...))
+}
+
+// Debug logs a debug message without formatting
+func (s *SugaredSlogLogger) Debug(msg string) {
+	s.logger.Debug(msg)
+}
+
+// Fatalf logs an error message and exits with code 1
+func (s *SugaredSlogLogger) Fatalf(format string, args ...interface{}) {
+	s.logger.Error(fmt.Sprintf(format, args...))
+	os.Exit(1)
+}
+
+// Panicf logs an error message and panics
+func (s *SugaredSlogLogger) Panicf(format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	s.logger.Error(msg)
+	panic(msg)
+}
+
+// With adds structured attributes to the logger
+func (s *SugaredSlogLogger) With(attrs ...slog.Attr) *SugaredSlogLogger {
+	args := make([]any, len(attrs))
+	for i, attr := range attrs {
+		args[i] = attr
 	}
-	return logConfig
+	return &SugaredSlogLogger{logger: s.logger.With(args...)}
+}
+
+// Return a new *slog.Logger instance, accept a *slog.HandlerOptions
+func NewDefaultLogger(opts *slog.HandlerOptions) *slog.Logger {
+	handler := slog.NewJSONHandler(os.Stdout, opts)
+	logger := slog.New(handler)
+	DefaultLogger = logger
+	return logger
+}
+
+// default slog.HandlerOptions. accept level of int type, value between -1 and 5
+func DefaultLogConfig(level int) *slog.HandlerOptions {
+	var slogLevel slog.Level
+	switch level {
+	case -1:
+		slogLevel = slog.LevelDebug
+	case 0:
+		slogLevel = slog.LevelInfo
+	case 1:
+		slogLevel = slog.LevelWarn
+	case 2:
+		slogLevel = slog.LevelError
+	default:
+		slogLevel = slog.LevelInfo
+	}
+
+	return &slog.HandlerOptions{
+		Level: slogLevel,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			// Format timestamp as ISO8601 (RFC3339)
+			if a.Key == slog.TimeKey {
+				return slog.String(slog.TimeKey, a.Value.Time().Format(time.RFC3339))
+			}
+			return a
+		},
+	}
 }
 
 // Return default Logger instance.
-func L() *zap.Logger {
+func L() *slog.Logger {
 	if DefaultLogger == nil {
 		NewDefaultLogger(DefaultLogConfig(0))
 	}
@@ -55,22 +131,22 @@ func L() *zap.Logger {
 }
 
 // Return default Logger.Sugar instance.
-func S() *zap.SugaredLogger {
-	return L().Sugar()
+func S() *SugaredSlogLogger {
+	return &SugaredSlogLogger{logger: L()}
 }
 
 // Return Logger instance with request id from context
-func LWithContext(ctx context.Context) *zap.Logger {
+func LWithContext(ctx context.Context) *slog.Logger {
 	l := L()
 	if reqID := middleware.GetReqID(ctx); reqID != "" {
-		l = DefaultLogger.With(zap.String("RequestId", reqID))
+		l = l.With(slog.String("RequestId", reqID))
 	}
 	return l
 }
 
 // Return Logger.Sugar instance with request id from context
-func SWithContext(ctx context.Context) *zap.SugaredLogger {
-	return LWithContext(ctx).Sugar()
+func SWithContext(ctx context.Context) *SugaredSlogLogger {
+	return &SugaredSlogLogger{logger: LWithContext(ctx)}
 }
 
 // Used as middleware, to insert request id into the response header if present

@@ -8,13 +8,12 @@ package investigators
 import (
 	"bytes"
 	"context"
+	"log/slog"
 	"regexp"
 	"strings"
 	"sync"
 	"text/template"
 	"time"
-
-	"go.uber.org/zap"
 
 	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/observability"
@@ -55,13 +54,13 @@ func getPodSolutionFromEvents(ctx context.Context, problem *problem.Problem,
 	pod *v1.Pod, status *v1.ContainerStatus,
 	solutions map[string]func(ctx context.Context, pod *v1.Pod, status *v1.ContainerStatus) ([]string, []string)) string {
 	l := log.SWithContext(ctx).With(
-		zap.String("pod", pod.Name),
-		zap.String("container", status.Name),
+		slog.String("pod", pod.Name),
+		slog.String("container", status.Name),
 	)
 
 	events, err := GetResourceEvents(ctx, input, pod.Name, pod.Namespace)
 	if err != nil {
-		l.Error("Got error when calling Kubernetes event API, error is %s", err)
+		l.Errorf("Got error when calling Kubernetes event API, error is %s", err)
 	}
 
 	if len(events) > 0 {

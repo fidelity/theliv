@@ -89,7 +89,7 @@ func GetIngressEvents(ctx context.Context, input *problem.DetectorCreationInput,
 	defer wg.Done()
 	events, err := in.GetResourceEvents(ctx, input, ingress.obj.Name, ingress.obj.Namespace)
 	if err != nil {
-		log.SWithContext(ctx).Error("Got error when calling Kubernetes event API, error is %s", err)
+		log.SWithContext(ctx).Errorf("Got error when calling Kubernetes event API, error is %s", err)
 	}
 	ingress.events = events
 	return *ingress

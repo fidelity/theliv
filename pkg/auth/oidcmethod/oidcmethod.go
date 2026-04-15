@@ -94,8 +94,8 @@ func userFromToken(ctx context.Context, auth string) (*rbac.UserInfo, error) {
 	c, ok := token.Claims.(*rbac.UserInfo)
 	if !ok {
 		msg := "cannot unmarshal ID token claim"
-		err := fmt.Errorf(msg)
-		log.SWithContext(ctx).Errorf(msg)
+		err := fmt.Errorf("%s", msg)
+		log.SWithContext(ctx).Error(msg)
 		return nil, err
 	}
 	if e := c.Valid(); e != nil {

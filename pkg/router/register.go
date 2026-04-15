@@ -6,6 +6,7 @@
 package router
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/fidelity/theliv/pkg/err"
@@ -13,12 +14,11 @@ import (
 	"github.com/fidelity/theliv/pkg/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"go.uber.org/zap"
 )
 
 const (
-	Registered          = "Registered"
-	ClusterNameTooShort = "cluster name must be at least 3 characters long"
+	Registered             = "Registered"
+	errClusterNameTooShort = "cluster name must be at least 3 characters long"
 )
 
 func Register(r chi.Router) {
@@ -42,20 +42,20 @@ func clusterRegister(w http.ResponseWriter, r *http.Request) {
 	basic.Name = cluster
 
 	l := log.SWithContext(r.Context()).With(
-		zap.String("cluster", basic.Name),
-		zap.String("clusterUrl", basic.Url),
-		zap.String("account", basic.Account),
+		slog.String("cluster", basic.Name),
+		slog.String("clusterUrl", basic.Url),
+		slog.String("account", basic.Account),
 	)
 
 	// return 400 if provided cluster name length is less than 3
 	if len(basic.Name) < 3 {
-		l.Errorf("cluster name '%s' is too short (length: %d)", basic.Name, len(basic.Name))
-		processError(w, r, err.NewCommonError(r.Context(), err.API, ClusterNameTooShort))
+		l.With(slog.Int("length", len(basic.Name))).Error("cluster name is too short")
+		processError(w, r, err.NewCommonError(r.Context(), err.API, errClusterNameTooShort))
 		return
 	}
 
-	// Validate critical fields but only log warnings (not errors)
-	// to prevent k8s jobs from retrying failed registrations
+	// Validate critical fields but only log errors to
+	// prevent k8s jobs from retrying failed registrations
 	if basic.Url == "" {
 		l.Error("cluster URL is empty")
 	}

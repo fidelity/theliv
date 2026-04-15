@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	invest "github.com/fidelity/theliv/internal/investigators"
+	log "github.com/fidelity/theliv/pkg/log"
 	"github.com/fidelity/theliv/pkg/database/etcd"
-	"go.uber.org/zap"
 )
 
 const (
@@ -57,7 +57,7 @@ type ClusterBasic struct {
 }
 
 // Insert or update 1 record, to /theliv/clusters/{name}/kubeconf.
-func RegisterCluster(ctx context.Context, l *zap.SugaredLogger, basic ClusterBasic) error {
+func RegisterCluster(ctx context.Context, l *log.SugaredSlogLogger, basic ClusterBasic) error {
 	clusterType := basic.Name[:3]
 	etcdBaseKey := KeyPath + clusterType + "/" + basic.Name
 
@@ -65,7 +65,7 @@ func RegisterCluster(ctx context.Context, l *zap.SugaredLogger, basic ClusterBas
 
 	// if aws account id present, convert to json and insert in db
 	if basic.Account != "" {
-		l.Info("AWS account provided, persist detail to db")
+		l.Info("AWS account provided, persisting to db")
 		if urlSlice := strings.Split(basic.Url, "."); len(urlSlice) > 5 {
 			basic.Region = urlSlice[len(urlSlice)-4]
 		}
