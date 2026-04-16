@@ -6,8 +6,11 @@
 package router
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/fidelity/theliv/pkg/err"
 	log "github.com/fidelity/theliv/pkg/log"
@@ -19,7 +22,10 @@ import (
 const (
 	Registered             = "Registered"
 	errClusterNameTooShort = "cluster name must be at least 3 characters long"
+	errClusterNameInvalid  = "cluster name contains invalid characters"
 )
+
+var clusterNamePattern = regexp.MustCompile(`^[a-z0-9]([a-z0-9_-]{0,61}[a-z0-9])?$`)
 
 func Register(r chi.Router) {
 	r.Post("/{cluster}", clusterRegister)
@@ -47,10 +53,10 @@ func clusterRegister(w http.ResponseWriter, r *http.Request) {
 		slog.String("account", basic.Account),
 	)
 
-	// return 400 if provided cluster name length is less than 3
-	if len(basic.Name) < 3 {
-		l.With(slog.Int("length", len(basic.Name))).Error("cluster name is too short")
-		processError(w, r, err.NewCommonError(r.Context(), err.API, errClusterNameTooShort))
+	// Validate cluster name for security and format compliance
+	if validationErr := validateClusterName(basic.Name); validationErr != nil {
+		l.With(slog.String("error", validationErr.Error())).Error("cluster name validation failed")
+		processError(w, r, err.NewCommonError(r.Context(), err.API, validationErr.Error()))
 		return
 	}
 
@@ -73,4 +79,23 @@ func clusterRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render.Respond(w, r, Registered)
+}
+
+// validateClusterName checks for path traversal and validates cluster name format
+func validateClusterName(name string) error {
+	if len(name) < 3 {
+		return fmt.Errorf(errClusterNameTooShort)
+	}
+	if len(name) > 63 {
+		return fmt.Errorf("cluster name must be 63 characters or less")
+	}
+	// Check for path traversal characters
+	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, "\\") {
+		return fmt.Errorf(errClusterNameInvalid)
+	}
+	// Lowercase alphanumeric with hyphens and underscores
+	if !clusterNamePattern.MatchString(name) {
+		return fmt.Errorf("cluster name must be lowercase alphanumeric with hyphens/underscores, start and end with alphanumeric")
+	}
+	return nil
 }
