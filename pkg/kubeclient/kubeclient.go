@@ -209,7 +209,7 @@ func (kc *KubeClient) getResource(ctx context.Context, obj runtime.Object, resNa
 	}
 	data, err := getTargetResource(ctx, dr, ops, resName)
 	if err != nil && strings.HasPrefix(err.Error(), RetrieveErrorMessage) {
-		return fmt.Errorf(err.Error())
+		return err
 	} else if err != nil {
 		return fmt.Errorf("error while marshalling json using unstructured in dynamic client: %w", err)
 	}

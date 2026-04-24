@@ -8,12 +8,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/fidelity/theliv/pkg/common"
 	com "github.com/fidelity/theliv/pkg/common"
 	theErr "github.com/fidelity/theliv/pkg/err"
 	log "github.com/fidelity/theliv/pkg/log"
-	"go.uber.org/zap"
 
 	"github.com/fidelity/theliv/pkg/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,7 +25,7 @@ func ListNs(ctx context.Context, clusterName string) ([]string, error) {
 	contact := fmt.Sprintf(com.Contact, config.GetThelivConfig().TeamName)
 
 	l := log.SWithContext(ctx).With(
-		zap.String("cluster", clusterName),
+		slog.String("cluster", clusterName),
 	)
 
 	conf, err := config.GetConfigLoader().GetKubernetesConfig(ctx, clusterName)

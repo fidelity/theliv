@@ -47,9 +47,8 @@ func main() {
 	r := router.NewRouter()
 
 	theliv := config.GetThelivConfig()
-	// init default Zap logger
-	Logger := log.NewDefaultLogger(log.DefaultLogConfig(theliv.LogLevel))
-	defer Logger.Sync()
+	// init default logger
+	log.NewDefaultLogger(log.DefaultLogConfig(theliv.LogLevel))
 
 	err := http.ListenAndServe(fmt.Sprintf(":%v", theliv.Port), r)
 	if err != nil {

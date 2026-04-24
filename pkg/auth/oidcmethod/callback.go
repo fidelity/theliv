@@ -137,7 +137,7 @@ func userJwt(ctx context.Context, user *rbac.UserInfo) (string, error) {
 	jwt, err := jwtToken.SignedString(jwtKey)
 	if err != nil {
 		msg := "Failed to sign jwt"
-		log.SWithContext(ctx).Error()
+		log.SWithContext(ctx).Error(msg)
 		return "", theliverr.NewCommonError(ctx, 1, msg)
 	}
 	return jwt, nil

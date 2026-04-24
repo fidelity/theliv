@@ -70,7 +70,7 @@ func joinCookies(ctx context.Context, key string, cookieList []*http.Cookie) (st
 	var ok bool
 	if token, ok = cookies[key]; !ok {
 		msg := "failed to retrieve id_token from cookies"
-		log.SWithContext(ctx).Warnf(msg)
+		log.SWithContext(ctx).Warn(msg)
 		return "", theliverr.NewCommonError(ctx, 1, msg)
 	}
 	parts := strings.Split(token, ":")
