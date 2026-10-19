@@ -53,6 +53,8 @@
     "typescript": "~4.3.5"
   },
   "overrides": {
-    "path-to-regexp": "0.1.12"
+    "path-to-regexp": "0.1.12",
+    "enhanced-resolve": "5.24.5",
+    "baseline-browser-mapping": "2.11.22"
   }
 }
